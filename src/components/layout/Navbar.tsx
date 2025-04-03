@@ -94,7 +94,7 @@ export default function Component() {
               endContent={<FiLogIn />}
               radius="full"
               as={Link}
-              href="/auth/login"
+              href="/login"
               size="md"
             >
               {t('login')}
@@ -123,7 +123,7 @@ export default function Component() {
               radius="full"
               variant="flat"
               as={Link}
-              href="/auth/login"
+              href="/login"
               size="md"
             >
               {t('login')}
