@@ -21,7 +21,7 @@ export default function Page() {
         {/* ส่วนหัวของหน้า */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">
-            สวัสดี, คุณ {session?.user?.name}
+            สวัสดี, คุณ {session?.user?.name} !
           </h1>
           <p className="text-default-500 mt-1">
             ยินดีต้อนรับสู่บางกระเจ้า
