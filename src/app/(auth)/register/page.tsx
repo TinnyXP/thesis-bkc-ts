@@ -4,13 +4,22 @@ import React, { useState } from 'react'
 
 import { Form, Input, Button, Link } from "@heroui/react";
 
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
+
 export default function page() {
+
+  const { data: session } = useSession()
+  if (session) {
+    redirect('/welcome')
+  }
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,6 +37,22 @@ export default function page() {
     }
 
     try {
+
+      const resCheckUser = await fetch('/api/auth/checkUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const { user } = await resCheckUser.json()
+
+      if (user) {
+        setError('User already exists')
+        return
+      }
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -41,6 +66,7 @@ export default function page() {
       })
 
       if (response.ok) {
+        setSuccess('Registration successful')
         setName('');
         setEmail('');
         setPassword('');
@@ -62,6 +88,10 @@ export default function page() {
 
           {error && (
             <p className='text-red-500'>{error}</p>
+          )}
+
+          {success && (
+            <p className='text-green-500'>{success}</p>
           )}
 
           <Input

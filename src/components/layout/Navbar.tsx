@@ -7,25 +7,22 @@ import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuI
 import { ToggleTheme } from "@/components"
 import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
 import { Avatar, AvatarIcon } from "@heroui/avatar";
-import { FiArrowUpRight, FiCodesandbox, FiLogIn, FiLogOut } from "react-icons/fi";
-import { Key } from 'react';
+import { FiArrowUpRight, FiLogIn, FiLogOut } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
+
+import { Session } from "next-auth";
 
 interface ProfileAvatarProps {
   size?: "md" | "sm" | "lg";
 }
 
-export default function Component() {
+export default function NavBar({ session }: { session: Session | null }) {
+
   const { theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
-  const handleLoginToggle = () => {
-    setIsLoggedIn(!isLoggedIn);
-  };
-  
   const { t } = useTranslation();
   const menuItems = [
     {
@@ -67,9 +64,6 @@ export default function Component() {
             alt="Website Logo"
           />
         </Link>
-        <Button isIconOnly variant="light" onPress={handleLoginToggle}>
-          <FiCodesandbox size={22} />
-        </Button>
       </NavbarBrand>
 
       {/* Center Content */}
@@ -84,7 +78,7 @@ export default function Component() {
       {/* Right Content */}
       <NavbarContent className="hidden md:flex" justify="end">
         <NavbarItem>
-          {isLoggedIn ? (
+          {session ? (
             <ProfileAvatar size="md" />
           ) : (
             <Button
@@ -113,15 +107,15 @@ export default function Component() {
       {/* Right Content (NavBar Toggle) */}
       <NavbarContent className="flex md:hidden" justify="end">
         <NavbarItem>
-          {isLoggedIn ? (
+          {session ? (
             <ProfileAvatar size="md" />
           ) : (
             <Button
               className="text-medium border-1.5 border-default-200 dark:border-default-200"
               color="default"
+              variant="flat"
               endContent={<FiLogIn />}
               radius="full"
-              variant="flat"
               as={Link}
               href="/login"
               size="md"
