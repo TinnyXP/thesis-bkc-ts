@@ -204,7 +204,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
    * ฟังก์ชันจัดการการคลิกรูปภาพ
    * แยกระหว่างการคลิกกับการลากโดยใช้เวลา
    */
-  const handleImageClick = (e: React.MouseEvent) => {
+  const handleImageClick = () => {
     // ถ้ากำลังลากอยู่ ไม่ถือว่าเป็นการคลิก
     if (isDragging) return;
 
@@ -340,7 +340,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
     e.preventDefault();
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     // คำนวณว่าเป็นการแตะที่สั้นพอที่จะถือว่าเป็นการคลิก ไม่ใช่การลาก
     const touchEndTime = Date.now();
     const touchDuration = touchEndTime - clickStartTime.current;

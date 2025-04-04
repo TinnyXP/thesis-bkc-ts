@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Button } from "@heroui/react";
 import { useLanguage } from '../hooks/useLanguage';
@@ -12,7 +11,7 @@ import { Key } from 'react';
  */
 export default function LanguageSelectorButton() {
   // ไม่ได้ใช้ t แต่เก็บไว้เผื่อใช้ในอนาคต ใส่ underscore เพื่อแสดงว่าไม่ได้ใช้
-  const { t: _t } = useTranslation();
+  // const { t: _t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const [selectedLanguage, setSelectedLanguage] = useState("TH");
 

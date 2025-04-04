@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Tabs, Tab } from "@heroui/react";
 import { useLanguage } from '../hooks/useLanguage';
 import { Key } from 'react';
@@ -11,7 +10,7 @@ import { Key } from 'react';
  */
 export default function LanguageSelectorTab() {
   // ไม่ได้ใช้ t แต่อาจจะใช้ในอนาคต ใส่ underscore เพื่อแสดงว่าไม่ได้ใช้
-  const { t: _t } = useTranslation();
+  // const { t: _t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
 
   // รับคีย์ที่เลือกในปัจจุบันตามรหัสภาษา

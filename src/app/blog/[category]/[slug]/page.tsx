@@ -5,7 +5,7 @@ import { getPostBySlug, urlFor, formatThaiDate } from "@/lib/sanity";
 
 import { Image, Link } from "@heroui/react";
 import { PortableText } from "next-sanity";
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 import { headers } from 'next/headers';
 
 import { PortableTextReactComponents } from "@portabletext/react";

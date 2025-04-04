@@ -3,7 +3,7 @@ import { CategoryCardList } from "@/components";
 import { getCategoryBySlug } from "@/lib/sanity";
 import { Link } from "@heroui/react";
 import { notFound } from "next/navigation";
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 
 // กำหนด metadata แบบ dynamic จากข้อมูลหมวดหมู่
 export async function generateMetadata(
