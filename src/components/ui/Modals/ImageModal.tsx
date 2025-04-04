@@ -305,7 +305,6 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
     setIsDragging(false);
   };
 
-  // ฟังก์ชันจัดการการลากรูปภาพสำหรับ touch events (มือถือ)
   const handleTouchStart = (e: React.TouchEvent) => {
     // ถ้าไม่ได้ซูมอยู่ ไม่ต้องทำอะไร
     if (!isZoomed) return;

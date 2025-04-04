@@ -3,7 +3,6 @@
 import React from 'react';
 import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
 import { House } from 'lucide-react';
-import { Category } from '@/lib/sanity/schema';
 
 interface SlugBreadcrumbProps {
   postTitle: string;

@@ -10,7 +10,8 @@ import { Key } from 'react';
  * คอมโพเนนต์เลือกภาษาแบบแท็บ
  */
 export default function LanguageSelectorTab() {
-  const { t } = useTranslation();
+  // ไม่ได้ใช้ t แต่อาจจะใช้ในอนาคต ใส่ underscore เพื่อแสดงว่าไม่ได้ใช้
+  const { t: _t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
 
   // รับคีย์ที่เลือกในปัจจุบันตามรหัสภาษา

@@ -1,7 +1,7 @@
 // src/lib/sanity/queries.ts
 import { client } from './client';
-import { defaultRevalidateOptions, fastRevalidateOptions } from './client';
-import { Post, Category, Author } from './schema';
+import { defaultRevalidateOptions } from './client';
+import { Post, Category } from './schema';
 
 /**
  * Query สำหรับดึงบทความทั้งหมด

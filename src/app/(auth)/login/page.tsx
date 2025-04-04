@@ -7,7 +7,7 @@ import { Form, Input, Button, Link } from "@heroui/react";
 import { signIn, useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 
-export default function page() {
+export default function Page() {
 
   const { data: session } = useSession()
     if (session) {

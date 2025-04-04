@@ -1,21 +1,29 @@
 "use client";
 
 import React from 'react';
-import { Card, CardBody, Button, Image, Link } from "@heroui/react";
-import { NavBar, Footer } from "@/components";
+import { Card, CardBody, Button, Link } from "@heroui/react";
+import { NavBar } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
 
 import { useSession } from "next-auth/react";
+import { redirect } from 'next/navigation';
 
 export default function Page() {
+  const { data: session, status } = useSession();
+  
+  // ป้องกันการเข้าถึงหากไม่มี session
+  if (status === "unauthenticated") {
+    redirect('/login');
+  }
 
-  const { data: session } = useSession();
-  console.log("Session data:", session);
+  if (status === "loading") {
+    return <div>กำลังโหลด...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
 
-      <NavBar session={session} />
+      <NavBar />
 
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* ส่วนหัวของหน้า */}

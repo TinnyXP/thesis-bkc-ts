@@ -11,8 +11,9 @@ import { Key } from 'react';
  * คอมโพเนนต์ปุ่มเลือกภาษาแบบดรอปดาวน์
  */
 export default function LanguageSelectorButton() {
-  const { t } = useTranslation();
-  const { currentLanguage, languages, changeLanguage } = useLanguage();
+  // ไม่ได้ใช้ t แต่เก็บไว้เผื่อใช้ในอนาคต ใส่ underscore เพื่อแสดงว่าไม่ได้ใช้
+  const { t: _t } = useTranslation();
+  const { currentLanguage, changeLanguage } = useLanguage();
   const [selectedLanguage, setSelectedLanguage] = useState("TH");
 
   // ตัวเลือกภาษา
@@ -28,7 +29,7 @@ export default function LanguageSelectorButton() {
     if (langOption) {
       setSelectedLanguage(langOption.display);
     }
-  }, [currentLanguage.code]);
+  }, [currentLanguage.code, languageOptions]);
 
   // จัดการการเปลี่ยนภาษา
   const handleLanguageChange = (key: Key) => {

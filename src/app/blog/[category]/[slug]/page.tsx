@@ -13,8 +13,8 @@ import { FaQuoteLeft } from "react-icons/fa6";
 
 // กำหนด metadata แบบ dynamic จากข้อมูลบทความ
 export async function generateMetadata(
-  { params }: { params: { category: string; slug: string } },
-  parent: ResolvingMetadata
+  { params }: { params: { category: string; slug: string } }
+  // ลบพารามิเตอร์ parent ออกเนื่องจากไม่ได้ใช้งาน
 ): Promise<Metadata> {
   // ดึงข้อมูลบทความ
   const post = await getPostBySlug(params.slug);

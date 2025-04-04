@@ -7,8 +7,8 @@ import { Metadata, ResolvingMetadata } from "next";
 
 // กำหนด metadata แบบ dynamic จากข้อมูลหมวดหมู่
 export async function generateMetadata(
-  { params }: { params: { category: string } },
-  parent: ResolvingMetadata
+  { params }: { params: { category: string } }
+  // ลบพารามิเตอร์ parent เนื่องจากไม่ได้ใช้งาน
 ): Promise<Metadata> {
   // ดึงข้อมูลหมวดหมู่
   const category = await getCategoryBySlug(params.category);

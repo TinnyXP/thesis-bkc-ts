@@ -4,8 +4,21 @@ import { useEffect, useState } from "react";
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY;
 const CALENDAR_ID = process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ID;
 
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  start?: {
+    dateTime?: string;
+    date?: string;
+  };
+  end?: {
+    dateTime?: string;
+    date?: string;
+  };
+}
+
 export default function Page() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
     const fetchEvents = async () => {

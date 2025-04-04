@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import React from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider, Tabs, Tab } from "@heroui/react";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider } from "@heroui/react";
 import { ToggleTheme } from "@/components"
 import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
 import { Avatar, AvatarIcon } from "@heroui/avatar";
@@ -12,13 +12,12 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
 
-import { Session } from "next-auth";
-
 interface ProfileAvatarProps {
   size?: "md" | "sm" | "lg";
 }
 
-export default function NavBar({ session }: { session: Session | null }) {
+export default function NavBar() {
+  const { data: session } = useSession();
 
   const { theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);

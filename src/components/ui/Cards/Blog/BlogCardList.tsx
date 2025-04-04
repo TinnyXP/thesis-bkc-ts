@@ -1,6 +1,6 @@
 // src/components/ui/Cards/SanityCards/AllCards/CardServer.tsx
 import { BlogCard } from "@/components";
-import { getLatestPosts, Post } from "@/lib/sanity";
+import { getLatestPosts } from "@/lib/sanity";
 
 /**
  * คอมโพเนนต์ที่ทำหน้าที่ดึงข้อมูลบทความจาก Sanity CMS (server-side)

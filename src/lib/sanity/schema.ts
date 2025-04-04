@@ -1,5 +1,27 @@
 // src/lib/sanity/schema.ts
 
+interface SanityImageAsset {
+  _ref?: string;
+  url: string;
+  metadata?: {
+    lqip?: string;
+    dimensions?: {
+      width: number;
+      height: number;
+    }
+  }
+}
+
+interface SanityImage {
+  asset: SanityImageAsset;
+}
+
+interface PortableTextBlock {
+  _type: string;
+  _key: string;
+  [key: string]: unknown;
+}
+
 /**
  * Post type interface
  * ใช้สำหรับข้อมูลบทความจาก Sanity CMS
@@ -10,22 +32,10 @@ export interface Post {
   slug: { current: string };
   publishedAt: string;
   excerpt?: string;
-  mainImage?: { 
-    asset: { 
-      _ref?: string;
-      url: string;
-      metadata?: {
-        lqip?: string;
-        dimensions?: {
-          width: number;
-          height: number;
-        }
-      }
-    } 
-  };
+  mainImage?: SanityImage;
   categories: Category[];
   author?: Author;
-  body?: any[]; // สำหรับ Portable Text
+  body?: PortableTextBlock[]; // สำหรับ Portable Text
 }
 
 /**
@@ -47,8 +57,8 @@ export interface Author {
   _id?: string;
   name: string;
   slug?: { current: string };
-  image?: any; // Sanity image
-  bio?: any[]; // Portable Text
+  image?: SanityImage; // Sanity image
+  bio?: PortableTextBlock[]; // Portable Text
 }
 
 /**
