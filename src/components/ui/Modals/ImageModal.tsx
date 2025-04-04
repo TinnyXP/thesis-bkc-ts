@@ -22,6 +22,22 @@ interface ImageWithModalProps {
   className?: string;
 }
 
+interface ToastOptions {
+  title: string;
+  description?: string;
+  color?: "default" | "foreground" | "primary" | "secondary" | "success" | "warning" | "danger";
+  timeout?: number;
+  hideCloseButton?: boolean;
+  shouldShowTimeoutProgress?: boolean;
+  icon?: React.ReactNode;
+  classNames?: {
+    base?: string;
+    title?: string;
+    description?: string;
+  };
+  radius?: "none" | "sm" | "md" | "lg" | "full";
+}
+
 /**
  * คอมโพเนนต์รูปภาพที่มีโมดัลแสดงรูปภาพขนาดใหญ่และดาวน์โหลดได้
  */
@@ -31,6 +47,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
   alt,
   className
 }) => {
+  
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -103,7 +120,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
    * ฟังก์ชันแสดง Toast notification
    * จะไม่แสดงถ้าอยู่บนอุปกรณ์มือถือ
    */
-  const showToast = (options: any) => {
+  const showToast = (options: ToastOptions) => {
     // ไม่แสดง Toast บนอุปกรณ์มือถือ
     if (!isMobile) {
       addToast(options);
