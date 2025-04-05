@@ -1,30 +1,32 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import { Form, Input, Button, Link } from "@heroui/react";
 
 import { signIn, useSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
 
-  const { data: session } = useSession()
-    if (session) {
-      redirect('/welcome')
-  }
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const router = useRouter()
+  useEffect(() => {
+    if (session) {
+      router.replace('/welcome')
+    }
+  }, [session, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
-      
+
       const res = await signIn("credentials", {
         redirect: false,
         email,
@@ -35,17 +37,21 @@ export default function Page() {
         setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ")
         return
       }
-  
+
       if (res.error) {
         setError("ข้อมูลเข้าสู่ระบบไม่ถูกต้อง")
         return
       }
-  
+
       router.replace("welcome")
 
     } catch (error) {
       console.error("Error during sign-in:", error)
     }
+  }
+
+  if (status === "loading") {
+    return <div>กำลังโหลด...</div>
   }
 
   return (

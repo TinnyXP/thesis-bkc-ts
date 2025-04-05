@@ -1,26 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { Button } from "@heroui/react";
 import { useLanguage } from '../hooks/useLanguage';
 import { Key } from 'react';
-
 /**
  * คอมโพเนนต์ปุ่มเลือกภาษาแบบดรอปดาวน์
  */
 export default function LanguageSelectorButton() {
-  // ไม่ได้ใช้ t แต่เก็บไว้เผื่อใช้ในอนาคต ใส่ underscore เพื่อแสดงว่าไม่ได้ใช้
-  // const { t: _t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const [selectedLanguage, setSelectedLanguage] = useState("TH");
 
-  // ตัวเลือกภาษา
-  const languageOptions = [
+  // ใช้ useMemo เพื่อทำให้ languageOptions ไม่ถูกสร้างใหม่ทุกครั้งที่ render
+  const languageOptions = useMemo(() => [
     { key: "th", display: "TH", name: "ไทย" },
     { key: "en", display: "EN", name: "English" },
     { key: "zh", display: "CN", name: "中文" },
-  ];
+  ], []); // empty dependency array means this only runs once
 
   // ตั้งค่าการแสดงผลภาษาเริ่มต้นตามภาษาปัจจุบัน
   useEffect(() => {
@@ -28,7 +25,7 @@ export default function LanguageSelectorButton() {
     if (langOption) {
       setSelectedLanguage(langOption.display);
     }
-  }, [currentLanguage.code, languageOptions]);
+  }, [currentLanguage.code, languageOptions]); // เพิ่ม languageOptions เป็น dependency
 
   // จัดการการเปลี่ยนภาษา
   const handleLanguageChange = (key: Key) => {
