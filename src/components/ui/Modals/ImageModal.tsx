@@ -415,10 +415,10 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
         onOpenChange={onOpenChange}
         size="5xl"
         hideCloseButton
+        backdrop='blur'
         classNames={{
           base: "bg-transparent shadow-none",
           body: "p-0",
-          backdrop: "bg-black/70 backdrop-blur-sm backdrop-saturate-150"
         }}
         placement='center'
         motionProps={{
