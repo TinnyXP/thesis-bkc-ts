@@ -18,22 +18,52 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
+  // โหลดสถานะที่เก็บไว้ใน localStorage เมื่อหน้าเว็บโหลด
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('loginEmail');
+      const otpSentStatus = localStorage.getItem('otpSent');
+      
+      if (savedEmail) {
+        setEmail(savedEmail);
+      }
+      
+      if (otpSentStatus === 'true') {
+        setIsOtpSent(true);
+        // ถ้ามีการเก็บเวลา countdown ไว้ ก็โหลดมาใช้
+        const savedCountdown = localStorage.getItem('otpCountdown');
+        if (savedCountdown) {
+          const timeLeft = Math.max(0, parseInt(savedCountdown) - 
+            Math.floor((Date.now() - parseInt(localStorage.getItem('otpTimestamp') || '0')) / 1000));
+          setCountdown(timeLeft);
+        }
+      }
+    }
+  }, []);
+  
   useEffect(() => {
     if (session) {
       if (session.user.isNewUser) {
-        router.replace('/auth/complete-profile');
+        router.replace('/complete-profile');
       } else {
         router.replace('/welcome');
       }
     }
   }, [session, router]);
 
-  // จัดการ countdown สำหรับการขอ OTP ใหม่
+  // จัดการ countdown
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
       timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
+        setCountdown(prev => {
+          const newValue = prev - 1;
+          // เก็บค่า countdown ใน localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('otpCountdown', newValue.toString());
+          }
+          return newValue;
+        });
       }, 1000);
     }
     
@@ -42,7 +72,9 @@ export default function LoginPage() {
     };
   }, [countdown]);
 
-  const handleSendOTP = async () => {
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault(); // ป้องกันการรีโหลดหน้า
+    
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       setError("กรุณากรอกอีเมลที่ถูกต้อง");
       return;
@@ -61,8 +93,17 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
+        // เก็บข้อมูลใน localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('loginEmail', email);
+          localStorage.setItem('otpSent', 'true');
+          localStorage.setItem('otpTimestamp', Date.now().toString());
+          localStorage.setItem('otpCountdown', '60');
+        }
+        
         setIsOtpSent(true);
-        setCountdown(60); // 60 วินาที
+        setCountdown(60);
+        console.log("OTP sent successfully, state updated:", { isOtpSent: true });
       } else {
         setError(data.message || "ไม่สามารถส่งรหัส OTP ได้");
       }
@@ -74,7 +115,9 @@ export default function LoginPage() {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault(); // ป้องกันการรีโหลดหน้า
+    
     if (!otp) {
       setError("กรุณากรอกรหัส OTP");
       return;
@@ -92,6 +135,14 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
+      } else if (result?.ok) {
+        // ลบข้อมูลใน localStorage เมื่อเข้าสู่ระบบสำเร็จ
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('loginEmail');
+          localStorage.removeItem('otpSent');
+          localStorage.removeItem('otpTimestamp');
+          localStorage.removeItem('otpCountdown');
+        }
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
@@ -105,9 +156,21 @@ export default function LoginPage() {
     signIn("line", { callbackUrl: "/welcome" });
   };
 
+  const handleResendOTP = () => {
+    // รีเซ็ตสถานะเพื่อขอ OTP ใหม่
+    setIsOtpSent(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('otpSent');
+    }
+    // เรียกฟังก์ชันส่ง OTP อีกครั้ง
+    handleSendOTP({ preventDefault: () => {} } as React.FormEvent);
+  };
+
   if (status === "loading") {
     return <div className="flex justify-center items-center h-screen">กำลังโหลด...</div>;
   }
+
+  console.log("Current state:", { isOtpSent, email, countdown });
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -188,7 +251,7 @@ export default function LoginPage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={handleSendOTP}
+                      onClick={handleResendOTP}
                       className="text-sm text-primary-color hover:underline"
                       disabled={isLoading}
                     >

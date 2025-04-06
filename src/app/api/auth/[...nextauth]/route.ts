@@ -20,10 +20,10 @@ async function saveLoginHistory(userId: string, status: 'success' | 'failed'): P
   try {
     const headersList = headers();
     const userAgent = headersList.get('user-agent') || 'Unknown';
-    const ip = headersList.get('x-forwarded-for') || 
-               headersList.get('x-real-ip') || 
-               '127.0.0.1';
-    
+    const ip = headersList.get('x-forwarded-for') ||
+      headersList.get('x-real-ip') ||
+      '127.0.0.1';
+
     await LoginHistory.create({
       user_id: userId,
       login_time: new Date(),
@@ -31,7 +31,7 @@ async function saveLoginHistory(userId: string, status: 'success' | 'failed'): P
       user_agent: userAgent,
       login_status: status
     });
-    
+
     return { ip, userAgent };
   } catch (error) {
     console.error("Error saving login history:", error);
@@ -58,12 +58,14 @@ interface CustomUser extends NextAuthUser {
 
 export const authOptions: AuthOptions = {
   providers: [
-    // LINE Provider
     LineProvider({
+      // clientId: process.env.LINE_CLIENT_ID || "",
+      // clientSecret: process.env.LINE_CLIENT_SECRET || "",
       clientId: process.env.LINE_CLIENT_ID || "",
       clientSecret: process.env.LINE_CLIENT_SECRET || "",
+      authorization: { params: { scope: "openid profile email" } }
     }),
-    
+
     // OTP Provider
     CredentialsProvider({
       id: "otp",
@@ -74,11 +76,11 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-        
+
         const { email, otp } = credentials as OTPUserCredentials;
         try {
           await connectDB();
-          
+
           // ตรวจสอบ OTP
           const validOtp = await OTP.findOne({
             email,
@@ -86,18 +88,18 @@ export const authOptions: AuthOptions = {
             is_used: false,
             expires_at: { $gt: new Date() }
           });
-          
+
           if (!validOtp) {
             console.log("Invalid OTP for email:", email);
             return null;
           }
-          
+
           // ทำเครื่องหมายว่า OTP ถูกใช้งานแล้ว
           await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
-          
+
           // ค้นหาผู้ใช้
           let user = await UserModel.findOne({ email, provider: 'otp' });
-          
+
           if (!user) {
             // ถ้าเป็นการล็อกอินครั้งแรก ให้ส่งค่ากลับพิเศษ
             return {
@@ -109,13 +111,13 @@ export const authOptions: AuthOptions = {
               isNewUser: true
             } as CustomUser;
           }
-          
+
           // บันทึกประวัติการล็อกอิน
           const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
-          
+
           // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
           sendLoginNotificationEmail(user.email, user.name, clientInfo);
-          
+
           return {
             id: user._id.toString(),
             name: user.name,
@@ -132,21 +134,24 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log("Sign in attempt:", { provider: account?.provider });
+      console.log("Profile data:", profile);
+
       try {
         await connectDB();
-        
+
         // จัดการกับการล็อกอินผ่าน LINE
         if (account?.provider === "line" && profile) {
           const lineProfile = profile as LineProfile;
           const { name, email, picture } = lineProfile;
           const provider_id = lineProfile.sub;
-          
+
           // ค้นหาผู้ใช้จาก provider_id
           let existingUser = await UserModel.findOne({
             provider: 'line',
             provider_id
           });
-          
+
           if (existingUser) {
             // อัพเดทข้อมูลถ้าจำเป็น
             if (existingUser.email !== email || existingUser.name !== name) {
@@ -160,13 +165,13 @@ export const authOptions: AuthOptions = {
                 { new: true }
               );
             }
-            
+
             // บันทึกประวัติการล็อกอิน
             const clientInfo = await saveLoginHistory(existingUser._id.toString(), 'success');
-            
+
             // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
             sendLoginNotificationEmail(existingUser.email, existingUser.name, clientInfo);
-            
+
             return true;
           } else {
             // สร้างผู้ใช้ใหม่
@@ -177,27 +182,27 @@ export const authOptions: AuthOptions = {
               provider: 'line',
               provider_id
             });
-            
+
             // บันทึกประวัติการล็อกอิน
             await saveLoginHistory(newUser._id.toString(), 'success');
-            
+
             return true;
           }
         }
-        
+
         return true;
       } catch (error) {
         console.error("Error in signIn callback:", error);
         return false;
       }
     },
-    
+
     async jwt({ token, user }) {
       if (user) {
         const customUser = user as CustomUser;
         token.userId = customUser.id;
         token.provider = customUser.provider || 'unknown';
-        
+
         // สำหรับผู้ใช้ใหม่ที่ล็อกอินด้วย OTP
         if (customUser.isNewUser) {
           token.isNewUser = true;
@@ -205,12 +210,12 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
-    
+
     async session({ session, token }: { session: Session; token: JWT }) {
       if (token && session.user) {
         session.user.id = token.userId;
         session.user.provider = token.provider;
-        
+
         if (token.isNewUser) {
           session.user.isNewUser = true;
         }
@@ -224,7 +229,7 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
-    error: "/auth/error",
+    error: "/error",
   }
 };
 
