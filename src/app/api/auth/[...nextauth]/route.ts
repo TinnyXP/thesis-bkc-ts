@@ -56,7 +56,7 @@ interface CustomUser extends NextAuthUser {
   isNewUser?: boolean;
 }
 
-const authOptions: AuthOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     // LINE Provider
     LineProvider({
