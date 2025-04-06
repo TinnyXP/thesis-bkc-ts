@@ -10,18 +10,39 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    password: {
+    provider: {
       type: String,
-      required: true,
+      enum: ['otp', 'line'],
+      default: 'otp',
+      required: true
+    },
+    provider_id: {
+      type: String,
+      default: null,
+    },
+    // ลบ password field ออก เนื่องจากไม่ได้ใช้อีกต่อไป
+    profile_image: {
+      type: String,
+      default: null,
     },
     role: {
       type: String,
-      required : false,
+      required: false,
       default: "user",
+    },
+    is_active: {
+      type: Boolean,
+      default: true
     }
   },
   { timestamps: true }
-)
+);
+
+// สร้าง compound index สำหรับป้องกันการซ้ำกัน
+// ผู้ใช้ otp ไม่สามารถมีอีเมลซ้ำกัน
+// ผู้ใช้ line ไม่สามารถมี provider_id ซ้ำกัน
+userSchema.index({ email: 1, provider: 1 }, { unique: true });
+userSchema.index({ provider_id: 1 }, { unique: true, sparse: true });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;
