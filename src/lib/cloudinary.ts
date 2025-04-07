@@ -9,7 +9,7 @@ interface CloudinaryUploadResult {
   height: number;
   resource_type: string;
   url: string;
-  [key: string]: any; // สำหรับ properties อื่นๆ ที่อาจมี
+  [key: string]: string | number | boolean | object;
 }
 
 // ตั้งค่า Cloudinary

@@ -1,4 +1,4 @@
-import NextAuth, { AuthOptions, Session, Account, Profile } from "next-auth";
+import NextAuth, { AuthOptions, Session, Profile } from "next-auth";
 import { User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import LineProvider from "next-auth/providers/line";
@@ -98,7 +98,7 @@ export const authOptions: AuthOptions = {
           await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
 
           // ค้นหาผู้ใช้
-          let user = await UserModel.findOne({ email, provider: 'otp' });
+          const user = await UserModel.findOne({ email, provider: 'otp' });
 
           if (!user) {
             // ถ้าเป็นการล็อกอินครั้งแรก ให้ส่งค่ากลับพิเศษ
@@ -132,8 +132,9 @@ export const authOptions: AuthOptions = {
       }
     })
   ],
-  callbacks: {
+   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log("user:", user);
       console.log("Sign in attempt:", { provider: account?.provider });
       console.log("Profile data:", profile);
 

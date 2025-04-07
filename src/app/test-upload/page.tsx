@@ -2,11 +2,21 @@
 
 import React, { useState } from 'react';
 import { Button } from "@heroui/react";
+import Image from 'next/image';
+
+// กำหนด interface แทนการใช้ any
+interface UploadResult {
+  success: boolean;
+  message: string;
+  url: string;
+  publicId?: string;
+  error?: string;
+}
 
 export default function TestUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,7 +101,7 @@ export default function TestUploadPage() {
         <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded mb-4">
           <h2 className="text-lg font-semibold mb-2">Upload successful!</h2>
           <div className="mb-2">
-            <img 
+            <Image 
               src={uploadResult.url} 
               alt="Uploaded image" 
               className="w-full rounded-lg shadow-md"
