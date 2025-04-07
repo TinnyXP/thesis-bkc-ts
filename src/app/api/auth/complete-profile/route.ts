@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../[...nextauth]/route"; // เราต้องเอา authOptions มาใช้
+import { authOptions } from "@/lib/auth"; // แก้ไขจากเดิมเป็น import จาก lib/auth
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(request: Request) {
