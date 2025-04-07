@@ -130,10 +130,15 @@ export const authOptions: AuthOptions = {
       }
     })
   ],
-   callbacks: {
+  // src/lib/auth.ts - แก้ไขเฉพาะส่วนของ callbacks.signIn
+  // แก้ไขเฉพาะส่วนของ signIn callback ใน AuthOptions
+
+  callbacks: {
     async signIn({ user, account, profile }) {
-      console.log("Sign in attempt:", { provider: account?.provider, user });
-      
+      console.log("user:", user);
+      console.log("Sign in attempt:", { provider: account?.provider });
+      console.log("Profile data:", profile);
+
       try {
         await connectDB();
 
@@ -169,6 +174,9 @@ export const authOptions: AuthOptions = {
             // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
             sendLoginNotificationEmail(existingUser.email, existingUser.name, clientInfo);
 
+            // ตั้งค่า provider ให้กับ user
+            user.provider = 'line';
+
             return true;
           } else {
             // สร้างผู้ใช้ใหม่
@@ -183,19 +191,10 @@ export const authOptions: AuthOptions = {
             // บันทึกประวัติการล็อกอิน
             await saveLoginHistory(newUser._id.toString(), 'success');
 
+            // ตั้งค่า provider ให้กับ user
+            user.provider = 'line';
+
             return true;
-          }
-        }
-        
-        // เพิ่มเงื่อนไขสำหรับ OTP หลังจากสร้างโปรไฟล์สำเร็จ
-        // ถ้าเป็น OTP และเป็นผู้ใช้ที่สร้างโปรไฟล์เสร็จแล้ว (ไม่ใช่ new-user)
-        if (account?.provider === "otp" && user.id !== 'new-user') {
-          // บันทึกประวัติการล็อกอิน
-          const clientInfo = await saveLoginHistory(user.id, 'success');
-          
-          // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
-          if (user.email) {
-            sendLoginNotificationEmail(user.email, user.name || '', clientInfo);
           }
         }
 
@@ -206,19 +205,7 @@ export const authOptions: AuthOptions = {
       }
     },
 
-    async jwt({ token, user, trigger, session }) {
-      // เพิ่มเงื่อนไขสำหรับการอัพเดต token เมื่อมีการอัพเดต session
-      if (trigger === "update" && session) {
-        // อัพเดต token จากข้อมูลใน session ที่ส่งมา
-        if (session.user) {
-          if (session.user.name) token.name = session.user.name;
-          if (session.user.image) token.picture = session.user.image;
-          if (session.user.hasOwnProperty('isNewUser')) token.isNewUser = session.user.isNewUser;
-        }
-        return token;
-      }
-      
-      // กรณีสร้าง token ครั้งแรกเมื่อ user login
+    async jwt({ token, user }) {
       if (user) {
         const customUser = user as CustomUser;
         token.userId = customUser.id;
@@ -227,6 +214,11 @@ export const authOptions: AuthOptions = {
         // สำหรับผู้ใช้ใหม่ที่ล็อกอินด้วย OTP
         if (customUser.isNewUser) {
           token.isNewUser = true;
+        }
+
+        // ถ้าเป็น LINE User ID ให้กำหนด provider เป็น 'line'
+        if (customUser.id?.startsWith('U')) {
+          token.provider = 'line';
         }
       }
       return token;
@@ -237,13 +229,13 @@ export const authOptions: AuthOptions = {
         session.user.id = token.userId;
         session.user.provider = token.provider;
 
-        // อัพเดตชื่อและรูปโปรไฟล์จาก token ล่าสุด
-        if (token.name) session.user.name = token.name;
-        if (token.picture) session.user.image = token.picture;
-        
-        // ตรวจสอบว่ามี isNewUser ในโทเค็นหรือไม่
-        if (token.hasOwnProperty('isNewUser')) {
-          session.user.isNewUser = token.isNewUser;
+        if (token.isNewUser) {
+          session.user.isNewUser = true;
+        }
+
+        // ถ้า ID เริ่มต้นด้วย 'U' ให้กำหนด provider เป็น 'line'
+        if (session.user.id?.startsWith('U')) {
+          session.user.provider = 'line';
         }
       }
       return session;

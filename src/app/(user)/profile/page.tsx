@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -18,6 +18,16 @@ interface LoginHistoryItem {
   location?: string;
 }
 
+// อินเตอร์เฟซสำหรับข้อมูลผู้ใช้จาก API
+// interface UserProfile {
+//   id: string;
+//   name: string;
+//   email: string;
+//   image: string | null;
+//   bio: string;
+//   provider: string;
+// }
+
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
@@ -27,6 +37,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [provider, setProvider] = useState<string>(""); // เพิ่มสถานะสำหรับ provider
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,35 +48,9 @@ export default function ProfilePage() {
   const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // เมื่อคอมโพเนนต์โหลด
-  useEffect(() => {
-    // ตรวจสอบว่ามีการล็อกอินหรือไม่
-    if (status === "unauthenticated") {
-      router.replace("/login");
-    }
-    
-    // ถ้าเป็นผู้ใช้ใหม่ให้ไปยังหน้าสร้างโปรไฟล์
-    if (status === "authenticated" && session?.user?.isNewUser) {
-      router.replace("/complete-profile");
-      return;
-    }
-
-    // ตั้งค่าข้อมูลเริ่มต้นเมื่อมีข้อมูล session
-    if (status === "authenticated" && session?.user) {
-      setName(session.user.name || "");
-      setPreviewUrl(session.user.image || null);
-      
-      // ดึงข้อมูลผู้ใช้เพิ่มเติม (เช่น bio) จาก API
-      fetchUserProfile();
-      
-      // ดึงข้อมูลประวัติการเข้าสู่ระบบ
-      fetchLoginHistory();
-    }
-  }, [session, status, router]);
-  
-  // ฟังก์ชันดึงข้อมูลโปรไฟล์ผู้ใช้
-  const fetchUserProfile = async () => {
-    if (!session?.user.id || session?.user.id === "new-user") return;
+  // ใช้ useCallback สำหรับฟังก์ชัน fetchUserProfile
+  const fetchUserProfile = useCallback(async () => {
+    if (!session?.user?.id || session?.user?.id === "new-user") return;
     
     try {
       const response = await fetch('/api/user/get-profile');
@@ -81,6 +66,8 @@ export default function ProfilePage() {
         // อัพเดทข้อมูลในฟอร์ม
         setName(data.user.name || "");
         setBio(data.user.bio || "");
+        setProvider(data.user.provider || "unknown"); // ตั้งค่า provider จาก API
+        
         if (data.user.image) {
           setPreviewUrl(data.user.image);
         }
@@ -88,11 +75,11 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
-  };
+  }, [session?.user?.id]);
 
-  // ฟังก์ชันดึงประวัติการเข้าสู่ระบบ
-  const fetchLoginHistory = async () => {
-    if (!session?.user.id || session?.user.id === "new-user") return;
+  // ใช้ useCallback สำหรับฟังก์ชัน fetchLoginHistory
+  const fetchLoginHistory = useCallback(async () => {
+    if (!session?.user?.id || session?.user?.id === "new-user") return;
     
     setIsLoadingHistory(true);
     try {
@@ -115,7 +102,33 @@ export default function ProfilePage() {
     } finally {
       setIsLoadingHistory(false);
     }
-  };
+  }, [session?.user?.id]);
+  
+  // เมื่อคอมโพเนนต์โหลด
+  useEffect(() => {
+    // ตรวจสอบว่ามีการล็อกอินหรือไม่
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+    
+    // ถ้าเป็นผู้ใช้ใหม่ให้ไปยังหน้าสร้างโปรไฟล์
+    if (status === "authenticated" && session?.user?.isNewUser) {
+      router.replace("/complete-profile");
+      return;
+    }
+
+    // ตั้งค่าข้อมูลเริ่มต้นเมื่อมีข้อมูล session
+    if (status === "authenticated" && session?.user) {
+      setName(session.user.name || "");
+      setPreviewUrl(session.user.image || null);
+      
+      // ดึงข้อมูลผู้ใช้เพิ่มเติม (เช่น bio และ provider) จาก API
+      fetchUserProfile();
+      
+      // ดึงข้อมูลประวัติการเข้าสู่ระบบ
+      fetchLoginHistory();
+    }
+  }, [session, status, router, fetchUserProfile, fetchLoginHistory]);
 
   // ฟังก์ชันจัดการการเปลี่ยนรูปโปรไฟล์
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,6 +206,14 @@ export default function ProfilePage() {
         
         setSuccess("อัพเดทข้อมูลสำเร็จ");
         setIsEditing(false);
+        
+        // อัพเดทข้อมูลในหน้า
+        setName(data.user.name);
+        setPreviewUrl(data.user.image);
+        setBio(data.user.bio || "");
+        
+        // ดึงข้อมูลผู้ใช้ใหม่
+        fetchUserProfile();
       } else {
         setError(data.message || "ไม่สามารถอัพเดทข้อมูลได้");
       }
@@ -213,6 +234,22 @@ export default function ProfilePage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+  
+  // แปลงชื่อ provider เป็นชื่อที่แสดงผล
+  const formatProvider = (provider: string): string => {
+    switch (provider) {
+      case 'line':
+        return 'LINE';
+      case 'otp':
+        return 'อีเมล OTP';
+      default:
+        // ถ้า session.user.id เริ่มต้นด้วย 'U' ให้สันนิษฐานว่าเป็น LINE
+        if (session?.user?.id?.startsWith('U')) {
+          return 'LINE';
+        }
+        return provider || 'ไม่ทราบ';
+    }
   };
 
   // แสดงข้อความกำลังโหลด
@@ -310,7 +347,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">เข้าสู่ระบบด้วย</h3>
-                      <p className="text-lg capitalize">{session?.user?.provider || "ไม่ระบุ"}</p>
+                      <p className="text-lg capitalize">{formatProvider(provider)}</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">เกี่ยวกับฉัน</h3>

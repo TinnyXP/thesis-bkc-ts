@@ -124,8 +124,6 @@ interface ProfileUpdateData {
 
 /**
  * แยก Public ID จาก Cloudinary URL
- * เช่น: https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/bangkrachao/profiles/abc123.jpg
- * จะได้: bangkrachao/profiles/abc123
  */
 function extractCloudinaryPublicId(url: string): string | null {
   try {
@@ -169,6 +167,16 @@ function extractCloudinaryPublicId(url: string): string | null {
   }
 }
 
+/**
+ * ตรวจสอบว่า id เป็น LINE ID หรือไม่
+ */
+function isLineUserId(id: string): boolean {
+  return typeof id === 'string' && id.startsWith('U');
+}
+
+// กำหนดให้ API นี้เป็น dynamic function เพื่อใช้ headers ได้
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     // ตรวจสอบว่ามีการเข้าสู่ระบบ
@@ -180,13 +188,12 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    // ตรวจสอบว่า session.user.id ถูกต้องหรือไม่
-    if (!session.user.id || session.user.id === "new-user" || !mongoose.Types.ObjectId.isValid(session.user.id)) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "ต้องสร้างโปรไฟล์ให้เสร็จสมบูรณ์ก่อน" 
-      }, { status: 400 });
-    }
+    console.log('Session user in update profile:', {
+      id: session.user.id,
+      provider: session.user.provider,
+      name: session.user.name,
+      email: session.user.email
+    });
 
     // แปลงข้อมูลจาก FormData
     const formData = await request.formData();
@@ -205,14 +212,46 @@ export async function POST(request: Request) {
     // เชื่อมต่อกับฐานข้อมูล
     await connectDB();
 
-    // หาข้อมูลผู้ใช้จากฐานข้อมูล
-    const user = await UserModel.findById(session.user.id);
+    // หาข้อมูลผู้ใช้จากฐานข้อมูล - ตรวจสอบตาม ID
+    let user = null;
+    if (session.user.id === 'new-user') {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ต้องสร้างโปรไฟล์ให้เสร็จสมบูรณ์ก่อน" 
+      }, { status: 400 });
+    } else if (isLineUserId(session.user.id)) {
+      // ถ้าเป็น LINE ID ให้ค้นหาด้วย provider_id แทน
+      console.log('Searching user by LINE provider_id');
+      user = await UserModel.findOne({ 
+        provider: 'line',
+        provider_id: session.user.id
+      });
+    } else if (mongoose.Types.ObjectId.isValid(session.user.id)) {
+      // ถ้าเป็น ObjectId ปกติ
+      console.log('Searching user by MongoDB ObjectId');
+      user = await UserModel.findById(session.user.id);
+    } else {
+      // กรณีอื่นๆ ที่ไม่รองรับ
+      return NextResponse.json({ 
+        success: false, 
+        message: "รูปแบบ ID ไม่ถูกต้อง" 
+      }, { status: 400 });
+    }
+
+    // ตรวจสอบว่าพบผู้ใช้หรือไม่
     if (!user) {
+      console.log('User not found with ID:', session.user.id);
       return NextResponse.json({ 
         success: false, 
         message: "ไม่พบข้อมูลผู้ใช้" 
       }, { status: 404 });
     }
+
+    console.log('Found user:', {
+      id: user._id,
+      name: user.name,
+      provider: user.provider
+    });
 
     // ตั้งค่าข้อมูลที่จะอัพเดท
     const updateData: ProfileUpdateData = {
@@ -257,9 +296,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // อัพเดทข้อมูลผู้ใช้
+    // อัพเดทข้อมูลผู้ใช้ - ใช้ _id จากข้อมูลที่ค้นหาได้
     const updatedUser = await UserModel.findByIdAndUpdate(
-      session.user.id,
+      user._id,
       updateData,
       { new: true } // คืนค่าข้อมูลหลังอัพเดท
     );
