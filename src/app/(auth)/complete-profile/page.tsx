@@ -68,7 +68,7 @@ export default function CompleteProfilePage() {
       const data = await response.json();
 
       if (data.success) {
-        // อัพเดทเซสชัน
+        // อัพเดทเซสชัน (session) แบบเดิม
         await update({
           ...session,
           user: {
@@ -79,8 +79,10 @@ export default function CompleteProfilePage() {
           }
         });
         
-        // ไปยังหน้า welcome
-        router.replace('/welcome');
+        // แทนที่จะใช้ router.replace ซึ่งใช้ client-side navigation
+        // ให้ใช้ window.location.href เพื่อทำการ full page reload
+        // เพื่อให้ได้ session ล่าสุดจากเซิร์ฟเวอร์
+        window.location.href = '/welcome';
       } else {
         setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");
       }

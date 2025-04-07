@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth"; // แก้ไขจากเดิมเป็น import จาก lib/auth
+import { authOptions } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(request: Request) {
@@ -44,19 +44,21 @@ export async function POST(request: Request) {
       name,
       email,
       provider: "otp",
-      provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, // เพิ่ม unique provider_id
+      provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, 
       profile_image: profileImageUrl,
       is_active: true
     });
 
+    // ส่งข้อมูลกลับให้ครบถ้วนมากขึ้น
     return NextResponse.json({ 
       success: true, 
       message: "สร้างโปรไฟล์สำเร็จ",
       user: {
-        id: newUser._id,
+        id: newUser._id.toString(), // แปลงเป็น string ให้ชัดเจน
         name: newUser.name,
         email: newUser.email,
-        image: newUser.profile_image
+        image: newUser.profile_image,
+        isNewUser: false // ชี้ชัดว่าไม่ใช่ผู้ใช้ใหม่แล้ว
       }
     });
   } catch (error) {

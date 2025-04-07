@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Button, Link } from "@heroui/react";
 import { NavBar } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
@@ -8,28 +8,52 @@ import { FaUserCircle } from 'react-icons/fa';
 import { useSession } from "next-auth/react";
 import { redirect } from 'next/navigation';
 
-export default function Page() {
+export default function WelcomePage() {
   const { data: session, status } = useSession();
+  const [loading, setLoading] = useState(true);
   
-  // ป้องกันการเข้าถึงหากไม่มี session
-  if (status === "unauthenticated") {
-    redirect('/login');
+  // ใช้ useEffect เพื่อตรวจสอบสถานะการเข้าสู่ระบบและป้องกันการ flash ของหน้าจอ
+  useEffect(() => {
+    // ป้องกันการเข้าถึงหากไม่มี session
+    if (status === "unauthenticated") {
+      redirect('/login');
+    }
+    
+    // ป้องกันการเข้าถึงหากเป็นผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
+    if (status === "authenticated") {
+      if (session.user.isNewUser) {
+        redirect('/complete-profile');
+      }
+      // ถ้าผ่านการตรวจสอบแล้ว จึงยกเลิกสถานะ loading
+      setLoading(false);
+    }
+  }, [session, status]);
+
+  // แสดง Loading state ที่สวยงาม
+  if (status === "loading" || loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
+        <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-primary-color mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-400">กำลังโหลด...</p>
+      </div>
+    );
   }
 
-  if (status === "loading") {
-    return <div>กำลังโหลด...</div>;
+  // ตรวจสอบซ้ำว่ามี session จริงๆ (เพิ่มความปลอดภัย)
+  if (!session || !session.user) {
+    redirect('/login');
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
-
       <NavBar />
 
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* ส่วนหัวของหน้า */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">
-            สวัสดี, คุณ {session?.user?.name} !
+            สวัสดี, คุณ {session.user.name} !
           </h1>
           <p className="text-default-500 mt-1">
             ยินดีต้อนรับสู่บางกระเจ้า
@@ -41,7 +65,7 @@ export default function Page() {
           <CardBody className="text-white">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h2 className="text-lg font-semibold">ลงทะเบียนสำเร็จ!</h2>
+                <h2 className="text-lg font-semibold">เข้าสู่ระบบสำเร็จ!</h2>
                 <p className="text-sm">ขอบคุณที่เข้าร่วมเป็นส่วนหนึ่งของชุมชนบางกระเจ้า</p>
               </div>
               <Button
@@ -88,8 +112,16 @@ export default function Page() {
           </Card>
         </div>
 
+        {/* แสดงข้อมูล Session สำหรับตรวจสอบ (เฉพาะโหมด development)
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2">ข้อมูล Session (สำหรับการพัฒนา)</h3>
+            <pre className="text-xs overflow-auto p-2 bg-gray-200 dark:bg-gray-700 rounded">
+              {JSON.stringify(session, null, 2)}
+            </pre>
+          </div>
+        )} */}
       </main>
-
     </div>
   );
 }
