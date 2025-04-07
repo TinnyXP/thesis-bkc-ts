@@ -1,3 +1,4 @@
+// src/models/user.ts
 import mongoose, { Schema } from "mongoose";
 
 const userSchema = new Schema(
@@ -20,10 +21,13 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-    // ลบ password field ออก เนื่องจากไม่ได้ใช้อีกต่อไป
     profile_image: {
       type: String,
       default: null,
+    },
+    bio: {
+      type: String,
+      default: "",
     },
     role: {
       type: String,

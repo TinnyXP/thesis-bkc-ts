@@ -1,3 +1,4 @@
+// src/lib/cloudinary.ts
 import { v2 as cloudinary } from 'cloudinary';
 
 // สร้าง interface สำหรับ result จาก Cloudinary
@@ -31,6 +32,13 @@ export async function uploadToCloudinary(file: File): Promise<CloudinaryUploadRe
     const base64 = Buffer.from(buffer).toString('base64');
     const dataURI = `data:${file.type};base64,${base64}`;
     
+    // แสดงรายละเอียดการอัพโหลด
+    console.log('Uploading file to Cloudinary:', {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
+    });
+    
     // อัปโหลดไฟล์ไปยัง Cloudinary
     const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
       cloudinary.uploader.upload(
@@ -44,8 +52,13 @@ export async function uploadToCloudinary(file: File): Promise<CloudinaryUploadRe
           ]
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result as CloudinaryUploadResult);
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            reject(error);
+          } else {
+            console.log('Cloudinary upload success, public_id:', result?.public_id);
+            resolve(result as CloudinaryUploadResult);
+          }
         }
       );
     });
@@ -64,12 +77,20 @@ export async function uploadToCloudinary(file: File): Promise<CloudinaryUploadRe
  */
 export async function deleteFromCloudinary(publicId: string) {
   try {
+    console.log('Deleting from Cloudinary with public ID:', publicId);
+    
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.destroy(
         publicId,
+        { invalidate: true }, // เพิ่ม invalidate เพื่อให้แน่ใจว่าไฟล์ถูกลบจาก cache ด้วย
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error('Cloudinary delete error:', error);
+            reject(error);
+          } else {
+            console.log('Cloudinary delete result:', result);
+            resolve(result);
+          }
         }
       );
     });
