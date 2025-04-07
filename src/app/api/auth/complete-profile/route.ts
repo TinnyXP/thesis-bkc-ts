@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       name,
       email,
       provider: "otp",
+      provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, // เพิ่ม unique provider_id
       profile_image: profileImageUrl,
       is_active: true
     });
