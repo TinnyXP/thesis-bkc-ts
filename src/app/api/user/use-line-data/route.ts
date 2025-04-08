@@ -1,4 +1,4 @@
-// src/app/api/user/get-profile/route.ts
+// src/app/api/user/use-line-data/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
@@ -16,7 +16,7 @@ function isLineUserId(id: string): boolean {
 // กำหนดให้ API นี้เป็น dynamic function เพื่อใช้ headers ได้
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function POST(request: Request) {
   try {
     // ตรวจสอบว่ามีการเข้าสู่ระบบ
     const session = await getServerSession(authOptions);
@@ -27,7 +27,11 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    console.log('Session user in get profile:', {
+    // รับข้อมูลจากคำขอ
+    const data = await request.json();
+    const useOriginalData = !!data.use_original_data;
+
+    console.log('Session user in use-line-data:', {
       id: session.user.id,
       provider: session.user.provider
     });
@@ -35,7 +39,7 @@ export async function GET() {
     // เชื่อมต่อกับฐานข้อมูล
     await connectDB();
 
-    // หาข้อมูลผู้ใช้จากฐานข้อมูล - ตรวจสอบตาม ID
+    // หาข้อมูลผู้ใช้จากฐานข้อมูล
     let user = null;
     if (session.user.id === 'new-user') {
       return NextResponse.json({ 
@@ -61,6 +65,7 @@ export async function GET() {
       }, { status: 400 });
     }
 
+    // ตรวจสอบว่าพบผู้ใช้หรือไม่
     if (!user) {
       console.log('User not found with ID:', session.user.id);
       return NextResponse.json({ 
@@ -69,7 +74,38 @@ export async function GET() {
       }, { status: 404 });
     }
 
-    // สร้างข้อมูลที่จะส่งกลับ
+    // ตรวจสอบว่าเป็นผู้ใช้ LINE หรือไม่
+    if (user.provider !== 'line' || !user.original_line_data) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่สามารถใช้ข้อมูลจาก LINE ได้ เนื่องจากไม่ได้เข้าสู่ระบบด้วย LINE" 
+      }, { status: 400 });
+    }
+
+    // อัพเดทสถานะการใช้ข้อมูลจาก LINE
+    interface UpdateData {
+      use_original_data: boolean;
+      name?: string;
+      profile_image?: string;
+    }
+    
+    const updateData: UpdateData = {
+      use_original_data: useOriginalData
+    };
+
+    // ถ้าเลือกใช้ข้อมูลจาก LINE ให้อัพเดทข้อมูลหลักด้วยข้อมูลจาก LINE
+    if (useOriginalData && user.original_line_data) {
+      updateData.name = user.original_line_data.name;
+      updateData.profile_image = user.original_line_data.profile_image;
+    }
+
+    // อัพเดทข้อมูลผู้ใช้
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      user._id,
+      updateData,
+      { new: true } // คืนค่าข้อมูลหลังอัพเดท
+    );
+
     // กำหนด interface สำหรับข้อมูลผู้ใช้ที่จะส่งกลับ
     interface UserResponse {
       id: mongoose.Types.ObjectId | string;
@@ -87,31 +123,30 @@ export async function GET() {
     }
     
     const userData: UserResponse = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      image: user.profile_image,
-      bio: user.bio || "",
-      provider: user.provider,
-      use_original_data: user.use_original_data || false
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      image: updatedUser.profile_image,
+      bio: updatedUser.bio || "",
+      provider: updatedUser.provider,
+      use_original_data: updatedUser.use_original_data || false
     };
     
     // เพิ่มข้อมูลต้นฉบับจาก LINE ถ้ามี
-    if (user.provider === 'line' && user.original_line_data) {
-      userData.original_line_data = user.original_line_data;
+    if (updatedUser.provider === 'line' && updatedUser.original_line_data) {
+      userData.original_line_data = updatedUser.original_line_data;
     }
     
-    const responseData = {
-      success: true,
+    return NextResponse.json({ 
+      success: true, 
+      message: useOriginalData ? "เปลี่ยนกลับไปใช้ข้อมูลจาก LINE เรียบร้อยแล้ว" : "อัพเดทการตั้งค่าเรียบร้อยแล้ว",
       user: userData
-    };
-
-    return NextResponse.json(responseData);
+    });
   } catch (error) {
-    console.error("Error fetching user profile:", error);
+    console.error("Error using LINE data:", error);
     return NextResponse.json({ 
       success: false, 
-      message: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้",
+      message: "เกิดข้อผิดพลาดในการใช้ข้อมูลจาก LINE",
       error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }

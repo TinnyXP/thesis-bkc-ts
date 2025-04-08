@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider } from "@heroui/react";
 import { ToggleTheme } from "@/components"
 import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
@@ -12,12 +12,29 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
 
+interface ProfileData {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  bio: string;
+  provider: string;
+  use_original_data: boolean;
+  original_line_data?: {
+    name: string;
+    email: string;
+    profile_image: string | null;
+  };
+}
+
 interface ProfileAvatarProps {
   size?: "md" | "sm" | "lg";
 }
 
 export default function NavBar() {
   const { data: session } = useSession();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -41,6 +58,63 @@ export default function NavBar() {
       href: "/test/download"
     },
   ];
+
+  // ฟังก์ชันสำหรับดึงข้อมูลโปรไฟล์จาก API
+  // const fetchProfileData = async () => {
+  //   if (!session || !session.user) return;
+    
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await fetch('/api/user/get-profile');
+      
+  //     if (!response.ok) {
+  //       console.error('Error fetching profile data:', response.statusText);
+  //       return;
+  //     }
+      
+  //     const data = await response.json();
+      
+  //     if (data.success) {
+  //       setProfileData(data.user);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching profile data:', error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // เรียกใช้ฟังก์ชันดึงข้อมูลเมื่อมีการเปลี่ยนแปลง session
+  useEffect(() => {
+    if (session?.user) {
+      // ย้ายฟังก์ชันเข้ามาอยู่ใน useEffect เพื่อแก้ไข warning
+      const fetchProfileData = async () => {
+        if (!session || !session.user) return;
+        
+        try {
+          setIsLoading(true);
+          const response = await fetch('/api/user/get-profile');
+          
+          if (!response.ok) {
+            console.error('Error fetching profile data:', response.statusText);
+            return;
+          }
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            setProfileData(data.user);
+          }
+        } catch (error) {
+          console.error('Error fetching profile data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchProfileData();
+    }
+  }, [session]);
 
   return (
     <Navbar
@@ -78,7 +152,7 @@ export default function NavBar() {
       <NavbarContent className="hidden md:flex" justify="end">
         <NavbarItem>
           {session ? (
-            <ProfileAvatar size="md" />
+            <ProfileAvatar size="md" profileData={profileData} isLoading={isLoading} />
           ) : (
             <Button
               className="text-medium border-1.5 border-default-200 dark:border-default-200"
@@ -107,7 +181,7 @@ export default function NavBar() {
       <NavbarContent className="flex md:hidden" justify="end">
         <NavbarItem>
           {session ? (
-            <ProfileAvatar size="md" />
+            <ProfileAvatar size="md" profileData={profileData} isLoading={isLoading} />
           ) : (
             <Button
               className="text-medium border-1.5 border-default-200 dark:border-default-200"
@@ -172,9 +246,44 @@ export default function NavBar() {
   );
 }
 
-const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
+// แยกคอมโพเนนต์ ProfileAvatar ออกมาและรับข้อมูลจาก prop แทน
+const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | null, isLoading: boolean }> = ({ size = "sm", profileData, isLoading }) => {
+  const { data: session } = useSession();
 
-  const { data: session } = useSession()
+  // ดึงรูปโปรไฟล์ที่ถูกต้องตามลำดับความสำคัญ
+  const getProfileImage = () => {
+    if (isLoading) return null; // กำลังโหลดข้อมูล
+    
+    if (profileData) {
+      // ถ้ามีข้อมูลจาก API ให้ใช้ข้อมูลนั้น
+      return profileData.image;
+    } else if (session?.user?.image) {
+      // ถ้าไม่มีข้อมูลจาก API แต่มี session image ให้ใช้ session
+      return session.user.image;
+    }
+    
+    // ไม่มีรูปโปรไฟล์
+    return null;
+  };
+
+  // ดึงชื่อที่ถูกต้องตามลำดับความสำคัญ
+  const getProfileName = () => {
+    if (isLoading) return "กำลังโหลด..."; // กำลังโหลดข้อมูล
+    
+    if (profileData) {
+      // ถ้ามีข้อมูลจาก API ให้ใช้ข้อมูลนั้น
+      return profileData.name;
+    } else if (session?.user?.name) {
+      // ถ้าไม่มีข้อมูลจาก API แต่มี session name ให้ใช้ session
+      return session.user.name;
+    }
+    
+    // ไม่มีชื่อ
+    return "ผู้ใช้";
+  };
+
+  const profileImage = getProfileImage();
+  const profileName = getProfileName();
 
   return (
     <div>
@@ -187,7 +296,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
               icon: "text-zinc-400 dark:text-zinc-400",
             }}
             size={size}
-            src={session?.user?.image ?? "https://images.unsplash.com/broken"}
+            src={profileImage ?? "https://images.unsplash.com/broken"}
             icon={<AvatarIcon />}
             showFallback
           />
@@ -201,9 +310,17 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
               <p className="font-regular text-default-500">
                 ลงชื่อด้วย
               </p>
-              <p className="font-semibold">{session?.user?.name ?? "Guest"}</p>
+              <p className="font-semibold">{profileName}</p>
             </DropdownItem>
           </DropdownSection>
+          <DropdownItem
+            key="profile_page"
+            as={Link}
+            href="/profile"
+            startContent={<FiArrowUpRight />}
+          >
+            จัดการโปรไฟล์
+          </DropdownItem>
           <DropdownItem
             key="help_and_feedback"
             startContent={<FiArrowUpRight />}
@@ -220,5 +337,5 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
         </DropdownMenu>
       </Dropdown>
     </div>
-  )
-}
+  );
+};

@@ -130,8 +130,6 @@ export const authOptions: AuthOptions = {
       }
     })
   ],
-  // src/lib/auth.ts - แก้ไขเฉพาะส่วนของ callbacks.signIn
-  // แก้ไขเฉพาะส่วนของ signIn callback ใน AuthOptions
 
   callbacks: {
     async signIn({ user, account, profile }) {
@@ -155,18 +153,19 @@ export const authOptions: AuthOptions = {
           });
 
           if (existingUser) {
-            // อัพเดทข้อมูลถ้าจำเป็น
-            if (existingUser.email !== email || existingUser.name !== name) {
-              existingUser = await UserModel.findByIdAndUpdate(
-                existingUser._id,
-                {
-                  email,
+            // เก็บข้อมูลจาก LINE ไว้ในฟิลด์ original_line_data
+            // แต่ไม่ได้อัพเดทข้อมูลหลักของผู้ใช้ (เพื่อรักษาข้อมูลที่ผู้ใช้แก้ไขเอง)
+            existingUser = await UserModel.findByIdAndUpdate(
+              existingUser._id,
+              {
+                original_line_data: {
                   name,
+                  email,
                   profile_image: picture
-                },
-                { new: true }
-              );
-            }
+                }
+              },
+              { new: true }
+            );
 
             // บันทึกประวัติการล็อกอิน
             const clientInfo = await saveLoginHistory(existingUser._id.toString(), 'success');
@@ -185,7 +184,12 @@ export const authOptions: AuthOptions = {
               name,
               profile_image: picture,
               provider: 'line',
-              provider_id
+              provider_id,
+              original_line_data: {
+                name,
+                email,
+                profile_image: picture
+              }
             });
 
             // บันทึกประวัติการล็อกอิน
