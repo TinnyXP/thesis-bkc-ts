@@ -1,47 +1,28 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Card, CardBody, CardHeader, Divider } from "@heroui/react";
+import React from "react";
+import { Button, Input, Link, Divider, Tooltip, Spinner, InputOtp } from "@heroui/react";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { FaLine } from "react-icons/fa";
+import { FaArrowLeftLong } from "react-icons/fa6";
+import { BsLine } from "react-icons/bs";
+import { IoLogIn, IoMail } from "react-icons/io5";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [email, setEmail] = React.useState("");
+  const [otp, setOtp] = React.useState("");
+  const [[page, direction], setPage] = React.useState([0, 0]);
+  const [isEmailValid, setIsEmailValid] = React.useState(true);
+  const [isOtpValid, setIsOtpValid] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [resendCooldown, setResendCooldown] = React.useState(0);
 
-  // โหลดสถานะที่เก็บไว้ใน localStorage เมื่อหน้าเว็บโหลด
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedEmail = localStorage.getItem('loginEmail');
-      const otpSentStatus = localStorage.getItem('otpSent');
-      
-      if (savedEmail) {
-        setEmail(savedEmail);
-      }
-      
-      if (otpSentStatus === 'true') {
-        setIsOtpSent(true);
-        // ถ้ามีการเก็บเวลา countdown ไว้ ก็โหลดมาใช้
-        const savedCountdown = localStorage.getItem('otpCountdown');
-        if (savedCountdown) {
-          const timeLeft = Math.max(0, parseInt(savedCountdown) - 
-            Math.floor((Date.now() - parseInt(localStorage.getItem('otpTimestamp') || '0')) / 1000));
-          setCountdown(timeLeft);
-        }
-      }
-    }
-  }, []);
-  
-  useEffect(() => {
+  // ตรวจสอบสถานะการเข้าสู่ระบบ
+  React.useEffect(() => {
     if (session) {
       if (session.user.isNewUser) {
         router.replace('/complete-profile');
@@ -51,39 +32,57 @@ export default function LoginPage() {
     }
   }, [session, router]);
 
-  // จัดการ countdown
-  useEffect(() => {
+  // ตัวนับเวลาถอยหลังสำหรับการขอรหัส OTP ใหม่
+  React.useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (countdown > 0) {
+    if (resendCooldown > 0) {
       timer = setInterval(() => {
-        setCountdown(prev => {
-          const newValue = prev - 1;
-          // เก็บค่า countdown ใน localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('otpCountdown', newValue.toString());
-          }
-          return newValue;
-        });
+        setResendCooldown(prev => prev - 1);
       }, 1000);
     }
-    
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [countdown]);
+  }, [resendCooldown]);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault(); // ป้องกันการรีโหลดหน้า
-    
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      setError("กรุณากรอกอีเมลที่ถูกต้อง");
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 20 : -20,
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 20 : -20,
+      opacity: 0,
+    }),
+  };
+
+  const paginate = (newDirection: number) => {
+    setPage([page + newDirection, newDirection]);
+    // รีเซ็ตค่า OTP เมื่อกลับไปหน้าก่อนหน้า
+    if (newDirection < 0) {
+      setOtp("");
+      setIsOtpValid(true);
+    }
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!email.length || !/^\S+@\S+\.\S+$/.test(email)) {
+      setIsEmailValid(false);
       return;
     }
 
+    setIsEmailValid(true);
     setIsLoading(true);
-    setError("");
 
     try {
+      // ส่งรหัส OTP
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,36 +96,37 @@ export default function LoginPage() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('loginEmail', email);
           localStorage.setItem('otpSent', 'true');
-          localStorage.setItem('otpTimestamp', Date.now().toString());
-          localStorage.setItem('otpCountdown', '60');
         }
-        
-        setIsOtpSent(true);
-        setCountdown(60);
-        console.log("OTP sent successfully, state updated:", { isOtpSent: true });
+
+        // เริ่มนับถอยหลังการขอรหัส OTP ใหม่
+        setResendCooldown(60); // 60 วินาที
+
+        // เปลี่ยนไปหน้ากรอก OTP
+        paginate(1);
       } else {
-        setError(data.message || "ไม่สามารถส่งรหัส OTP ได้");
+        setIsEmailValid(false);
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
-      setError("เกิดข้อผิดพลาดในการส่งรหัส OTP");
+      setIsEmailValid(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault(); // ป้องกันการรีโหลดหน้า
-    
-    if (!otp) {
-      setError("กรุณากรอกรหัส OTP");
+  const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!otp.length || otp.length !== 6) {
+      setIsOtpValid(false);
       return;
     }
 
+    setIsOtpValid(true);
     setIsLoading(true);
-    setError("");
 
     try {
+      // ดำเนินการเข้าสู่ระบบ
       const result = await signIn("otp", {
         email,
         otp,
@@ -134,155 +134,195 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
+        setIsOtpValid(false);
       } else if (result?.ok) {
         // ลบข้อมูลใน localStorage เมื่อเข้าสู่ระบบสำเร็จ
         if (typeof window !== 'undefined') {
           localStorage.removeItem('loginEmail');
           localStorage.removeItem('otpSent');
-          localStorage.removeItem('otpTimestamp');
-          localStorage.removeItem('otpCountdown');
         }
+        // การเข้าสู่ระบบสำเร็จ router จะไปหน้าอื่นโดยอัตโนมัติจาก useEffect
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
-      setError("เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP");
+      setIsOtpValid(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLineLogin = () => {
-    signIn("line", { callbackUrl: "/welcome" });
-  };
+  // ฟังก์ชันสำหรับการขอรหัส OTP ใหม่
+  const handleResendOtp = async () => {
+    // ตรวจสอบว่าหมดเวลาการรอแล้ว
+    if (resendCooldown > 0) return;
 
-  const handleResendOTP = () => {
-    // รีเซ็ตสถานะเพื่อขอ OTP ใหม่
-    setIsOtpSent(false);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('otpSent');
+    setIsLoading(true);
+
+    try {
+      // ส่งรหัส OTP ใหม่
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // เริ่มนับถอยหลังใหม่
+        setResendCooldown(60); // 60 วินาที
+        
+        // รีเซ็ตค่า OTP เดิม
+        setOtp("");
+      } else {
+        // กรณีมีข้อผิดพลาด
+        console.error("ไม่สามารถส่งรหัส OTP ใหม่ได้");
+      }
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+    } finally {
+      setIsLoading(false);
     }
-    // เรียกฟังก์ชันส่ง OTP อีกครั้ง
-    handleSendOTP({ preventDefault: () => {} } as React.FormEvent);
   };
 
+  const handleSubmit = page === 0 ? handleEmailSubmit : handleOtpSubmit;
+
+  // แสดงหน้า loading เมื่อกำลังตรวจสอบ session
   if (status === "loading") {
-    return <div className="flex justify-center items-center h-screen">กำลังโหลด...</div>;
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Spinner 
+          classNames={{ 
+            label: "text-foreground mt-4 font-[family-name:var(--font-line-seed-sans)]" 
+          }} 
+          label="กำลังโหลด" 
+          variant="gradient" 
+          size="lg" 
+        />
+      </div>
+    );
   }
 
-  console.log("Current state:", { isOtpSent, email, countdown });
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md bg-white dark:bg-gray-800 shadow-xl">
-        <CardHeader className="flex flex-col items-center gap-4 p-6">
-          <Image
-            src="/Bkj_logo.svg"
-            alt="Bangkrachao Logo"
-            width={120}
-            height={60}
-            className="mb-2"
-          />
-          <h1 className="text-2xl font-bold text-center">เข้าสู่ระบบ</h1>
-        </CardHeader>
-        
-        <Divider />
-        
-        <CardBody className="p-6">
-          {/* LINE Login Button */}
-          <div className="mb-6">
-            <Button
-              onClick={handleLineLogin}
-              className="w-full bg-green-500 hover:bg-green-600 text-white"
-              startContent={<FaLine size={20} />}
-              size="lg"
+    <section className="font-[family-name:var(--font-line-seed-sans)] min-h-screen flex items-center justify-center">
+      <div className="flex w-full max-w-sm flex-col gap-3 rounded-large bg-content1 px-8 pb-6 pt-6 shadow-small">
+        <LazyMotion features={domAnimation}>
+          <m.div layout className="flex min-h-[40px] items-center gap-2 pb-2">
+            {page === 1 && (
+              <m.div>
+                <Tooltip content="ย้อนกลับ" delay={1000}>
+                  <Button isIconOnly size="sm" variant="flat" onPress={() => paginate(-1)}>
+                    <FaArrowLeftLong />
+                  </Button>
+                </Tooltip>
+              </m.div>
+            )}
+            <m.h1 layout className="text-xl font-bold" transition={{ duration: 0.25 }}>
+              เข้าสู่ระบบ
+            </m.h1>
+          </m.div>
+          <AnimatePresence custom={direction} initial={false} mode="wait">
+            <m.form
+              key={page}
+              animate="center"
+              className="flex flex-col gap-3"
+              custom={direction}
+              exit="exit"
+              initial="enter"
+              transition={{
+                duration: 0.25,
+              }}
+              variants={variants}
+              onSubmit={handleSubmit}
             >
-              เข้าสู่ระบบด้วย LINE
-            </Button>
-          </div>
-          
-          <div className="relative my-6">
-            <Divider />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 px-3">
-              หรือ
-            </div>
-          </div>
-          
-          {/* OTP Login Form */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4">เข้าสู่ระบบด้วยอีเมล</h2>
-            
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
-              </div>
-            )}
-            
-            {!isOtpSent ? (
-              <Form onSubmit={handleSendOTP} className="space-y-4">
+              {page === 0 ? (
                 <Input
+                  errorMessage={!isEmailValid ? "กรุณากรอกรูปแบบอีเมลให้ถูกต้อง" : undefined}
+                  isInvalid={!isEmailValid}
+                  label="ที่อยู่อีเมล"
+                  name="email"
                   type="email"
-                  label="อีเมล"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="กรอกอีเมลของคุณ"
-                  isRequired
-                  fullWidth
+                  variant="bordered"
+                  onValueChange={(value) => {
+                    setIsEmailValid(true);
+                    setEmail(value);
+                  }}
                 />
-                <Button 
-                  type="submit" 
-                  color="primary" 
-                  isLoading={isLoading}
-                  fullWidth
-                >
-                  ส่งรหัส OTP
-                </Button>
-              </Form>
-            ) : (
-              <Form onSubmit={handleVerifyOTP} className="space-y-4">
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    รหัส OTP ถูกส่งไปยัง {email}
-                  </p>
-                  {countdown > 0 ? (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      ขอรหัสใหม่ได้ในอีก {countdown} วินาที
-                    </p>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleResendOTP}
-                      className="text-sm text-primary-color hover:underline"
-                      disabled={isLoading}
-                    >
-                      ส่งรหัส OTP อีกครั้ง
-                    </button>
+              ) : (
+                <div className="flex flex-col items-center">
+                  {!isOtpValid && (
+                    <p className="text-danger text-tiny">กรุณากรอกรหัส OTP ให้ถูกต้อง</p>
                   )}
+                  <InputOtp 
+                    length={6} 
+                    value={otp} 
+                    variant="bordered"
+                    onValueChange={(value) => {
+                      setOtp(value);
+                      setIsOtpValid(true);
+                    }}
+                    isInvalid={!isOtpValid}
+                    errorMessage="ควย"
+                    classNames={{
+                      helperWrapper: "flex justify-center items-center",
+                      errorMessage: "hidden"
+                    }}
+                  />
+                  <div className="flex flex-col items-center">
+                    {resendCooldown > 0 ? (
+                      <p className="text-tiny text-default-500">
+                        ขอรหัสใหม่ได้ในอีก {resendCooldown} วินาที
+                      </p>
+                    ) : (
+                      <Link
+                        size="sm"
+                        color="primary"
+                        onPress={handleResendOtp}
+                        className="text-tiny"
+                      >
+                        ส่งรหัส OTP ใหม่อีกครั้ง
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                
-                <Input
-                  type="text"
-                  label="รหัส OTP"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="กรอกรหัส OTP 6 หลัก"
-                  isRequired
-                  fullWidth
-                />
-                
-                <Button 
-                  type="submit" 
-                  color="primary" 
-                  isLoading={isLoading}
-                  fullWidth
-                >
-                  ยืนยันรหัส OTP
-                </Button>
-              </Form>
-            )}
-          </div>
-        </CardBody>
-      </Card>
-    </div>
+              )}
+
+              <Button fullWidth color="primary" type="submit"
+                className="font-bold"
+                startContent={isLoading ? <Spinner size="sm" color="white" variant="gradient" /> : (page === 0 ? <IoMail size={20} /> : <IoLogIn size={20} />)}
+              >
+                {page === 0 ? "เข้าสู่ระบบผ่านอีเมล" : "ยืนยันรหัส OTP"}
+              </Button>
+            </m.form>
+          </AnimatePresence>
+        </LazyMotion>
+        <div className="flex items-center gap-3 py-2">
+          <Divider className="flex-1" />
+          <p className="shrink-0 text-tiny text-default-500">หรือ</p>
+          <Divider className="flex-1" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button
+            startContent={<BsLine className="text-primary-color" size={20} />}
+            variant="bordered"
+            // onPress={handleLineLogin}
+          >
+            เข้าสู่ระบบผ่าน LINE
+          </Button>
+        </div>
+        <p className="text-center text-tiny text-default-500 mt-1">
+          การเข้าสู่ระบบถือว่าคุณยอมรับ
+          <Link href="/privacy-policy" className="text-primary-color text-tiny mx-1 hover:underline">
+            นโยบายความเป็นส่วนตัว
+          </Link>
+          <br />
+          และ
+          <Link href="/terms" className="text-primary-color text-tiny mx-1 hover:underline">
+            เงื่อนไขการใช้งาน
+          </Link>
+        </p>
+      </div>
+    </section >
   );
 }
