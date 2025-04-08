@@ -7,6 +7,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { BsLine } from "react-icons/bs";
+import Image from "next/image";
 import { IoLogIn, IoMail } from "react-icons/io5";
 
 export default function LoginPage() {
@@ -171,7 +172,7 @@ export default function LoginPage() {
       if (data.success) {
         // เริ่มนับถอยหลังใหม่
         setResendCooldown(60); // 60 วินาที
-        
+
         // รีเซ็ตค่า OTP เดิม
         setOtp("");
       } else {
@@ -191,20 +192,27 @@ export default function LoginPage() {
   if (status === "loading") {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
-        <Spinner 
-          classNames={{ 
-            label: "text-foreground mt-4 font-[family-name:var(--font-line-seed-sans)]" 
-          }} 
-          label="กำลังโหลด" 
-          variant="gradient" 
-          size="lg" 
+        <Spinner
+          classNames={{
+            label: "text-foreground mt-4 font-[family-name:var(--font-line-seed-sans)]"
+          }}
+          label="กำลังโหลด"
+          variant="gradient"
+          size="lg"
         />
       </div>
     );
   }
 
   return (
-    <section className="font-[family-name:var(--font-line-seed-sans)] min-h-screen flex items-center justify-center">
+    <section className="font-[family-name:var(--font-line-seed-sans)] min-h-screen flex flex-col items-center justify-center mx-4">
+      <Image
+        src="/Bkj_logo.svg"
+        alt="Bangkrachoa Logo"
+        width={120}
+        height={60}
+        className="mb-4"
+      />
       <div className="flex w-full max-w-sm flex-col gap-3 rounded-large bg-content1 px-8 pb-6 pt-6 shadow-small">
         <LazyMotion features={domAnimation}>
           <m.div layout className="flex min-h-[40px] items-center gap-2 pb-2">
@@ -251,12 +259,15 @@ export default function LoginPage() {
                 />
               ) : (
                 <div className="flex flex-col items-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    รหัส OTP ถูกส่งไปยัง <span className="font-semibold">{email}</span>
+                  </p>
                   {!isOtpValid && (
-                    <p className="text-danger text-tiny">กรุณากรอกรหัส OTP ให้ถูกต้อง</p>
+                    <p className="text-danger text-tiny mt-1">กรุณากรอกรหัส OTP ให้ถูกต้อง</p>
                   )}
-                  <InputOtp 
-                    length={6} 
-                    value={otp} 
+                  <InputOtp
+                    length={6}
+                    value={otp}
                     variant="bordered"
                     onValueChange={(value) => {
                       setOtp(value);
@@ -306,7 +317,7 @@ export default function LoginPage() {
           <Button
             startContent={<BsLine className="text-primary-color" size={20} />}
             variant="bordered"
-            // onPress={handleLineLogin}
+          // onPress={handleLineLogin}
           >
             เข้าสู่ระบบผ่าน LINE
           </Button>

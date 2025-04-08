@@ -199,13 +199,13 @@ export default function LoginPage() {
       <div className="flex justify-center items-center min-h-screen p-4">
         <Card className="w-full max-w-sm bg-white dark:bg-default-100/50 shadow-xl">
           <CardHeader className="flex flex-col items-center gap-4 p-6">
-            {/* <Image
-            src="/Bkj_logo.svg"
-            alt="Bangkrachoa Logo"
-            width={120}
-            height={60}
-            className="mb-2"
-          /> */}
+            <Image
+              src="/Bkj_logo.svg"
+              alt="Bangkrachoa Logo"
+              width={120}
+              height={60}
+              className="mb-2"
+            />
             <LazyMotion features={domAnimation}>
               <m.div layout className="flex min-h-[40px] items-center gap-2 pb-2">
                 {page === 1 && (
