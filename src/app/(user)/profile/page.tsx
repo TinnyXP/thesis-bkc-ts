@@ -140,7 +140,7 @@ export default function ProfilePage() {
     
     // ถ้าเป็นผู้ใช้ใหม่ให้ไปยังหน้าสร้างโปรไฟล์
     if (status === "authenticated" && session?.user?.isNewUser) {
-      router.replace("/complete-profile");
+      router.replace("/create-profile");
       return;
     }
 

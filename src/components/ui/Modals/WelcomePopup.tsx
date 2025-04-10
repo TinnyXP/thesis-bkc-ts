@@ -7,7 +7,8 @@ import { FaCheckCircle } from 'react-icons/fa';
 
 const WelcomePopup = () => {
   const { data: session } = useSession();
-  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  // ลบ onClose ที่ไม่ได้ใช้ออกจากการ destructuring
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
   useEffect(() => {
