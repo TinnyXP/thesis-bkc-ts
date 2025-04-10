@@ -115,6 +115,10 @@ export default function LoginPage() {
     }
   };
 
+  const handleLineLogin = () => {
+    signIn("line", { callbackUrl: "/welcome" });
+  };
+
   const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -196,7 +200,6 @@ export default function LoginPage() {
           classNames={{
             label: "text-foreground mt-4 font-[family-name:var(--font-line-seed-sans)]"
           }}
-          label="กำลังโหลด"
           variant="gradient"
           size="lg"
         />
@@ -274,7 +277,7 @@ export default function LoginPage() {
                       setIsOtpValid(true);
                     }}
                     isInvalid={!isOtpValid}
-                    errorMessage="ควย"
+                    errorMessage="กรุณากรอกรหัส OTP ให้ถูกต้องและครบถ้วน"
                     classNames={{
                       helperWrapper: "flex justify-center items-center",
                       errorMessage: "hidden"
@@ -317,7 +320,7 @@ export default function LoginPage() {
           <Button
             startContent={<BsLine className="text-primary-color" size={20} />}
             variant="bordered"
-          // onPress={handleLineLogin}
+            onPress={handleLineLogin}
           >
             เข้าสู่ระบบผ่าน LINE
           </Button>
