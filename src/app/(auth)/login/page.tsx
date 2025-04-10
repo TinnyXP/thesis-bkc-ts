@@ -26,9 +26,17 @@ export default function LoginPage() {
   React.useEffect(() => {
     if (session) {
       if (session.user.isNewUser) {
-        router.replace('/complete-profile');
+        // ถ้าเป็นผู้ใช้ใหม่ที่เข้าสู่ระบบด้วย OTP ให้ไปที่หน้าสร้างโปรไฟล์
+        if (session.user.provider === 'otp') {
+          router.replace('/create-profile');
+        } else {
+          // ถ้าเป็นผู้ใช้ใหม่ที่เข้าสู่ระบบด้วย LINE ให้ไปที่หน้าแรกเลย
+          localStorage.setItem('firstLogin', 'true'); // ตั้งค่าเพื่อให้แสดง popup
+          router.replace('/');
+        }
       } else {
-        router.replace('/welcome');
+        // ถ้าไม่ใช่ผู้ใช้ใหม่ ให้ไปที่หน้าแรกเลย
+        router.replace('/');
       }
     }
   }, [session, router]);
@@ -115,8 +123,11 @@ export default function LoginPage() {
     }
   };
 
+  // แก้ไขฟังก์ชัน handleLineLogin
   const handleLineLogin = () => {
-    signIn("line", { callbackUrl: "/welcome" });
+    // ตั้งค่า localStorage เพื่อให้แสดง popup เมื่อเข้าสู่ระบบสำเร็จครั้งแรก
+    localStorage.setItem('firstLogin', 'true');
+    signIn("line", { callbackUrl: "/" });
   };
 
   const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

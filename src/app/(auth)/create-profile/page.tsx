@@ -48,7 +48,7 @@ export default function CreateProfilePage() {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
-      
+
       setProfileImage(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -66,11 +66,11 @@ export default function CreateProfilePage() {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-    
+
     // รีเซ็ต state
     setProfileImage(null);
     setPreviewUrl(null);
-    
+
     // รีเซ็ตค่าใน input element เพื่อให้สามารถเลือกไฟล์เดิมได้อีกครั้ง
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -78,6 +78,8 @@ export default function CreateProfilePage() {
   };
 
   // จัดการการบันทึกโปรไฟล์
+  // แก้ไขในส่วน handleSubmit
+  // แก้ไขเฉพาะส่วน handleSubmit ในไฟล์ create-profile/page.tsx
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -99,7 +101,8 @@ export default function CreateProfilePage() {
         formData.append("profileImage", profileImage);
       }
 
-      const response = await fetch('/api/auth/complete-profile', {
+      // เปลี่ยน URL ของ API endpoint จาก complete-profile เป็น create-profile
+      const response = await fetch('/api/auth/create-profile', {
         method: 'POST',
         body: formData
       });
@@ -120,9 +123,12 @@ export default function CreateProfilePage() {
 
         setSuccess("สร้างโปรไฟล์สำเร็จ");
 
-        // เปลี่ยนเส้นทางไปยัง /profile แทน /welcome
+        // ตั้งค่า localStorage เพื่อให้แสดง popup ต้อนรับเมื่อไปที่หน้าแรก
+        localStorage.setItem('firstLogin', 'true');
+
+        // เปลี่ยนเส้นทางไปยังหน้าแรกแทน /profile
         setTimeout(() => {
-          window.location.href = '/profile';
+          window.location.href = '/';  // แก้จาก '/profile' เป็น '/'
         }, 1000);
       } else {
         setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");
@@ -258,7 +264,7 @@ export default function CreateProfilePage() {
               className="w-full font-semibold"
               isLoading={isLoading}
               isDisabled={isSaveDisabled}
-              startContent={isLoading ? <Spinner size="sm" /> : <PiPencilSimpleLineFill size={20}/>}
+              startContent={isLoading ? <Spinner size="sm" /> : <PiPencilSimpleLineFill size={20} />}
             >
               {isLoading ? "กำลังสร้างโปรไฟล์..." : "สร้างโปรไฟล์"}
             </Button>

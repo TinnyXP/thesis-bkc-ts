@@ -74,11 +74,11 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-
+      
         const { email, otp } = credentials as OTPUserCredentials;
         try {
           await connectDB();
-
+      
           // ตรวจสอบ OTP
           const validOtp = await OTP.findOne({
             email,
@@ -86,18 +86,18 @@ export const authOptions: AuthOptions = {
             is_used: false,
             expires_at: { $gt: new Date() }
           });
-
+      
           if (!validOtp) {
             console.log("Invalid OTP for email:", email);
             return null;
           }
-
+      
           // ทำเครื่องหมายว่า OTP ถูกใช้งานแล้ว
           await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
-
+      
           // ค้นหาผู้ใช้
           const user = await UserModel.findOne({ email, provider: 'otp' });
-
+      
           if (!user) {
             // ถ้าเป็นการล็อกอินครั้งแรก ให้ส่งค่ากลับพิเศษ
             return {
@@ -109,13 +109,13 @@ export const authOptions: AuthOptions = {
               isNewUser: true
             } as CustomUser;
           }
-
+      
           // บันทึกประวัติการล็อกอิน
           const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
-
+      
           // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
           sendLoginNotificationEmail(user.email, user.name, clientInfo);
-
+      
           return {
             id: user._id.toString(),
             name: user.name,
@@ -136,22 +136,22 @@ export const authOptions: AuthOptions = {
       console.log("user:", user);
       console.log("Sign in attempt:", { provider: account?.provider });
       console.log("Profile data:", profile);
-
+    
       try {
         await connectDB();
-
+    
         // จัดการกับการล็อกอินผ่าน LINE
         if (account?.provider === "line" && profile) {
           const lineProfile = profile as LineProfile;
           const { name, email, picture } = lineProfile;
           const provider_id = lineProfile.sub;
-
+    
           // ค้นหาผู้ใช้จาก provider_id
           let existingUser = await UserModel.findOne({
             provider: 'line',
             provider_id
           });
-
+    
           if (existingUser) {
             // เก็บข้อมูลจาก LINE ไว้ในฟิลด์ original_line_data
             // แต่ไม่ได้อัพเดทข้อมูลหลักของผู้ใช้ (เพื่อรักษาข้อมูลที่ผู้ใช้แก้ไขเอง)
@@ -166,19 +166,19 @@ export const authOptions: AuthOptions = {
               },
               { new: true }
             );
-
+    
             // บันทึกประวัติการล็อกอิน
             const clientInfo = await saveLoginHistory(existingUser._id.toString(), 'success');
-
+    
             // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
             sendLoginNotificationEmail(existingUser.email, existingUser.name, clientInfo);
-
+    
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
-
+    
             return true;
           } else {
-            // สร้างผู้ใช้ใหม่
+            // สร้างผู้ใช้ใหม่สำหรับ LINE (ไม่ต้องไปที่ create-profile)
             const newUser = await UserModel.create({
               email,
               name,
@@ -189,19 +189,20 @@ export const authOptions: AuthOptions = {
                 name,
                 email,
                 profile_image: picture
-              }
+              },
+              is_active: true
             });
-
+    
             // บันทึกประวัติการล็อกอิน
             await saveLoginHistory(newUser._id.toString(), 'success');
-
+    
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
-
+    
             return true;
           }
         }
-
+    
         return true;
       } catch (error) {
         console.error("Error in signIn callback:", error);

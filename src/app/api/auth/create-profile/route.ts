@@ -1,3 +1,4 @@
+// src/app/api/auth/create-profile/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
+    const bio = formData.get("bio") as string || ""; // ดึงค่า bio และกำหนดค่าเริ่มต้นเป็น ""
     const email = session.user.email;
     const profileImage = formData.get("profileImage") as File | null;
 
@@ -39,25 +41,29 @@ export async function POST(request: Request) {
       }
     }
 
-    // สร้างผู้ใช้ใหม่
+    // สร้างผู้ใช้ใหม่ - เพิ่ม bio ในการสร้าง
     const newUser = await UserModel.create({
       name,
       email,
+      bio,  // เพิ่ม bio ที่ได้จากฟอร์ม
       provider: "otp",
       provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, 
       profile_image: profileImageUrl,
       is_active: true
     });
 
+    console.log("Created new user with bio:", newUser); // Log เพื่อตรวจสอบว่ามีการบันทึก bio
+
     // ส่งข้อมูลกลับให้ครบถ้วนมากขึ้น
     return NextResponse.json({ 
       success: true, 
       message: "สร้างโปรไฟล์สำเร็จ",
       user: {
-        id: newUser._id.toString(), // แปลงเป็น string ให้ชัดเจน
+        id: newUser._id.toString(),
         name: newUser.name,
         email: newUser.email,
         image: newUser.profile_image,
+        bio: newUser.bio, // ส่งค่า bio กลับไปด้วย
         isNewUser: false // ชี้ชัดว่าไม่ใช่ผู้ใช้ใหม่แล้ว
       }
     });
