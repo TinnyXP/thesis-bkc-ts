@@ -35,7 +35,6 @@ export default function NavBar() {
   const { data: session, status, update } = useSession();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [needsRefresh, setNeedsRefresh] = useState(false);
 
   const { theme } = useTheme();
@@ -73,7 +72,6 @@ export default function NavBar() {
 
     try {
       setIsLoading(true);
-      setFetchError(null);
       console.log("NavBar: Fetching profile data for user ID:", session.user.id);
       
       const response = await fetch('/api/user/get-profile', {
@@ -87,7 +85,6 @@ export default function NavBar() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error fetching profile data:', response.status, errorText);
-        setFetchError(`Error ${response.status}: ${errorText}`);
         return;
       }
       
@@ -112,12 +109,10 @@ export default function NavBar() {
           });
         }
       } else {
-        setFetchError(data.message || "Failed to fetch profile data");
         console.error("NavBar: Profile data error:", data.message);
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
-      setFetchError(error instanceof Error ? error.message : String(error));
     } finally {
       setIsLoading(false);
     }

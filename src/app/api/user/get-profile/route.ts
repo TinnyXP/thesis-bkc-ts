@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 // กำหนดเป็น no-store เพื่อไม่ให้ cache การเรียก API นี้
 export const fetchCache = 'force-no-store'; 
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // ตรวจสอบว่ามีการเข้าสู่ระบบ
     const session = await getServerSession(authOptions);

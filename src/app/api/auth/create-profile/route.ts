@@ -107,7 +107,12 @@ export async function POST(request: Request) {
       console.log("CreateProfile API: Updating existing user:", user._id);
       
       // เตรียมข้อมูลที่จะอัพเดท
-      const updateData: any = {
+      const updateData: {
+        name: string;
+        bio: string;
+        is_active: boolean;
+        profile_image?: string;
+      } = {
         name,
         bio,
         is_active: true
