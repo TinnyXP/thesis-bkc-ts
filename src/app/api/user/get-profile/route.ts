@@ -13,11 +13,8 @@ function isLineUserId(id: string): boolean {
   return typeof id === 'string' && id.startsWith('U');
 }
 
-// กำหนดให้ API นี้เป็น dynamic function เพื่อใช้ headers ได้
+// กำหนดให้ API นี้เป็น dynamic function เพื่อป้องกันการ cache
 export const dynamic = 'force-dynamic';
-
-// กำหนดเป็น no-store เพื่อไม่ให้ cache การเรียก API นี้
-export const fetchCache = 'force-no-store'; 
 
 export async function GET() {
   try {
@@ -54,7 +51,8 @@ export async function GET() {
       }, { status: 400 });
     } 
     
-    // ตรวจสอบตามลำดับ
+    // ค้นหาข้อมูลผู้ใช้ด้วยวิธีต่างๆ
+    
     // 1. ตรวจสอบด้วย MongoDB ObjectId
     if (mongoose.Types.ObjectId.isValid(session.user.id)) {
       console.log('GetProfile API: Searching user by MongoDB ObjectId');
@@ -78,25 +76,22 @@ export async function GET() {
       }
     }
     
-    // 3. ถ้ายังไม่พบ ลองค้นหาด้วย provider_id ในกรณีที่เป็น OTP user
-    if (!user) {
-      console.log('GetProfile API: Trying to find user by provider_id (for OTP users)');
-      user = await UserModel.findOne({
-        provider: 'otp',
-        provider_id: session.user.id
-      });
-      
-      if (user) {
-        console.log('GetProfile API: Found user by OTP provider_id');
-      }
-    }
-    
-    // 4. ถ้ายังไม่พบและมี email ใน session ลองค้นหาด้วย email
+    // 3. ถ้ายังไม่พบ และมี email ใน session ลองค้นหาด้วย email
     if (!user && session.user.email) {
       console.log('GetProfile API: Trying to find user by email:', session.user.email);
-      user = await UserModel.findOne({
-        email: session.user.email
-      });
+      
+      // ค้นหาตามประเภทของ provider
+      if (session.user.provider === 'otp') {
+        user = await UserModel.findOne({
+          email: session.user.email,
+          provider: 'otp'
+        });
+      } else {
+        // ค้นหาโดยไม่ระบุ provider ในกรณีที่ไม่แน่ใจ
+        user = await UserModel.findOne({
+          email: session.user.email
+        });
+      }
       
       if (user) {
         console.log('GetProfile API: Found user by email');
@@ -156,7 +151,7 @@ export async function GET() {
       user: userData
     };
 
-    // ตั้งค่า cache-control ให้ไม่ cache การเรียก API นี้
+    // ตั้งค่า cache-control เพื่อป้องกันการ cache
     return NextResponse.json(responseData, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

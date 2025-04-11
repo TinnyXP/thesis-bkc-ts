@@ -131,16 +131,20 @@ export default function CreateProfilePage() {
       // ส่งข้อมูลไปยัง API
       const response = await fetch('/api/auth/create-profile', {
         method: 'POST',
-        body: formData
+        body: formData,
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
       });
 
       if (!response.ok) {
-        const text = await response.text();
+        const errorData = await response.json();
         console.error("CreateProfile: API error response", {
           status: response.status,
-          text
+          message: errorData.message || "Unknown error"
         });
-        throw new Error(`Error ${response.status}: ${text}`);
+        throw new Error(errorData.message || `Error ${response.status}: Could not create profile`);
       }
 
       const data = await response.json();
@@ -173,6 +177,8 @@ export default function CreateProfilePage() {
 
           // ตั้งค่า localStorage เพื่อให้แสดง popup ต้อนรับเมื่อไปที่หน้าแรก
           localStorage.setItem('firstLogin', 'true');
+          // ตั้งค่า session_updated เพื่อบอกว่ามีการอัพเดท session
+          sessionStorage.setItem('session_updated', 'true');
           
           // ตั้งเวลาเพื่อ redirect ให้ผู้ใช้เห็นข้อความสำเร็จก่อน
           setIsRedirecting(true);
@@ -192,6 +198,7 @@ export default function CreateProfilePage() {
         } catch (updateError) {
           console.error("CreateProfile: Error updating session", updateError);
           // ถ้าไม่สามารถอัพเดท session ได้ ให้เปลี่ยนเส้นทางด้วย window.location
+          localStorage.setItem('session_updated', 'true');
           setTimeout(() => {
             window.location.href = '/';
           }, 1500);

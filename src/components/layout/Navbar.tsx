@@ -27,10 +27,6 @@ interface ProfileData {
   };
 }
 
-interface ProfileAvatarProps {
-  size?: "md" | "sm" | "lg";
-}
-
 export default function NavBar() {
   const { data: session, status, update } = useSession();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -62,23 +58,20 @@ export default function NavBar() {
 
   // กำหนด fetchProfileData เป็น useCallback
   const fetchProfileData = useCallback(async () => {
-    if (!session?.user) return;
-    
-    // ถ้าเป็น new-user ไม่ต้องพยายามเรียกข้อมูล
-    if (session.user.id === 'new-user') {
-      console.log("NavBar: User is new-user, not fetching profile");
+    if (!session?.user || !session.user.id || session.user.id === 'new-user' || session.user.isNewUser) {
+      console.log("NavBar: Not fetching profile for new user or no session");
       return;
     }
-
+    
     try {
       setIsLoading(true);
       console.log("NavBar: Fetching profile data for user ID:", session.user.id);
       
       const response = await fetch('/api/user/get-profile', {
-        // เพิ่ม cache: 'no-store' เพื่อไม่ให้ใช้ cache
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         }
       });
       
@@ -96,7 +89,7 @@ export default function NavBar() {
         setNeedsRefresh(false);
         console.log("NavBar: Profile data set successfully:", data.user);
         
-        // อัพเดท session ด้วยข้อมูลล่าสุด
+        // อัพเดท session ด้วยข้อมูลล่าสุดถ้ามีการเปลี่ยนแปลง
         if (data.user.name !== session.user.name || data.user.image !== session.user.image) {
           console.log("NavBar: Updating session with new profile data");
           await update({
@@ -107,6 +100,9 @@ export default function NavBar() {
               image: data.user.image
             }
           });
+          
+          // อัพเดท sessionStorage เพื่อแจ้งคอมโพเนนต์อื่นๆ
+          sessionStorage.setItem('session_updated', 'true');
         }
       } else {
         console.error("NavBar: Profile data error:", data.message);
@@ -135,8 +131,9 @@ export default function NavBar() {
       sessionStorage.removeItem('session_updated');
     }
     
-    // มีการล็อกอินและไม่ใช่ผู้ใช้ใหม่
-    if (session?.user && session.user.id !== 'new-user' && !session.user.isNewUser) {
+    // ถ้า authenticated และไม่ใช่ผู้ใช้ใหม่ ให้ดึงข้อมูลโปรไฟล์
+    if (status === "authenticated" && session?.user && 
+        session.user.id !== 'new-user' && !session.user.isNewUser) {
       fetchProfileData();
     } else {
       // รีเซ็ตข้อมูลโปรไฟล์เมื่อไม่มี session หรือเป็นผู้ใช้ใหม่
@@ -184,7 +181,7 @@ export default function NavBar() {
       {/* Right Content */}
       <NavbarContent className="hidden md:flex" justify="end">
         <NavbarItem>
-          {session ? (
+          {session && status === "authenticated" && session.user && session.user.id && session.user.id !== 'new-user' && !session.user.isNewUser ? (
             <div className="flex items-center gap-2">
               {needsRefresh && (
                 <Button
@@ -199,9 +196,10 @@ export default function NavBar() {
                 </Button>
               )}
               <ProfileAvatar 
-                size="md" 
-                profileData={profileData} 
                 isLoading={isLoading} 
+                size="md"
+                session={session}
+                profileData={profileData}
               />
             </div>
           ) : (
@@ -224,15 +222,20 @@ export default function NavBar() {
           <ToggleTheme className="border-1.5 border-default-200 dark:border-default-200" />
         </NavbarItem>
         <NavbarItem>
-          <LanguageSelectorButton /> {/* ใช้คอมโพเนนต์ใหม่ */}
+          <LanguageSelectorButton />
         </NavbarItem>
       </NavbarContent>
 
       {/* Right Content (NavBar Toggle) */}
       <NavbarContent className="flex md:hidden" justify="end">
         <NavbarItem>
-          {session ? (
-            <ProfileAvatar size="md" profileData={profileData} isLoading={isLoading} />
+          {session && status === "authenticated" && session.user && session.user.id && session.user.id !== 'new-user' && !session.user.isNewUser ? (
+            <ProfileAvatar 
+              isLoading={isLoading} 
+              size="md" 
+              session={session}
+              profileData={profileData}
+            />
           ) : (
             <Button
               className="text-medium border-1.5 border-default-200 dark:border-default-200"
@@ -297,70 +300,73 @@ export default function NavBar() {
   );
 }
 
-// แยกคอมโพเนนต์ ProfileAvatar ออกมาและรับข้อมูลจาก prop แทน
-const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | null, isLoading: boolean }> = ({ size = "sm", profileData, isLoading }) => {
-  const { data: session } = useSession();
+// แยกคอมโพเนนต์ ProfileAvatar ออกมา
+interface ProfileAvatarProps {
+  size?: "md" | "sm" | "lg";
+  isLoading: boolean;
+  session: {
+    user?: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      provider?: string;
+    }
+  };
+  profileData: ProfileData | null;
+}
 
-  // ดึงรูปโปรไฟล์ที่ถูกต้องตามลำดับความสำคัญ
+const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ 
+  size = "sm", 
+  isLoading, 
+  session, 
+  profileData 
+}) => {
+  // ดึงรูปโปรไฟล์ที่ถูกต้อง
   const getProfileImage = () => {
-    if (isLoading) return null; // กำลังโหลดข้อมูล
+    if (isLoading) return null;
     
-    // แสดง log เพื่อตรวจสอบข้อมูล
-    console.log("ProfileAvatar: Available image sources", {
-      profileDataImage: profileData?.image,
-      sessionUserImage: session?.user?.image
-    });
-    
+    // ลำดับความสำคัญ: 1. profileData.image, 2. session.user.image
     if (profileData?.image) {
-      // ถ้ามีข้อมูลจาก API ให้ใช้ข้อมูลนั้น
       return profileData.image;
     } else if (session?.user?.image) {
-      // ถ้าไม่มีข้อมูลจาก API แต่มี session image ให้ใช้ session
       return session.user.image;
     }
     
-    // ไม่มีรูปโปรไฟล์
     return null;
   };
 
-  // ดึงชื่อที่ถูกต้องตามลำดับความสำคัญ
+  // ดึงชื่อที่ถูกต้อง
   const getProfileName = () => {
-    if (isLoading) return "กำลังโหลด..."; // กำลังโหลดข้อมูล
+    if (isLoading) return "กำลังโหลด...";
     
-    // แสดง log เพื่อตรวจสอบข้อมูล
-    console.log("ProfileAvatar: Available name sources", {
-      profileDataName: profileData?.name,
-      sessionUserName: session?.user?.name
-    });
-    
+    // ลำดับความสำคัญ: 1. profileData.name, 2. session.user.name
     if (profileData?.name) {
-      // ถ้ามีข้อมูลจาก API ให้ใช้ข้อมูลนั้น
       return profileData.name;
     } else if (session?.user?.name) {
-      // ถ้าไม่มีข้อมูลจาก API แต่มี session name ให้ใช้ session
       return session.user.name;
     }
     
-    // ไม่มีชื่อ
     return "ผู้ใช้";
   };
 
   const profileImage = getProfileImage();
   const profileName = getProfileName();
   
-  // แสดง log เพื่อตรวจสอบข้อมูลที่จะแสดงจริง
-  console.log("ProfileAvatar: Final display values", {
-    profileImage,
-    profileName
-  });
-  
   // ฟังก์ชันล็อกเอาท์
   const handleLogout = async () => {
     // เก็บข้อมูลว่ามีการล็อกเอาท์ เพื่อไม่ให้ redirect กลับมาหน้า profile
     sessionStorage.setItem('logged_out', 'true');
     
+    // ล้าง localStorage เกี่ยวกับการเข้าสู่ระบบ
+    localStorage.removeItem('loginEmail');
+    localStorage.removeItem('otpSent');
+    localStorage.removeItem('otpCountdown');
+    localStorage.removeItem('otpTimestamp');
+    localStorage.removeItem('firstLogin');
+    
     // ออกจากระบบ
-    await signOut({ callbackUrl: '/' });
+    await signOut({ callbackUrl: '/login' });
   };
 
   return (

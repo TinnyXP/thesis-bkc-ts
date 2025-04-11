@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
 interface ClientInfo {
   ip: string;
   userAgent: string;
-  sessionId?: string; // เพิ่ม sessionId เป็นตัวเลือก
+  sessionId?: string;
 }
 
 // ฟังก์ชันช่วยบันทึกประวัติการล็อกอิน
@@ -207,6 +207,8 @@ export const authOptions: AuthOptions = {
     
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
+            // ตั้งค่า ID ให้ถูกต้อง
+            user.id = existingUser._id.toString();
     
             return true;
           } else {
@@ -234,8 +236,10 @@ export const authOptions: AuthOptions = {
             const clientInfo = await saveLoginHistory(newUser._id.toString(), 'success');
             console.log("Auth: Login history saved for new LINE user with session ID:", clientInfo.sessionId);
     
-            // ตั้งค่า provider ให้กับ user
+            // ตั้งค่า provider และ ID ให้กับ user
             user.provider = 'line';
+            user.id = newUser._id.toString();
+            user.isNewUser = true;
     
             return true;
           }
@@ -248,7 +252,7 @@ export const authOptions: AuthOptions = {
       }
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         const customUser = user as CustomUser;
         
@@ -266,19 +270,17 @@ export const authOptions: AuthOptions = {
           token.isNewUser = true;
           console.log("Auth: JWT marked as new user");
         }
-
-        // ถ้าเป็น LINE User ID ให้กำหนด provider เป็น 'line'
-        if (customUser.id?.startsWith('U')) {
-          token.provider = 'line';
-          console.log("Auth: JWT provider set to LINE based on ID format");
-        }
         
         console.log("Auth: JWT token updated", { 
           userId: token.userId, 
           provider: token.provider,
           isNewUser: token.isNewUser
         });
+      } else if (account?.provider === "line") {
+        // มีการเรียก callback นี้หลายครั้ง แต่ต้องการให้ค่า token คงอยู่
+        console.log("Auth: JWT callback from LINE provider, keeping existing token values");
       }
+      
       return token;
     },
 
@@ -296,12 +298,6 @@ export const authOptions: AuthOptions = {
         if (token.isNewUser) {
           session.user.isNewUser = true;
           console.log("Auth: Session marked as new user");
-        }
-
-        // ถ้า ID เริ่มต้นด้วย 'U' ให้กำหนด provider เป็น 'line'
-        if (session.user.id?.startsWith('U')) {
-          session.user.provider = 'line';
-          console.log("Auth: Session provider set to LINE based on ID format");
         }
         
         console.log("Auth: Session updated", { 

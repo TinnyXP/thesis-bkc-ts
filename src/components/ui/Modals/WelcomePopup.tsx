@@ -7,29 +7,28 @@ import { FaCheckCircle } from 'react-icons/fa';
 
 const WelcomePopup = () => {
   const { data: session } = useSession();
-  // ลบ onClose ที่ไม่ได้ใช้ออกจากการ destructuring
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
   useEffect(() => {
-    // ตรวจสอบว่ามี session และยังไม่เคยแสดง popup
+    // ถ้ามีการเข้าสู่ระบบและยังไม่เคยแสดง popup
     if (session?.user?.name && !hasShownWelcome) {
       // ตรวจสอบว่าเป็นการเข้าสู่ระบบครั้งแรกหรือไม่จาก localStorage
-      const isFirstLogin = localStorage.getItem('firstLogin') !== 'false';
+      const isFirstLogin = localStorage.getItem('firstLogin') === 'true';
       
       if (isFirstLogin) {
-        // ตั้งค่าเป็น false เพื่อไม่ให้แสดงอีกในการเข้าสู่ระบบครั้งถัดไป
-        localStorage.setItem('firstLogin', 'false');
-        
         // เปิด popup หลังจากโหลดหน้าเสร็จเล็กน้อย
         setTimeout(() => {
           onOpen();
           setHasShownWelcome(true);
+          // ล้างค่า firstLogin เพื่อไม่ให้แสดงอีก
+          localStorage.removeItem('firstLogin');
         }, 1000);
       }
     }
   }, [session, hasShownWelcome, onOpen]);
 
+  // ถ้าไม่มี session ไม่ต้องทำอะไร
   if (!session) return null;
 
   return (

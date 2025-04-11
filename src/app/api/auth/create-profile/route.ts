@@ -8,6 +8,9 @@ import { uploadToCloudinary } from "@/lib/cloudinary";
 import LoginHistory from "@/models/loginHistory";
 import mongoose from "mongoose";
 
+// ป้องกันการ cache
+export const dynamic = 'force-dynamic';
+
 // ฟังก์ชันบันทึกประวัติการเข้าสู่ระบบ
 async function saveLoginHistory(userId: string, userAgent: string, ip: string) {
   try {
@@ -50,13 +53,39 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    // ยกเลิกการตรวจสอบ isNewUser เพื่อให้สามารถแก้ไขโปรไฟล์ได้เสมอ
-    // if (!session.user.isNewUser) {
-    //   return NextResponse.json({ 
-    //     success: false, 
-    //     message: "คุณไม่ใช่ผู้ใช้ใหม่" 
-    //   }, { status: 403 });
-    // }
+    // ควรตรวจสอบว่าเป็น new-user หรือมีสถานะ isNewUser จริงๆ
+    if (session.user.id !== 'new-user' && !session.user.isNewUser) {
+      console.log("CreateProfile API: Not a new user, checking if exists");
+      // ตรวจสอบว่ามีผู้ใช้นี้ในระบบหรือไม่
+      await connectDB();
+      
+      // ค้นหาด้วย ID ถ้าเป็น ObjectId ที่ถูกต้อง
+      let existingUser = null;
+      if (mongoose.Types.ObjectId.isValid(session.user.id)) {
+        existingUser = await UserModel.findById(session.user.id);
+      }
+      
+      // ถ้าไม่พบ แต่มี email ให้ลองค้นหาด้วย email
+      if (!existingUser && session.user.email) {
+        existingUser = await UserModel.findOne({ 
+          email: session.user.email,
+          provider: session.user.provider || 'otp'
+        });
+      }
+      
+      // ถ้ายังไม่พบและเป็น LINE ID ให้ลองค้นหาด้วย provider_id
+      if (!existingUser && session.user.id.startsWith('U')) {
+        existingUser = await UserModel.findOne({
+          provider: 'line',
+          provider_id: session.user.id
+        });
+      }
+      
+      // ถ้ายังไม่พบอีก ก็อนุญาตให้สร้างโปรไฟล์ใหม่
+      if (existingUser) {
+        console.log("CreateProfile API: User already exists:", existingUser._id.toString());
+      }
+    }
 
     // ดึงข้อมูลจาก request
     const formData = await request.formData();
@@ -69,6 +98,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         success: false, 
         message: "กรุณากรอกชื่อ" 
+      }, { status: 400 });
+    }
+
+    if (!email) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่พบข้อมูลอีเมล" 
       }, { status: 400 });
     }
 
@@ -92,15 +128,42 @@ export async function POST(request: Request) {
       if (uploadResult && uploadResult.secure_url) {
         profileImageUrl = uploadResult.secure_url;
         console.log("CreateProfile API: Image uploaded successfully:", profileImageUrl);
+      } else {
+        console.log("CreateProfile API: Image upload failed or incomplete result");
       }
+    } else {
+      console.log("CreateProfile API: No profile image provided");
     }
 
     // สร้างรหัสเฉพาะสำหรับผู้ใช้ OTP
     const uniqueProviderId = `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    // กำหนด provider จาก session หรือใช้ค่าเริ่มต้น 'otp'
+    const provider = session.user.provider || 'otp';
 
     // ตรวจสอบว่ามีผู้ใช้ที่มี email นี้อยู่แล้วหรือไม่
-    let user = await UserModel.findOne({ email, provider: 'otp' });
+    let user = null;
     let isNewUserCreated = false;
+    
+    // ถ้าเป็น LINE user ให้ค้นหาด้วย provider_id
+    if (provider === 'line' && session.user.id.startsWith('U')) {
+      user = await UserModel.findOne({ 
+        provider: 'line', 
+        provider_id: session.user.id 
+      });
+    } 
+    // ถ้าไม่ใช่ LINE ให้ค้นหาด้วย email และ provider
+    else {
+      user = await UserModel.findOne({ 
+        email, 
+        provider 
+      });
+    }
+    
+    // ถ้าไม่พบผู้ใช้ แต่มี ID ที่ถูกต้อง (ไม่ใช่ 'new-user') ให้ลองค้นหาด้วย ID
+    if (!user && session.user.id !== 'new-user' && mongoose.Types.ObjectId.isValid(session.user.id)) {
+      user = await UserModel.findById(session.user.id);
+    }
     
     if (user) {
       // อัพเดทผู้ใช้ที่มีอยู่แล้ว
@@ -131,17 +194,36 @@ export async function POST(request: Request) {
       );
     } else {
       // สร้างผู้ใช้ใหม่
-      console.log("CreateProfile API: Creating new user");
+      console.log("CreateProfile API: Creating new user with provider:", provider);
       isNewUserCreated = true;
-      user = await UserModel.create({
+      
+      const userData: {
+        name: string;
+        email: string;
+        bio: string;
+        provider: string;
+        provider_id?: string;
+        profile_image: string | null;
+        is_active: boolean;
+      } = {
         name,
         email,
         bio,
-        provider: "otp",
-        provider_id: uniqueProviderId, 
+        provider,
         profile_image: profileImageUrl,
         is_active: true
-      });
+      };
+      
+      // ถ้าเป็น OTP user ให้เพิ่ม provider_id
+      if (provider === 'otp') {
+        userData.provider_id = uniqueProviderId;
+      } 
+      // ถ้าเป็น LINE user ให้ใช้ ID จาก session
+      else if (provider === 'line' && session.user.id.startsWith('U')) {
+        userData.provider_id = session.user.id;
+      }
+      
+      user = await UserModel.create(userData);
     }
 
     // แน่ใจว่ามีการแปลง _id เป็น string
@@ -151,7 +233,7 @@ export async function POST(request: Request) {
       id: userId,
       name: user.name,
       email: user.email,
-      provider: "otp",
+      provider: user.provider,
       isNewUser: isNewUserCreated
     });
 
@@ -171,7 +253,7 @@ export async function POST(request: Request) {
         email: user.email,
         image: user.profile_image,
         bio: user.bio,
-        provider: "otp",
+        provider: user.provider,
         isNewUser: false // ชี้ชัดว่าไม่ใช่ผู้ใช้ใหม่แล้ว
       }
     });

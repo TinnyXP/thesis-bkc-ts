@@ -31,7 +31,7 @@ export default function LoginPage() {
       isNewUser: session?.user?.isNewUser
     });
     
-    if (session) {
+    if (status === "authenticated") {
       if (session.user.isNewUser) {
         // ถ้าเป็นผู้ใช้ใหม่ที่เข้าสู่ระบบด้วย OTP ให้ไปที่หน้าสร้างโปรไฟล์
         if (session.user.provider === 'otp') {
@@ -67,9 +67,7 @@ export default function LoginPage() {
             setPage([1, 1]);
           } else {
             // ถ้าหมดเวลาแล้ว ลบข้อมูล OTP ออก
-            localStorage.removeItem('otpSent');
-            localStorage.removeItem('otpCountdown');
-            localStorage.removeItem('otpTimestamp');
+            clearOtpLocalStorage();
           }
         }
       }
@@ -88,9 +86,7 @@ export default function LoginPage() {
             localStorage.setItem('otpCountdown', newValue.toString());
           } else {
             // ถ้าหมดเวลาแล้ว ลบข้อมูล OTP ออก
-            localStorage.removeItem('otpSent');
-            localStorage.removeItem('otpCountdown');
-            localStorage.removeItem('otpTimestamp');
+            clearOtpLocalStorage();
           }
           return newValue;
         });
@@ -100,6 +96,18 @@ export default function LoginPage() {
       if (timer) clearInterval(timer);
     };
   }, [resendCooldown]);
+
+  // ฟังก์ชันล้างข้อมูล OTP ใน localStorage
+  const clearOtpLocalStorage = () => {
+    localStorage.removeItem('otpSent');
+    localStorage.removeItem('otpCountdown');
+    localStorage.removeItem('otpTimestamp');
+  };
+
+  const clearAllLoginLocalStorage = () => {
+    clearOtpLocalStorage();
+    localStorage.removeItem('loginEmail');
+  };
 
   const variants = {
     enter: (direction: number) => ({
@@ -156,12 +164,10 @@ export default function LoginPage() {
 
       if (data.success) {
         // เก็บข้อมูลใน localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('loginEmail', email);
-          localStorage.setItem('otpSent', 'true');
-          localStorage.setItem('otpTimestamp', Date.now().toString());
-          localStorage.setItem('otpCountdown', '60');
-        }
+        localStorage.setItem('loginEmail', email);
+        localStorage.setItem('otpSent', 'true');
+        localStorage.setItem('otpTimestamp', Date.now().toString());
+        localStorage.setItem('otpCountdown', '60');
 
         // เริ่มนับถอยหลังการขอรหัส OTP ใหม่
         setResendCooldown(60); // 60 วินาที
@@ -181,11 +187,12 @@ export default function LoginPage() {
     }
   };
 
-  // แก้ไขฟังก์ชัน handleLineLogin
   const handleLineLogin = () => {
     console.log("Login: Initiating LINE login");
     // ตั้งค่า localStorage เพื่อให้แสดง popup เมื่อเข้าสู่ระบบสำเร็จครั้งแรก
     localStorage.setItem('firstLogin', 'true');
+    // ล้างข้อมูล OTP ก่อนเข้าสู่ระบบด้วย LINE
+    clearAllLoginLocalStorage();
     signIn("line", { callbackUrl: "/" });
   };
 
@@ -223,13 +230,12 @@ export default function LoginPage() {
         setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
       } else if (result?.ok) {
         // ลบข้อมูลใน localStorage เมื่อเข้าสู่ระบบสำเร็จ
-        localStorage.removeItem('loginEmail');
-        localStorage.removeItem('otpSent');
-        localStorage.removeItem('otpCountdown');
-        localStorage.removeItem('otpTimestamp');
+        clearAllLoginLocalStorage();
         
-        console.log("Login: OTP login successful, clear localStorage");
+        // เก็บค่า firstLogin
+        localStorage.setItem('firstLogin', 'true');
         
+        console.log("Login: OTP login successful, redirecting to proper page");
         // การเข้าสู่ระบบสำเร็จ router จะไปหน้าอื่นโดยอัตโนมัติจาก useEffect
       }
     } catch (error) {
@@ -273,6 +279,7 @@ export default function LoginPage() {
 
         // รีเซ็ตค่า OTP เดิม
         setOtp("");
+        setIsOtpValid(true);
       } else {
         // กรณีมีข้อผิดพลาด
         setError(data.message || "ไม่สามารถส่งรหัส OTP ใหม่ได้");
