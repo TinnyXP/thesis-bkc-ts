@@ -14,29 +14,29 @@ export async function POST(request: Request) {
 
     // สร้างรหัส OTP
     const otpCode = generateOTP(6);
-    
+
     // กำหนดเวลาหมดอายุ (10 นาที)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
-    
+
     // เก็บ OTP ลงฐานข้อมูล
     await OTP.create({
       email,
       otp_code: otpCode,
       expires_at: expiresAt
     });
-    
-    // ส่ง OTP ทางอีเมล
+
+    // ส่ง OTP ทางอีเมล (แก้ไขจาก sendOTPEmail เป็น sendOTPEmail)
     await sendOTPEmail(email, otpCode);
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: "OTP sent successfully" 
+
+    return NextResponse.json({
+      success: true,
+      message: "OTP sent successfully"
     });
   } catch (error) {
     console.error("Error sending OTP:", error);
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       message: "An error occurred while sending OTP",
       error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });

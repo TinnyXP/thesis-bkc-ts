@@ -3,14 +3,12 @@ import { User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import LineProvider from "next-auth/providers/line";
 import { connectDB } from "@/lib/mongodb";
-import UserModel from "@/models/user"; // เปลี่ยนชื่อ import จาก User เป็น UserModel
+import UserModel from "@/models/user"; 
 import OTP from "@/models/otp";
 import LoginHistory from "@/models/loginHistory";
 import { headers } from "next/headers";
-import { sendLoginNotificationEmail } from "@/lib/otpService";
+import { generateOTP, sendOTPEmail } from "@/lib/otpService";
 import { JWT } from "next-auth/jwt";
-
-// นำเข้า mongoose เพิ่มเติม
 import mongoose from 'mongoose';
 
 // แก้ไข interface ClientInfo โดยเพิ่ม sessionId
@@ -123,9 +121,6 @@ export const authOptions: AuthOptions = {
           // บันทึกประวัติการล็อกอิน
           const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
       
-          // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
-          sendLoginNotificationEmail(user.email, user.name, clientInfo);
-      
           return {
             id: user._id.toString(),
             name: user.name,
@@ -179,9 +174,6 @@ export const authOptions: AuthOptions = {
     
             // บันทึกประวัติการล็อกอิน
             const clientInfo = await saveLoginHistory(existingUser._id.toString(), 'success');
-    
-            // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
-            sendLoginNotificationEmail(existingUser.email, existingUser.name, clientInfo);
     
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
