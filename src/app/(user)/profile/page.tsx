@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Card, CardBody, CardHeader, Divider, Button, Input, Textarea, Tooltip,
-  Tabs, Tab, Accordion, AccordionItem, Pagination
+  Tabs, Tab, Accordion, AccordionItem, Pagination, Spinner
 } from "@heroui/react";
 import { FaCamera, FaRegEdit, FaHistory, FaUser, FaUserEdit, FaTrashAlt } from "react-icons/fa";
 import { SiLine } from "react-icons/si";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiRefreshCw } from "react-icons/fi";
 import { NavBar, Footer } from "@/components";
 
 // อินเตอร์เฟซสำหรับประวัติการเข้าสู่ระบบ
@@ -92,6 +92,7 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState("");
   const [originalLineData, setOriginalLineData] = useState<OriginalLineData | null>(null);
   const [useOriginalData, setUseOriginalData] = useState(false);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
 
   // สถานะสำหรับประวัติการเข้าสู่ระบบ
   const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
@@ -107,18 +108,32 @@ export default function ProfilePage() {
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/user/get-profile');
+      console.log("ProfilePage: Fetching user profile data for user ID:", session.user.id);
+      
+      const response = await fetch('/api/user/get-profile', {
+        // ป้องกันการใช้ cache
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
 
       if (!response.ok) {
-        console.error("Error fetching user profile:", response.statusText);
+        const errorText = await response.text();
+        console.error("Error fetching user profile:", response.status, errorText);
+        setError(`ไม่สามารถดึงข้อมูลได้ (${response.status})`);
         return;
       }
 
       const data = await response.json();
+      console.log("ProfilePage: User profile data response:", data);
 
       if (data.success) {
         // เก็บข้อมูลผู้ใช้ที่ได้จาก API
         setUserData(data.user);
+        setNeedsRefresh(false);
 
         // อัพเดทข้อมูลในฟอร์ม
         setName(data.user.name || "");
@@ -135,29 +150,58 @@ export default function ProfilePage() {
 
         // ตั้งค่าการใช้ข้อมูลต้นฉบับ
         setUseOriginalData(data.user.use_original_data || false);
+        
+        // อัพเดท session ด้วยข้อมูลล่าสุด
+        if (data.user.name !== session.user.name || data.user.image !== session.user.image) {
+          console.log("ProfilePage: Updating session with new profile data");
+          await update({
+            ...session,
+            user: {
+              ...session.user,
+              name: data.user.name,
+              image: data.user.image
+            }
+          });
+        }
+      } else {
+        console.log("ProfilePage: Failed to get user profile:", data.message);
+        setError(data.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
+      setError("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้");
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user?.id]);
+  }, [session, update]);
 
   // ใช้ useCallback สำหรับฟังก์ชัน fetchLoginHistory
   const fetchLoginHistory = useCallback(async (page = 1, mode = viewMode) => {
     if (!session?.user?.id || session?.user?.id === "new-user") return;
 
     setIsLoadingHistory(true);
+    console.log("ProfilePage: Fetching login history, page:", page, "mode:", mode);
+    
     try {
       const groupByIp = mode === "grouped";
-      const response = await fetch(`/api/user/login-history?page=${page}&limit=10&groupByIp=${groupByIp}`);
+      const response = await fetch(`/api/user/login-history?page=${page}&limit=10&groupByIp=${groupByIp}`, {
+        // ป้องกันการใช้ cache
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
 
       if (!response.ok) {
-        console.error("Error fetching login history:", response.statusText);
+        const errorText = await response.text();
+        console.error("Error fetching login history:", response.status, errorText);
         return;
       }
 
       const data = await response.json();
+      console.log("ProfilePage: Login history response:", data);
 
       if (data.success) {
         if (groupByIp) {
@@ -184,19 +228,46 @@ export default function ProfilePage() {
 
   // เมื่อคอมโพเนนต์โหลด
   useEffect(() => {
-    // ตรวจสอบว่ามีการล็อกอินหรือไม่
-    if (status === "unauthenticated") {
-      router.replace("/login");
-    }
+    // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อคอมโพเนนต์โหลด
+    console.log("ProfilePage: Checking session status", {
+      status,
+      id: session?.user?.id,
+      isNewUser: session?.user?.isNewUser
+    });
 
-    // ถ้าเป็นผู้ใช้ใหม่ให้ไปยังหน้าสร้างโปรไฟล์
-    if (status === "authenticated" && session?.user?.isNewUser) {
-      router.replace("/create-profile");
+    // ถ้าไม่ได้ล็อกอิน ให้เปลี่ยนเส้นทางไปหน้า login
+    if (status === "unauthenticated") {
+      console.log("ProfilePage: Not authenticated, redirecting to login");
+      router.replace('/login');
       return;
     }
 
+    // ถ้าเป็นผู้ใช้ใหม่ที่ยังไม่ได้สร้างโปรไฟล์ ให้ไปที่หน้าสร้างโปรไฟล์
+    if (status === "authenticated" && (session.user.id === 'new-user' || session.user.isNewUser)) {
+      console.log("ProfilePage: New user detected, redirecting to create-profile");
+      router.replace('/create-profile');
+      return;
+    }
+
+    // ตรวจสอบว่ามีการล็อกเอาท์จาก sessionStorage หรือไม่
+    const loggedOut = sessionStorage.getItem('logged_out');
+    if (loggedOut === 'true') {
+      console.log("ProfilePage: User logged out, redirecting to login");
+      sessionStorage.removeItem('logged_out');
+      router.replace('/login');
+      return;
+    }
+
+    // ตรวจสอบว่ามีการอัพเดท session จาก sessionStorage หรือไม่
+    const sessionUpdated = sessionStorage.getItem('session_updated');
+    if (sessionUpdated === 'true') {
+      console.log("ProfilePage: Session was updated, setting needsRefresh");
+      setNeedsRefresh(true);
+      sessionStorage.removeItem('session_updated');
+    }
+
     // ตั้งค่าข้อมูลเริ่มต้นเมื่อมีข้อมูล session
-    if (status === "authenticated" && session?.user) {
+    if (status === "authenticated" && session?.user && session.user.id !== 'new-user') {
       // ดึงข้อมูลผู้ใช้จาก API
       fetchUserProfile();
 
@@ -207,15 +278,30 @@ export default function ProfilePage() {
 
   // อัพเดทการดึงข้อมูลเมื่อเปลี่ยนโหมดการแสดงผล
   useEffect(() => {
-    if (session?.user?.id) {
+    if (session?.user?.id && session.user.id !== 'new-user') {
       fetchLoginHistory(1, viewMode);
     }
   }, [viewMode, fetchLoginHistory, session?.user?.id]);
+
+  // ล้าง URL เมื่อคอมโพเนนต์ถูกทำลาย
+  useEffect(() => {
+    return () => {
+      // ล้าง URL.createObjectURL เมื่อคอมโพเนนต์ถูกทำลาย
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // ฟังก์ชันจัดการการเปลี่ยนรูปโปรไฟล์
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
+      // หากมี URL ก่อนหน้า ให้ revoke เพื่อคืนหน่วยความจำ
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
       setProfileImage(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
@@ -231,8 +317,18 @@ export default function ProfilePage() {
 
   // ฟังก์ชันล้างรูปโปรไฟล์
   const handleClearImage = () => {
+    // ถ้ามี URL ที่สร้างไว้ ให้ revoke เพื่อคืนหน่วยความจำ
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
     setProfileImage(null);
     setPreviewUrl(null);
+
+    // รีเซ็ตค่าใน input element เพื่อให้สามารถเลือกไฟล์เดิมได้อีกครั้ง
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   // ฟังก์ชันเริ่มการแก้ไขข้อมูล
@@ -245,6 +341,11 @@ export default function ProfilePage() {
   // ฟังก์ชันยกเลิกการแก้ไข
   const handleCancelEdit = () => {
     setIsEditing(false);
+
+    // ล้าง URL.createObjectURL ถ้ามีการเปลี่ยนรูปภาพแล้วยกเลิก
+    if (profileImage && previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
 
     // ใช้ข้อมูลจาก API ที่เก็บไว้ใน userData
     if (userData) {
@@ -283,14 +384,37 @@ export default function ProfilePage() {
         formData.append("profileImage", profileImage);
       }
 
+      console.log("ProfilePage: Saving profile data", {
+        name,
+        bio,
+        useOriginalData,
+        hasProfileImage: !!profileImage
+      });
+
       const response = await fetch('/api/user/update-profile', {
         method: 'POST',
         body: formData
       });
 
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("ProfilePage: API error response", {
+          status: response.status,
+          text
+        });
+        throw new Error(`Error ${response.status}: ${text}`);
+      }
+
       const data = await response.json();
+      console.log("ProfilePage: Profile update response:", data);
 
       if (data.success) {
+        // ล้าง URL.createObjectURL เมื่อบันทึกสำเร็จ
+        if (profileImage && previewUrl && previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl);
+          setProfileImage(null);
+        }
+
         // อัพเดทเซสชัน
         await update({
           ...session,
@@ -300,6 +424,9 @@ export default function ProfilePage() {
             image: data.user.image
           }
         });
+
+        // ตั้งค่า sessionStorage เพื่อบอกว่ามีการอัพเดท session
+        sessionStorage.setItem('session_updated', 'true');
 
         setSuccess("อัพเดทข้อมูลสำเร็จ");
         setIsEditing(false);
@@ -320,7 +447,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      setError("เกิดข้อผิดพลาดในการอัพเดทข้อมูล");
+      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการอัพเดทข้อมูล");
     } finally {
       setIsLoading(false);
     }
@@ -334,6 +461,8 @@ export default function ProfilePage() {
     setError("");
 
     try {
+      console.log("ProfilePage: Restoring LINE data");
+      
       const response = await fetch('/api/user/use-line-data', {
         method: 'POST',
         headers: {
@@ -344,7 +473,17 @@ export default function ProfilePage() {
         })
       });
 
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("ProfilePage: API error response", {
+          status: response.status,
+          text
+        });
+        throw new Error(`Error ${response.status}: ${text}`);
+      }
+
       const data = await response.json();
+      console.log("ProfilePage: LINE data restore response:", data);
 
       if (data.success) {
         // อัพเดทเซสชัน
@@ -356,6 +495,9 @@ export default function ProfilePage() {
             image: data.user.image
           }
         });
+
+        // ตั้งค่า sessionStorage เพื่อบอกว่ามีการอัพเดท session
+        sessionStorage.setItem('session_updated', 'true');
 
         // อัพเดท userData
         setUserData(data.user);
@@ -378,7 +520,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error using LINE data:", error);
-      setError("เกิดข้อผิดพลาดในการกลับไปใช้ข้อมูลจาก LINE");
+      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการกลับไปใช้ข้อมูลจาก LINE");
     } finally {
       setIsLoading(false);
     }
@@ -395,6 +537,8 @@ export default function ProfilePage() {
 
     setIsLoggingOut(ipAddress);
     try {
+      console.log("ProfilePage: Logging out IP", ipAddress, "sessionId:", sessionId);
+      
       const response = await fetch('/api/user/logout-ip', {
         method: 'POST',
         headers: {
@@ -406,7 +550,17 @@ export default function ProfilePage() {
         })
       });
 
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("ProfilePage: API error response", {
+          status: response.status,
+          text
+        });
+        throw new Error(`Error ${response.status}: ${text}`);
+      }
+
       const data = await response.json();
+      console.log("ProfilePage: Logout IP response:", data);
 
       if (data.success) {
         // ดึงข้อมูลประวัติการเข้าสู่ระบบใหม่
@@ -419,10 +573,31 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error logging out IP:", error);
-      setError("เกิดข้อผิดพลาดในการออกจากระบบ");
+      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการออกจากระบบ");
     } finally {
       setIsLoggingOut(null);
     }
+  };
+
+  // ฟังก์ชันสำหรับรีเฟรชข้อมูล
+  const handleRefreshData = () => {
+    setNeedsRefresh(false);
+    fetchUserProfile();
+    fetchLoginHistory(pagination.page, viewMode);
+  };
+
+  // ฟังก์ชันล็อกเอาท์และตั้งค่า sessionStorage
+  const handleLogout = async () => {
+    // เก็บข้อมูลว่ามีการล็อกเอาท์ เพื่อไม่ให้ redirect กลับมาหน้า profile
+    sessionStorage.setItem('logged_out', 'true');
+    
+    // ล้าง URL.createObjectURL ถ้ามี
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    
+    // ออกจากระบบและไปที่หน้า login
+    router.replace('/login');
   };
 
   // แปลงสตริงวันที่เป็นรูปแบบไทย
@@ -453,8 +628,12 @@ export default function ProfilePage() {
   };
 
   // แสดงข้อความกำลังโหลด
-  if (status === "loading" || isLoading) {
-    return <div className="flex justify-center items-center h-screen">กำลังโหลด...</div>;
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner size="lg" color="primary" labelColor="primary" label="กำลังโหลด..." />
+      </div>
+    );
   }
 
   // ตรวจสอบว่าเป็นผู้ใช้ LINE หรือไม่
@@ -465,7 +644,21 @@ export default function ProfilePage() {
       <NavBar />
 
       <main className="container mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">โปรไฟล์ของฉัน</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">โปรไฟล์ของฉัน</h1>
+          
+          {needsRefresh && (
+            <Button
+              color="primary"
+              variant="flat"
+              size="sm"
+              startContent={<FiRefreshCw />}
+              onPress={handleRefreshData}
+            >
+              รีเฟรชข้อมูล
+            </Button>
+          )}
+        </div>
 
         {/* การ์ดข้อมูลโปรไฟล์ */}
         <Card className="mb-6">
@@ -478,6 +671,7 @@ export default function ProfilePage() {
                 size="sm"
                 startContent={<FaRegEdit />}
                 onPress={handleEditStart}
+                isDisabled={isLoading}
               >
                 แก้ไขข้อมูล
               </Button>
@@ -499,223 +693,241 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* รูปโปรไฟล์ */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`relative w-32 h-32 rounded-full mb-4 ${isEditing ? 'cursor-pointer' : ''} overflow-hidden bg-gray-200 flex items-center justify-center`}
-                  onClick={handleImageClick}
-                >
-                  {previewUrl ? (
-                    <Image
-                      src={previewUrl}
-                      alt="Profile"
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <FaUser size={50} className="text-gray-400" />
-                  )}
-                  {isEditing && (
-                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <FaCamera size={28} className="text-white" />
-                    </div>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                {isEditing && (
-                  <div className="flex flex-col gap-2 items-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      คลิกเพื่อเปลี่ยนรูปโปรไฟล์
-                    </p>
-                    {previewUrl && (
-                      <Tooltip content="ลบรูปโปรไฟล์">
-                        <Button
-                          size="sm"
-                          isIconOnly
-                          color="danger"
-                          variant="flat"
-                          onPress={handleClearImage}
-                        >
-                          <FaTrashAlt size={16} />
-                        </Button>
-                      </Tooltip>
+            {isLoading && !isEditing ? (
+              <div className="flex justify-center py-12">
+                <Spinner size="lg" color="primary" />
+              </div>
+            ) : (
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* รูปโปรไฟล์ */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`relative w-32 h-32 rounded-full mb-4 ${isEditing ? 'cursor-pointer' : ''} overflow-hidden bg-gray-200 flex items-center justify-center`}
+                    onClick={handleImageClick}
+                  >
+                    {previewUrl ? (
+                      <Image
+                        src={previewUrl}
+                        alt="Profile"
+                        fill
+                        style={{ objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <FaUser size={50} className="text-gray-400" />
+                    )}
+                    {isEditing && (
+                      <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <FaCamera size={28} className="text-white" />
+                      </div>
                     )}
                   </div>
-                )}
-
-                {/* ปุ่มกลับไปใช้ข้อมูลจาก LINE */}
-                {!isEditing && isLineUser && originalLineData && (
-                  <Tooltip content="กลับไปใช้ข้อมูลจาก LINE">
-                    <Button
-                      size="sm"
-                      color="success"
-                      variant="flat"
-                      startContent={<SiLine />}
-                      onPress={handleUseLineData}
-                      isLoading={isLoading}
-                    >
-                      ใช้ข้อมูล LINE
-                    </Button>
-                  </Tooltip>
-                )}
-              </div>
-
-              {/* ข้อมูลส่วนตัว */}
-              <div className="flex-1">
-                {!isEditing ? (
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">ชื่อ</h3>
-                      <div className="flex items-center gap-2">
-                        <p className="text-lg">{userData?.name || "ไม่ระบุ"}</p>
-                        {isLineUser && useOriginalData && (
-                          <Tooltip content="ใช้ชื่อจาก LINE">
-                            <div className="flex items-center text-xs px-2 py-1 rounded-full bg-green-100 text-green-600">
-                              <SiLine className="mr-1" /> LINE
-                            </div>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">อีเมล</h3>
-                      <p className="text-lg">{userData?.email || ""}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">เข้าสู่ระบบด้วย</h3>
-                      <p className="text-lg capitalize">{formatProvider(userData?.provider || "")}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">เกี่ยวกับฉัน</h3>
-                      {userData?.bio ? (
-                        <p className="text-lg">{userData.bio}</p>
-                      ) : (
-                        <p className="text-gray-400 italic">ยังไม่ได้เพิ่มข้อมูล</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  {isEditing && (
+                    <div className="flex flex-col gap-2 items-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        คลิกเพื่อเปลี่ยนรูปโปรไฟล์
+                      </p>
+                      {previewUrl && (
+                        <Tooltip content="ลบรูปโปรไฟล์">
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            color="danger"
+                            variant="flat"
+                            onPress={handleClearImage}
+                          >
+                            <FaTrashAlt size={16} />
+                          </Button>
+                        </Tooltip>
                       )}
                     </div>
+                  )}
 
-                    {/* แสดงข้อมูลต้นฉบับจาก LINE */}
-                    {isLineUser && originalLineData && !useOriginalData && (
-                      <div className="mt-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center">
-                          <SiLine className="mr-2 text-green-500" /> ข้อมูลต้นฉบับจาก LINE
-                        </h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">ชื่อ:</p>
-                            <p className="text-sm">{originalLineData.name}</p>
-                          </div>
-                          {originalLineData.profile_image && (
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm text-gray-500 dark:text-gray-400">รูปโปรไฟล์:</p>
-                              <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <Image
-                                  src={originalLineData.profile_image}
-                                  alt="LINE Profile"
-                                  width={40}
-                                  height={40}
-                                />
+                  {/* ปุ่มกลับไปใช้ข้อมูลจาก LINE */}
+                  {!isEditing && isLineUser && originalLineData && !useOriginalData && (
+                    <Tooltip content="กลับไปใช้ข้อมูลจาก LINE">
+                      <Button
+                        size="sm"
+                        color="success"
+                        variant="flat"
+                        startContent={<SiLine />}
+                        onPress={handleUseLineData}
+                        isLoading={isLoading}
+                      >
+                        ใช้ข้อมูล LINE
+                      </Button>
+                    </Tooltip>
+                  )}
+                </div>
+
+                {/* ข้อมูลส่วนตัว */}
+                <div className="flex-1">
+                  {!isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">ชื่อ</h3>
+                        <div className="flex items-center gap-2">
+                          <p className="text-lg">{userData?.name || "ไม่ระบุ"}</p>
+                          {isLineUser && useOriginalData && (
+                            <Tooltip content="ใช้ชื่อจาก LINE">
+                              <div className="flex items-center text-xs px-2 py-1 rounded-full bg-green-100 text-green-600">
+                                <SiLine className="mr-1" /> LINE
                               </div>
-                            </div>
+                            </Tooltip>
                           )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Input
-                      type="text"
-                      label="ชื่อ"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="ชื่อของคุณ"
-                      isRequired
-                      variant="bordered"
-                      endContent={
-                        isLineUser && originalLineData && (
-                          <Tooltip content="ใช้ชื่อจาก LINE">
-                            <Button
-                              size="sm"
-                              isIconOnly
-                              color="success"
-                              variant="flat"
-                              onPress={() => setName(originalLineData.name)}
-                            >
-                              <SiLine />
-                            </Button>
-                          </Tooltip>
-                        )
-                      }
-                    />
-                    <Input
-                      type="email"
-                      label="อีเมล"
-                      value={userData?.email || ""}
-                      isDisabled
-                      variant="bordered"
-                    />
-                    <Textarea
-                      label="เกี่ยวกับฉัน"
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      placeholder="ข้อมูลเกี่ยวกับตัวคุณ (ไม่บังคับ)"
-                      variant="bordered"
-                    />
-
-                    {/* ตัวเลือกใช้ข้อมูลจาก LINE */}
-                    {isLineUser && originalLineData && (
-                      <div className="border border-green-200 rounded-lg p-3 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                        <div className="flex items-center gap-2 mb-2">
-                          <SiLine className="text-green-500" size={18} />
-                          <h3 className="text-sm font-medium">ข้อมูลจาก LINE</h3>
-                        </div>
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="useLineData"
-                            checked={useOriginalData}
-                            onChange={(e) => setUseOriginalData(e.target.checked)}
-                            className="mr-2"
-                          />
-                          <label htmlFor="useLineData" className="text-sm">
-                            ใช้ข้อมูลต้นฉบับจาก LINE (ชื่อและรูปโปรไฟล์)
-                          </label>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          เมื่อเลือกตัวเลือกนี้ ข้อมูลจะอัพเดทอัตโนมัติทุกครั้งที่คุณเข้าสู่ระบบด้วย LINE
-                        </p>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">อีเมล</h3>
+                        <p className="text-lg">{userData?.email || ""}</p>
                       </div>
-                    )}
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">เข้าสู่ระบบด้วย</h3>
+                        <p className="text-lg capitalize">{formatProvider(userData?.provider || "")}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">เกี่ยวกับฉัน</h3>
+                        {userData?.bio ? (
+                          <p className="text-lg">{userData.bio}</p>
+                        ) : (
+                          <p className="text-gray-400 italic">ยังไม่ได้เพิ่มข้อมูล</p>
+                        )}
+                      </div>
 
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        color="primary"
-                        onPress={handleSaveProfile}
-                        isLoading={isLoading}
-                        startContent={<FaUserEdit />}
-                      >
-                        บันทึกข้อมูล
-                      </Button>
-                      <Button
-                        variant="flat"
-                        onPress={handleCancelEdit}
-                        disabled={isLoading}
-                      >
-                        ยกเลิก
-                      </Button>
+                      {/* แสดงข้อมูลต้นฉบับจาก LINE */}
+                      {isLineUser && originalLineData && !useOriginalData && (
+                        <div className="mt-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center">
+                            <SiLine className="mr-2 text-green-500" /> ข้อมูลต้นฉบับจาก LINE
+                          </h3>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">ชื่อ:</p>
+                              <p className="text-sm">{originalLineData.name}</p>
+                            </div>
+                            {originalLineData.profile_image && (
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">รูปโปรไฟล์:</p>
+                                <div className="w-10 h-10 rounded-full overflow-hidden">
+                                  <Image
+                                    src={originalLineData.profile_image}
+                                    alt="LINE Profile"
+                                    width={40}
+                                    height={40}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* ปุ่มล็อกเอาท์ */}
+                      <div className="mt-8">
+                        <Button
+                          color="danger"
+                          variant="flat"
+                          startContent={<FiLogOut />}
+                          onPress={handleLogout}
+                        >
+                          ออกจากระบบ
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="space-y-4">
+                      <Input
+                        type="text"
+                        label="ชื่อ"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="ชื่อของคุณ"
+                        isRequired
+                        variant="bordered"
+                        endContent={
+                          isLineUser && originalLineData && (
+                            <Tooltip content="ใช้ชื่อจาก LINE">
+                              <Button
+                                size="sm"
+                                isIconOnly
+                                color="success"
+                                variant="flat"
+                                onPress={() => setName(originalLineData.name)}
+                              >
+                                <SiLine />
+                              </Button>
+                            </Tooltip>
+                          )
+                        }
+                      />
+                      <Input
+                        type="email"
+                        label="อีเมล"
+                        value={userData?.email || ""}
+                        isDisabled
+                        variant="bordered"
+                      />
+                      <Textarea
+                        label="เกี่ยวกับฉัน"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="ข้อมูลเกี่ยวกับตัวคุณ (ไม่บังคับ)"
+                        variant="bordered"
+                      />
+
+                      {/* ตัวเลือกใช้ข้อมูลจาก LINE */}
+                      {isLineUser && originalLineData && (
+                        <div className="border border-green-200 rounded-lg p-3 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                          <div className="flex items-center gap-2 mb-2">
+                            <SiLine className="text-green-500" size={18} />
+                            <h3 className="text-sm font-medium">ข้อมูลจาก LINE</h3>
+                          </div>
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="useLineData"
+                              checked={useOriginalData}
+                              onChange={(e) => setUseOriginalData(e.target.checked)}
+                              className="mr-2"
+                            />
+                            <label htmlFor="useLineData" className="text-sm">
+                              ใช้ข้อมูลต้นฉบับจาก LINE (ชื่อและรูปโปรไฟล์)
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            เมื่อเลือกตัวเลือกนี้ ข้อมูลจะอัพเดทอัตโนมัติทุกครั้งที่คุณเข้าสู่ระบบด้วย LINE
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          color="primary"
+                          onPress={handleSaveProfile}
+                          isLoading={isLoading}
+                          startContent={<FaUserEdit />}
+                        >
+                          บันทึกข้อมูล
+                        </Button>
+                        <Button
+                          variant="flat"
+                          onPress={handleCancelEdit}
+                          disabled={isLoading}
+                        >
+                          ยกเลิก
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </CardBody>
         </Card>
 
@@ -732,7 +944,9 @@ export default function ProfilePage() {
 
           <CardBody>
             {isLoadingHistory ? (
-              <div className="py-4 text-center">กำลังโหลดข้อมูล...</div>
+              <div className="py-10 flex justify-center">
+                <Spinner size="lg" color="primary" />
+              </div>
             ) : (
               <>
                 {/* Tabs สำหรับเลือกดูแบบจัดกลุ่มตาม IP หรือดูทั้งหมด */}
@@ -844,7 +1058,7 @@ export default function ProfilePage() {
                         )}
                       </div>
                     ) : (
-                      <div className="py-4 text-center text-gray-500">ไม่พบประวัติการเข้าสู่ระบบ</div>
+                      <div className="py-10 text-center text-gray-500">ไม่พบประวัติการเข้าสู่ระบบ</div>
                     )}
                   </>
                 ) : (
@@ -922,7 +1136,7 @@ export default function ProfilePage() {
                         )}
                       </div>
                     ) : (
-                      <div className="py-4 text-center text-gray-500">ไม่พบประวัติการเข้าสู่ระบบ</div>
+                      <div className="py-10 text-center text-gray-500">ไม่พบประวัติการเข้าสู่ระบบ</div>
                     )}
                   </>
                 )}

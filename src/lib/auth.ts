@@ -29,6 +29,14 @@ export async function saveLoginHistory(userId: string, status: 'success' | 'fail
     // สร้าง session ID ใหม่
     const sessionId = new mongoose.Types.ObjectId().toString();
 
+    console.log("Auth: Saving login history", {
+      userId,
+      status,
+      ip,
+      userAgent,
+      sessionId
+    });
+
     await LoginHistory.create({
       user_id: userId,
       session_id: sessionId,
@@ -83,6 +91,9 @@ export const authOptions: AuthOptions = {
         if (!credentials) return null;
       
         const { email, otp } = credentials as OTPUserCredentials;
+        
+        console.log("Auth: OTP login attempt", { email, otpLength: otp?.length });
+        
         try {
           await connectDB();
       
@@ -95,18 +106,22 @@ export const authOptions: AuthOptions = {
           });
       
           if (!validOtp) {
-            console.log("Invalid OTP for email:", email);
+            console.log("Auth: Invalid OTP for email:", email);
             return null;
           }
       
           // ทำเครื่องหมายว่า OTP ถูกใช้งานแล้ว
           await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
+          console.log("Auth: OTP marked as used:", validOtp._id);
       
           // ค้นหาผู้ใช้
           const user = await UserModel.findOne({ email, provider: 'otp' });
+          
+          console.log("Auth: User search result for email", email, ":", user ? "Found" : "Not found");
       
           if (!user) {
             // ถ้าเป็นการล็อกอินครั้งแรก ให้ส่งค่ากลับพิเศษ
+            console.log("Auth: First-time OTP login, returning new-user status");
             return {
               id: 'new-user',
               email,
@@ -117,9 +132,16 @@ export const authOptions: AuthOptions = {
             } as CustomUser;
           }
       
-          // บันทึกประวัติการล็อกอิน - แก้ไขโดยไม่กำหนดตัวแปรให้เกิด warning
-          await saveLoginHistory(user._id.toString(), 'success');
+          // บันทึกประวัติการล็อกอิน
+          const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
+          console.log("Auth: Login history saved with session ID:", clientInfo.sessionId);
       
+          console.log("Auth: OTP login successful for existing user", {
+            id: user._id.toString(),
+            name: user.name,
+            provider: 'otp'
+          });
+          
           return {
             id: user._id.toString(),
             name: user.name,
@@ -137,9 +159,13 @@ export const authOptions: AuthOptions = {
 
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.log("user:", user);
-      console.log("Sign in attempt:", { provider: account?.provider });
-      console.log("Profile data:", profile);
+      console.log("Auth: Sign in attempt", { 
+        provider: account?.provider,
+        userId: user?.id,
+        userName: user?.name
+      });
+      
+      console.log("Auth: Profile data:", profile);
     
       try {
         await connectDB();
@@ -150,6 +176,8 @@ export const authOptions: AuthOptions = {
           const { name, email, picture } = lineProfile;
           const provider_id = lineProfile.sub;
     
+          console.log("Auth: LINE login with provider_id:", provider_id);
+          
           // ค้นหาผู้ใช้จาก provider_id
           let existingUser = await UserModel.findOne({
             provider: 'line',
@@ -157,6 +185,8 @@ export const authOptions: AuthOptions = {
           });
     
           if (existingUser) {
+            console.log("Auth: Existing LINE user found:", existingUser._id.toString());
+            
             // เก็บข้อมูลจาก LINE ไว้ในฟิลด์ original_line_data
             // แต่ไม่ได้อัพเดทข้อมูลหลักของผู้ใช้ (เพื่อรักษาข้อมูลที่ผู้ใช้แก้ไขเอง)
             existingUser = await UserModel.findByIdAndUpdate(
@@ -171,8 +201,9 @@ export const authOptions: AuthOptions = {
               { new: true }
             );
     
-            // บันทึกประวัติการล็อกอิน - แก้ไขโดยไม่กำหนดตัวแปรให้เกิด warning
-            await saveLoginHistory(existingUser._id.toString(), 'success');
+            // บันทึกประวัติการล็อกอิน
+            const clientInfo = await saveLoginHistory(existingUser._id.toString(), 'success');
+            console.log("Auth: Login history saved for LINE user with session ID:", clientInfo.sessionId);
     
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
@@ -180,6 +211,8 @@ export const authOptions: AuthOptions = {
             return true;
           } else {
             // สร้างผู้ใช้ใหม่สำหรับ LINE (ไม่ต้องไปที่ create-profile)
+            console.log("Auth: Creating new LINE user");
+            
             const newUser = await UserModel.create({
               email,
               name,
@@ -191,11 +224,15 @@ export const authOptions: AuthOptions = {
                 email,
                 profile_image: picture
               },
-              is_active: true
+              is_active: true,
+              use_original_data: true // ใช้ข้อมูลจาก LINE เป็นค่าเริ่มต้น
             });
     
+            console.log("Auth: New LINE user created:", newUser._id.toString());
+            
             // บันทึกประวัติการล็อกอิน
-            await saveLoginHistory(newUser._id.toString(), 'success');
+            const clientInfo = await saveLoginHistory(newUser._id.toString(), 'success');
+            console.log("Auth: Login history saved for new LINE user with session ID:", clientInfo.sessionId);
     
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
@@ -214,35 +251,64 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         const customUser = user as CustomUser;
+        
+        console.log("Auth: JWT callback for user", {
+          id: customUser.id, 
+          provider: customUser.provider,
+          isNewUser: customUser.isNewUser
+        });
+        
         token.userId = customUser.id;
         token.provider = customUser.provider || 'unknown';
 
         // สำหรับผู้ใช้ใหม่ที่ล็อกอินด้วย OTP
         if (customUser.isNewUser) {
           token.isNewUser = true;
+          console.log("Auth: JWT marked as new user");
         }
 
         // ถ้าเป็น LINE User ID ให้กำหนด provider เป็น 'line'
         if (customUser.id?.startsWith('U')) {
           token.provider = 'line';
+          console.log("Auth: JWT provider set to LINE based on ID format");
         }
+        
+        console.log("Auth: JWT token updated", { 
+          userId: token.userId, 
+          provider: token.provider,
+          isNewUser: token.isNewUser
+        });
       }
       return token;
     },
 
     async session({ session, token }: { session: Session; token: JWT }) {
+      console.log("Auth: Session callback with token", { 
+        userId: token.userId, 
+        provider: token.provider,
+        isNewUser: token.isNewUser 
+      });
+      
       if (token && session.user) {
         session.user.id = token.userId;
         session.user.provider = token.provider;
 
         if (token.isNewUser) {
           session.user.isNewUser = true;
+          console.log("Auth: Session marked as new user");
         }
 
         // ถ้า ID เริ่มต้นด้วย 'U' ให้กำหนด provider เป็น 'line'
         if (session.user.id?.startsWith('U')) {
           session.user.provider = 'line';
+          console.log("Auth: Session provider set to LINE based on ID format");
         }
+        
+        console.log("Auth: Session updated", { 
+          userId: session.user.id, 
+          provider: session.user.provider,
+          isNewUser: session.user.isNewUser
+        });
       }
       return session;
     }

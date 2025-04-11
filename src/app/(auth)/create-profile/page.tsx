@@ -26,17 +26,40 @@ export default function CreateProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // เช็คว่าปุ่มบันทึกพร้อมกดหรือไม่
-  const isSaveDisabled = !name.trim() || isLoading;
+  const isSaveDisabled = !name.trim() || isLoading || isRedirecting;
 
   // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อคอมโพเนนต์โหลด
   useEffect(() => {
-    // ถ้าไม่ได้ล็อกอิน หรือไม่ใช่ผู้ใช้ใหม่ ให้เปลี่ยนเส้นทาง
+    console.log("CreateProfile: Session status:", status, "User:", session?.user);
+
+    // ถ้าไม่ได้ล็อกอิน ให้เปลี่ยนเส้นทางไปหน้า login
     if (status === "unauthenticated") {
+      console.log("CreateProfile: Not authenticated, redirecting to login");
       router.replace('/login');
-    } else if (status === "authenticated" && !session.user.isNewUser) {
+      return;
+    }
+
+    // ถ้าเป็นผู้ใช้ปกติที่มี id ไม่ใช่ 'new-user' ให้ redirect ไปหน้า profile
+    if (status === "authenticated" && session?.user?.id !== 'new-user' && !session.user.isNewUser) {
+      console.log("CreateProfile: User already has a profile, redirecting to profile page");
       router.replace('/profile');
+      return;
+    }
+
+    // ถ้ามีการล็อกอินสำเร็จ ให้ตั้งค่าข้อมูลเริ่มต้น
+    if (status === "authenticated" && session?.user) {
+      // ตั้งค่าชื่อและอีเมลจาก session
+      if (session.user.name) {
+        setName(session.user.name);
+      }
+      
+      // ตั้งค่ารูปโปรไฟล์จาก session
+      if (session.user.image) {
+        setPreviewUrl(session.user.image);
+      }
     }
   }, [session, status, router]);
 
@@ -45,7 +68,7 @@ export default function CreateProfilePage() {
     const file = e.target.files?.[0] || null;
     if (file) {
       // หากมี URL ก่อนหน้า ให้ revoke เพื่อคืนหน่วยความจำ
-      if (previewUrl) {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
         URL.revokeObjectURL(previewUrl);
       }
 
@@ -63,7 +86,7 @@ export default function CreateProfilePage() {
   // ล้างรูปโปรไฟล์ - แก้ไขเพื่อให้สามารถอัปโหลดรูปเดิมซ้ำได้
   const handleClearImage = () => {
     // ถ้ามี URL ที่สร้างไว้ ให้ revoke เพื่อคืนหน่วยความจำ
-    if (previewUrl) {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl);
     }
 
@@ -78,8 +101,6 @@ export default function CreateProfilePage() {
   };
 
   // จัดการการบันทึกโปรไฟล์
-  // แก้ไขในส่วน handleSubmit
-  // แก้ไขเฉพาะส่วน handleSubmit ในไฟล์ create-profile/page.tsx
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -101,41 +122,87 @@ export default function CreateProfilePage() {
         formData.append("profileImage", profileImage);
       }
 
-      // เปลี่ยน URL ของ API endpoint จาก complete-profile เป็น create-profile
+      console.log("CreateProfile: Submitting profile data to API", {
+        name,
+        bio,
+        hasProfileImage: !!profileImage
+      });
+
+      // ส่งข้อมูลไปยัง API
       const response = await fetch('/api/auth/create-profile', {
         method: 'POST',
         body: formData
       });
 
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("CreateProfile: API error response", {
+          status: response.status,
+          text
+        });
+        throw new Error(`Error ${response.status}: ${text}`);
+      }
+
       const data = await response.json();
+      console.log("CreateProfile: API response:", data);
 
       if (data.success) {
-        // อัพเดทเซสชัน
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            isNewUser: false,
-            name: data.user.name,
-            image: data.user.image
-          }
+        // ตรวจสอบข้อมูลที่ได้รับกลับมา
+        console.log("CreateProfile: Profile created successfully", {
+          userId: data.user.id,
+          name: data.user.name,
+          image: data.user.image
         });
 
-        setSuccess("สร้างโปรไฟล์สำเร็จ");
+        setSuccess(data.message || "สร้างโปรไฟล์สำเร็จ");
 
-        // ตั้งค่า localStorage เพื่อให้แสดง popup ต้อนรับเมื่อไปที่หน้าแรก
-        localStorage.setItem('firstLogin', 'true');
+        // อัพเดทเซสชันด้วยข้อมูลใหม่ รวมถึง ID
+        try {
+          await update({
+            ...session,
+            user: {
+              ...session?.user,
+              id: data.user.id, // อัพเดท ID
+              isNewUser: false,  // เปลี่ยนสถานะผู้ใช้
+              name: data.user.name,
+              image: data.user.image
+            }
+          });
+          
+          console.log("CreateProfile: Session updated successfully");
 
-        // เปลี่ยนเส้นทางไปยังหน้าแรกแทน /profile
-        setTimeout(() => {
-          window.location.href = '/';  // แก้จาก '/profile' เป็น '/'
-        }, 1000);
+          // ตั้งค่า localStorage เพื่อให้แสดง popup ต้อนรับเมื่อไปที่หน้าแรก
+          localStorage.setItem('firstLogin', 'true');
+          
+          // ตั้งเวลาเพื่อ redirect ให้ผู้ใช้เห็นข้อความสำเร็จก่อน
+          setIsRedirecting(true);
+          
+          // เปลี่ยนเส้นทางไปยังหน้าแรก และใช้ window.location.href เพื่อให้มีการโหลดหน้าใหม่
+          setTimeout(() => {
+            console.log("CreateProfile: Redirecting to home page");
+            // ทำความสะอาด localStorage อื่นๆ ที่เกี่ยวกับการ login
+            localStorage.removeItem('loginEmail');
+            localStorage.removeItem('otpSent');
+            localStorage.removeItem('otpCountdown');
+            localStorage.removeItem('otpTimestamp');
+            
+            // ใช้ window.location เพื่อให้มีการโหลดหน้าเว็บใหม่ทั้งหมด
+            window.location.href = '/';
+          }, 1500);
+        } catch (updateError) {
+          console.error("CreateProfile: Error updating session", updateError);
+          // ถ้าไม่สามารถอัพเดท session ได้ ให้เปลี่ยนเส้นทางด้วย window.location
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1500);
+        }
       } else {
+        console.error("CreateProfile: Error creating profile", data.message);
         setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");
       }
     } catch (error) {
-      console.error("Error creating profile:", error);
-      setError("เกิดข้อผิดพลาดในการสร้างโปรไฟล์");
+      console.error("CreateProfile: Error creating profile:", error);
+      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างโปรไฟล์");
     } finally {
       setIsLoading(false);
     }
@@ -184,6 +251,9 @@ export default function CreateProfilePage() {
           {success && (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
               {success}
+              {isRedirecting && (
+                <p className="text-sm mt-2">กำลังนำคุณไปยังหน้าหลัก...</p>
+              )}
             </div>
           )}
 
@@ -262,11 +332,12 @@ export default function CreateProfilePage() {
               type="submit"
               color="primary"
               className="w-full font-semibold"
-              isLoading={isLoading}
+              isLoading={isLoading || isRedirecting}
               isDisabled={isSaveDisabled}
-              startContent={isLoading ? <Spinner size="sm" /> : <PiPencilSimpleLineFill size={20} />}
+              startContent={isLoading || isRedirecting ? <Spinner size="sm" /> : <PiPencilSimpleLineFill size={20} />}
             >
-              {isLoading ? "กำลังสร้างโปรไฟล์..." : "สร้างโปรไฟล์"}
+              {isLoading ? "กำลังสร้างโปรไฟล์..." : 
+               isRedirecting ? "กำลังนำไปยังหน้าหลัก..." : "สร้างโปรไฟล์"}
             </Button>
           </form>
 

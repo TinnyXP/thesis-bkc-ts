@@ -21,32 +21,79 @@ export default function LoginPage() {
   const [isOtpValid, setIsOtpValid] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [resendCooldown, setResendCooldown] = React.useState(0);
+  const [error, setError] = React.useState<string | null>(null);
 
   // ตรวจสอบสถานะการเข้าสู่ระบบ
   React.useEffect(() => {
+    console.log("Login: Session status check", { 
+      status, 
+      userId: session?.user?.id,
+      isNewUser: session?.user?.isNewUser
+    });
+    
     if (session) {
       if (session.user.isNewUser) {
         // ถ้าเป็นผู้ใช้ใหม่ที่เข้าสู่ระบบด้วย OTP ให้ไปที่หน้าสร้างโปรไฟล์
         if (session.user.provider === 'otp') {
+          console.log("Login: Redirecting to create-profile");
           router.replace('/create-profile');
         } else {
           // ถ้าเป็นผู้ใช้ใหม่ที่เข้าสู่ระบบด้วย LINE ให้ไปที่หน้าแรกเลย
+          console.log("Login: New LINE user, redirecting to home");
           localStorage.setItem('firstLogin', 'true'); // ตั้งค่าเพื่อให้แสดง popup
           router.replace('/');
         }
       } else {
         // ถ้าไม่ใช่ผู้ใช้ใหม่ ให้ไปที่หน้าแรกเลย
+        console.log("Login: Existing user, redirecting to home");
         router.replace('/');
       }
+    } else if (status === "unauthenticated") {
+      // โหลด email จาก localStorage เมื่อเริ่มต้น (เฉพาะเมื่อยังไม่ได้เข้าสู่ระบบ)
+      const savedEmail = localStorage.getItem('loginEmail');
+      if (savedEmail) {
+        setEmail(savedEmail);
+      }
+      
+      // ตรวจสอบสถานะ OTP
+      const otpSentStatus = localStorage.getItem('otpSent');
+      if (otpSentStatus === 'true') {
+        const savedCountdown = localStorage.getItem('otpCountdown');
+        if (savedCountdown) {
+          const timeLeft = Math.max(0, parseInt(savedCountdown) -
+            Math.floor((Date.now() - parseInt(localStorage.getItem('otpTimestamp') || '0')) / 1000));
+          if (timeLeft > 0) {
+            setResendCooldown(timeLeft);
+            setPage([1, 1]);
+          } else {
+            // ถ้าหมดเวลาแล้ว ลบข้อมูล OTP ออก
+            localStorage.removeItem('otpSent');
+            localStorage.removeItem('otpCountdown');
+            localStorage.removeItem('otpTimestamp');
+          }
+        }
+      }
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
   // ตัวนับเวลาถอยหลังสำหรับการขอรหัส OTP ใหม่
   React.useEffect(() => {
     let timer: NodeJS.Timeout;
     if (resendCooldown > 0) {
       timer = setInterval(() => {
-        setResendCooldown(prev => prev - 1);
+        setResendCooldown(prev => {
+          const newValue = prev - 1;
+          // เก็บค่า countdown ใน localStorage
+          if (newValue > 0) {
+            localStorage.setItem('otpCountdown', newValue.toString());
+          } else {
+            // ถ้าหมดเวลาแล้ว ลบข้อมูล OTP ออก
+            localStorage.removeItem('otpSent');
+            localStorage.removeItem('otpCountdown');
+            localStorage.removeItem('otpTimestamp');
+          }
+          return newValue;
+        });
       }, 1000);
     }
     return () => {
@@ -77,20 +124,26 @@ export default function LoginPage() {
     if (newDirection < 0) {
       setOtp("");
       setIsOtpValid(true);
+      setError(null);
     }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
     if (!email.length || !/^\S+@\S+\.\S+$/.test(email)) {
       setIsEmailValid(false);
+      setError("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง");
       return;
     }
 
     setIsEmailValid(true);
     setIsLoading(true);
+    setError(null);
 
     try {
+      console.log("Login: Sending OTP to email", email);
+      
       // ส่งรหัส OTP
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -99,12 +152,15 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
+      console.log("Login: OTP send response", { success: data.success });
 
       if (data.success) {
         // เก็บข้อมูลใน localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('loginEmail', email);
           localStorage.setItem('otpSent', 'true');
+          localStorage.setItem('otpTimestamp', Date.now().toString());
+          localStorage.setItem('otpCountdown', '60');
         }
 
         // เริ่มนับถอยหลังการขอรหัส OTP ใหม่
@@ -114,10 +170,12 @@ export default function LoginPage() {
         paginate(1);
       } else {
         setIsEmailValid(false);
+        setError(data.message || "ไม่สามารถส่งรหัส OTP ได้");
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
       setIsEmailValid(false);
+      setError("เกิดข้อผิดพลาดในการส่งรหัส OTP");
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +183,7 @@ export default function LoginPage() {
 
   // แก้ไขฟังก์ชัน handleLineLogin
   const handleLineLogin = () => {
+    console.log("Login: Initiating LINE login");
     // ตั้งค่า localStorage เพื่อให้แสดง popup เมื่อเข้าสู่ระบบสำเร็จครั้งแรก
     localStorage.setItem('firstLogin', 'true');
     signIn("line", { callbackUrl: "/" });
@@ -135,13 +194,17 @@ export default function LoginPage() {
 
     if (!otp.length || otp.length !== 6) {
       setIsOtpValid(false);
+      setError("กรุณากรอกรหัส OTP ให้ครบ 6 หลัก");
       return;
     }
 
     setIsOtpValid(true);
     setIsLoading(true);
+    setError(null);
 
     try {
+      console.log("Login: Verifying OTP", { email, otpLength: otp.length });
+      
       // ดำเนินการเข้าสู่ระบบ
       const result = await signIn("otp", {
         email,
@@ -149,19 +212,30 @@ export default function LoginPage() {
         redirect: false
       });
 
+      console.log("Login: OTP verification result", { 
+        ok: result?.ok, 
+        error: result?.error,
+        url: result?.url
+      });
+
       if (result?.error) {
         setIsOtpValid(false);
+        setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
       } else if (result?.ok) {
         // ลบข้อมูลใน localStorage เมื่อเข้าสู่ระบบสำเร็จ
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('loginEmail');
-          localStorage.removeItem('otpSent');
-        }
+        localStorage.removeItem('loginEmail');
+        localStorage.removeItem('otpSent');
+        localStorage.removeItem('otpCountdown');
+        localStorage.removeItem('otpTimestamp');
+        
+        console.log("Login: OTP login successful, clear localStorage");
+        
         // การเข้าสู่ระบบสำเร็จ router จะไปหน้าอื่นโดยอัตโนมัติจาก useEffect
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
       setIsOtpValid(false);
+      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP");
     } finally {
       setIsLoading(false);
     }
@@ -173,8 +247,11 @@ export default function LoginPage() {
     if (resendCooldown > 0) return;
 
     setIsLoading(true);
+    setError(null);
 
     try {
+      console.log("Login: Resending OTP to email", email);
+      
       // ส่งรหัส OTP ใหม่
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -183,8 +260,14 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
+      console.log("Login: Resend OTP response", { success: data.success });
 
       if (data.success) {
+        // ตั้งค่า localStorage ใหม่
+        localStorage.setItem('otpSent', 'true');
+        localStorage.setItem('otpTimestamp', Date.now().toString());
+        localStorage.setItem('otpCountdown', '60');
+        
         // เริ่มนับถอยหลังใหม่
         setResendCooldown(60); // 60 วินาที
 
@@ -192,10 +275,11 @@ export default function LoginPage() {
         setOtp("");
       } else {
         // กรณีมีข้อผิดพลาด
-        console.error("ไม่สามารถส่งรหัส OTP ใหม่ได้");
+        setError(data.message || "ไม่สามารถส่งรหัส OTP ใหม่ได้");
       }
     } catch (error) {
       console.error("Error resending OTP:", error);
+      setError("เกิดข้อผิดพลาดในการส่งรหัส OTP ใหม่");
     } finally {
       setIsLoading(false);
     }
@@ -213,6 +297,7 @@ export default function LoginPage() {
           }}
           variant="gradient"
           size="lg"
+          label="กำลังตรวจสอบสถานะการเข้าสู่ระบบ..."
         />
       </div>
     );
@@ -243,6 +328,14 @@ export default function LoginPage() {
               เข้าสู่ระบบ
             </m.h1>
           </m.div>
+          
+          {/* แสดงข้อความแจ้งเตือน */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2">
+              {error}
+            </div>
+          )}
+          
           <AnimatePresence custom={direction} initial={false} mode="wait">
             <m.form
               key={page}
@@ -269,16 +362,14 @@ export default function LoginPage() {
                   onValueChange={(value) => {
                     setIsEmailValid(true);
                     setEmail(value);
+                    setError(null);
                   }}
                 />
               ) : (
                 <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     รหัส OTP ถูกส่งไปยัง <span className="font-semibold">{email}</span>
                   </p>
-                  {!isOtpValid && (
-                    <p className="text-danger text-tiny mt-1">กรุณากรอกรหัส OTP ให้ถูกต้อง</p>
-                  )}
                   <InputOtp
                     length={6}
                     value={otp}
@@ -286,15 +377,14 @@ export default function LoginPage() {
                     onValueChange={(value) => {
                       setOtp(value);
                       setIsOtpValid(true);
+                      setError(null);
                     }}
                     isInvalid={!isOtpValid}
-                    errorMessage="กรุณากรอกรหัส OTP ให้ถูกต้องและครบถ้วน"
                     classNames={{
                       helperWrapper: "flex justify-center items-center",
-                      errorMessage: "hidden"
                     }}
                   />
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center mt-2">
                     {resendCooldown > 0 ? (
                       <p className="text-tiny text-default-500">
                         ขอรหัสใหม่ได้ในอีก {resendCooldown} วินาที
@@ -332,6 +422,7 @@ export default function LoginPage() {
             startContent={<BsLine className="text-primary-color" size={20} />}
             variant="bordered"
             onPress={handleLineLogin}
+            isLoading={isLoading && page === 0}
           >
             เข้าสู่ระบบผ่าน LINE
           </Button>
@@ -348,6 +439,6 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
-    </section >
+    </section>
   );
 }

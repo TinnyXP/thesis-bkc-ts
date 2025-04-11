@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider } from "@heroui/react";
 import { ToggleTheme } from "@/components"
 import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
 import { Avatar, AvatarIcon } from "@heroui/avatar";
-import { FiArrowUpRight, FiLogIn, FiLogOut } from "react-icons/fi";
+import { FiArrowUpRight, FiLogIn, FiLogOut, FiRefreshCw } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
@@ -32,9 +32,11 @@ interface ProfileAvatarProps {
 }
 
 export default function NavBar() {
-  const { data: session } = useSession();
+  const { data: session, status, update } = useSession();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
 
   const { theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -59,62 +61,98 @@ export default function NavBar() {
     },
   ];
 
-  // ฟังก์ชันสำหรับดึงข้อมูลโปรไฟล์จาก API
-  // const fetchProfileData = async () => {
-  //   if (!session || !session.user) return;
+  // กำหนด fetchProfileData เป็น useCallback
+  const fetchProfileData = useCallback(async () => {
+    if (!session?.user) return;
     
-  //   try {
-  //     setIsLoading(true);
-  //     const response = await fetch('/api/user/get-profile');
-      
-  //     if (!response.ok) {
-  //       console.error('Error fetching profile data:', response.statusText);
-  //       return;
-  //     }
-      
-  //     const data = await response.json();
-      
-  //     if (data.success) {
-  //       setProfileData(data.user);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching profile data:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // เรียกใช้ฟังก์ชันดึงข้อมูลเมื่อมีการเปลี่ยนแปลง session
-  useEffect(() => {
-    if (session?.user) {
-      // ย้ายฟังก์ชันเข้ามาอยู่ใน useEffect เพื่อแก้ไข warning
-      const fetchProfileData = async () => {
-        if (!session || !session.user) return;
-        
-        try {
-          setIsLoading(true);
-          const response = await fetch('/api/user/get-profile');
-          
-          if (!response.ok) {
-            console.error('Error fetching profile data:', response.statusText);
-            return;
-          }
-          
-          const data = await response.json();
-          
-          if (data.success) {
-            setProfileData(data.user);
-          }
-        } catch (error) {
-          console.error('Error fetching profile data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchProfileData();
+    // ถ้าเป็น new-user ไม่ต้องพยายามเรียกข้อมูล
+    if (session.user.id === 'new-user') {
+      console.log("NavBar: User is new-user, not fetching profile");
+      return;
     }
-  }, [session]);
+
+    try {
+      setIsLoading(true);
+      setFetchError(null);
+      console.log("NavBar: Fetching profile data for user ID:", session.user.id);
+      
+      const response = await fetch('/api/user/get-profile', {
+        // เพิ่ม cache: 'no-store' เพื่อไม่ให้ใช้ cache
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error fetching profile data:', response.status, errorText);
+        setFetchError(`Error ${response.status}: ${errorText}`);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log("NavBar: Profile data response:", data);
+      
+      if (data.success) {
+        setProfileData(data.user);
+        setNeedsRefresh(false);
+        console.log("NavBar: Profile data set successfully:", data.user);
+        
+        // อัพเดท session ด้วยข้อมูลล่าสุด
+        if (data.user.name !== session.user.name || data.user.image !== session.user.image) {
+          console.log("NavBar: Updating session with new profile data");
+          await update({
+            ...session,
+            user: {
+              ...session.user,
+              name: data.user.name,
+              image: data.user.image
+            }
+          });
+        }
+      } else {
+        setFetchError(data.message || "Failed to fetch profile data");
+        console.error("NavBar: Profile data error:", data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+      setFetchError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session, update]);
+
+  // ตรวจสอบ session เมื่อมีการเปลี่ยนแปลง
+  useEffect(() => {
+    console.log("NavBar: Session changed", { 
+      status, 
+      userId: session?.user?.id,
+      name: session?.user?.name,
+      email: session?.user?.email
+    });
+    
+    // ตรวจสอบว่ามีการอัพเดท session จาก sessionStorage หรือไม่
+    const sessionUpdated = sessionStorage.getItem('session_updated');
+    if (sessionUpdated === 'true') {
+      console.log("NavBar: Session was updated, setting needsRefresh");
+      setNeedsRefresh(true);
+      sessionStorage.removeItem('session_updated');
+    }
+    
+    // มีการล็อกอินและไม่ใช่ผู้ใช้ใหม่
+    if (session?.user && session.user.id !== 'new-user' && !session.user.isNewUser) {
+      fetchProfileData();
+    } else {
+      // รีเซ็ตข้อมูลโปรไฟล์เมื่อไม่มี session หรือเป็นผู้ใช้ใหม่
+      setProfileData(null);
+    }
+  }, [session, status, fetchProfileData]);
+
+  // ฟังก์ชันรีเฟรชข้อมูลโปรไฟล์
+  const handleRefreshProfile = () => {
+    fetchProfileData();
+  };
 
   return (
     <Navbar
@@ -152,7 +190,25 @@ export default function NavBar() {
       <NavbarContent className="hidden md:flex" justify="end">
         <NavbarItem>
           {session ? (
-            <ProfileAvatar size="md" profileData={profileData} isLoading={isLoading} />
+            <div className="flex items-center gap-2">
+              {needsRefresh && (
+                <Button
+                  isIconOnly
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                  onPress={handleRefreshProfile}
+                  title="รีเฟรชข้อมูลโปรไฟล์"
+                >
+                  <FiRefreshCw />
+                </Button>
+              )}
+              <ProfileAvatar 
+                size="md" 
+                profileData={profileData} 
+                isLoading={isLoading} 
+              />
+            </div>
           ) : (
             <Button
               className="text-medium border-1.5 border-default-200 dark:border-default-200"
@@ -254,7 +310,13 @@ const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | 
   const getProfileImage = () => {
     if (isLoading) return null; // กำลังโหลดข้อมูล
     
-    if (profileData) {
+    // แสดง log เพื่อตรวจสอบข้อมูล
+    console.log("ProfileAvatar: Available image sources", {
+      profileDataImage: profileData?.image,
+      sessionUserImage: session?.user?.image
+    });
+    
+    if (profileData?.image) {
       // ถ้ามีข้อมูลจาก API ให้ใช้ข้อมูลนั้น
       return profileData.image;
     } else if (session?.user?.image) {
@@ -270,7 +332,13 @@ const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | 
   const getProfileName = () => {
     if (isLoading) return "กำลังโหลด..."; // กำลังโหลดข้อมูล
     
-    if (profileData) {
+    // แสดง log เพื่อตรวจสอบข้อมูล
+    console.log("ProfileAvatar: Available name sources", {
+      profileDataName: profileData?.name,
+      sessionUserName: session?.user?.name
+    });
+    
+    if (profileData?.name) {
       // ถ้ามีข้อมูลจาก API ให้ใช้ข้อมูลนั้น
       return profileData.name;
     } else if (session?.user?.name) {
@@ -284,6 +352,21 @@ const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | 
 
   const profileImage = getProfileImage();
   const profileName = getProfileName();
+  
+  // แสดง log เพื่อตรวจสอบข้อมูลที่จะแสดงจริง
+  console.log("ProfileAvatar: Final display values", {
+    profileImage,
+    profileName
+  });
+  
+  // ฟังก์ชันล็อกเอาท์
+  const handleLogout = async () => {
+    // เก็บข้อมูลว่ามีการล็อกเอาท์ เพื่อไม่ให้ redirect กลับมาหน้า profile
+    sessionStorage.setItem('logged_out', 'true');
+    
+    // ออกจากระบบ
+    await signOut({ callbackUrl: '/' });
+  };
 
   return (
     <div>
@@ -296,7 +379,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | 
               icon: "text-zinc-400 dark:text-zinc-400",
             }}
             size={size}
-            src={profileImage ?? "https://images.unsplash.com/broken"}
+            src={profileImage ?? undefined}
             icon={<AvatarIcon />}
             showFallback
           />
@@ -330,7 +413,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps & { profileData: ProfileData | 
             key="logout"
             color="danger"
             startContent={<FiLogOut />}
-            onClick={() => signOut()}
+            onClick={handleLogout}
           >
             ออกจากระบบ
           </DropdownItem>
