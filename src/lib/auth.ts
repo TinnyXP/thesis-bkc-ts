@@ -7,7 +7,6 @@ import UserModel from "@/models/user";
 import OTP from "@/models/otp";
 import LoginHistory from "@/models/loginHistory";
 import { headers } from "next/headers";
-import { generateOTP, sendOTPEmail } from "@/lib/otpService";
 import { JWT } from "next-auth/jwt";
 import mongoose from 'mongoose';
 
@@ -118,8 +117,8 @@ export const authOptions: AuthOptions = {
             } as CustomUser;
           }
       
-          // บันทึกประวัติการล็อกอิน
-          const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
+          // บันทึกประวัติการล็อกอิน - แก้ไขโดยไม่กำหนดตัวแปรให้เกิด warning
+          await saveLoginHistory(user._id.toString(), 'success');
       
           return {
             id: user._id.toString(),
@@ -172,8 +171,8 @@ export const authOptions: AuthOptions = {
               { new: true }
             );
     
-            // บันทึกประวัติการล็อกอิน
-            const clientInfo = await saveLoginHistory(existingUser._id.toString(), 'success');
+            // บันทึกประวัติการล็อกอิน - แก้ไขโดยไม่กำหนดตัวแปรให้เกิด warning
+            await saveLoginHistory(existingUser._id.toString(), 'success');
     
             // ตั้งค่า provider ให้กับ user
             user.provider = 'line';
