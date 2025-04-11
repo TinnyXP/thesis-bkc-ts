@@ -10,9 +10,14 @@ import { headers } from "next/headers";
 import { sendLoginNotificationEmail } from "@/lib/otpService";
 import { JWT } from "next-auth/jwt";
 
+// นำเข้า mongoose เพิ่มเติม
+import mongoose from 'mongoose';
+
+// แก้ไข interface ClientInfo โดยเพิ่ม sessionId
 interface ClientInfo {
   ip: string;
   userAgent: string;
+  sessionId?: string; // เพิ่ม sessionId เป็นตัวเลือก
 }
 
 // ฟังก์ชันช่วยบันทึกประวัติการล็อกอิน
@@ -23,19 +28,24 @@ export async function saveLoginHistory(userId: string, status: 'success' | 'fail
     const ip = headersList.get('x-forwarded-for') ||
       headersList.get('x-real-ip') ||
       '127.0.0.1';
+    
+    // สร้าง session ID ใหม่
+    const sessionId = new mongoose.Types.ObjectId().toString();
 
     await LoginHistory.create({
       user_id: userId,
+      session_id: sessionId,
       login_time: new Date(),
       ip_address: ip,
       user_agent: userAgent,
-      login_status: status
+      login_status: status,
+      is_current_session: true
     });
 
-    return { ip, userAgent };
+    return { ip, userAgent, sessionId };
   } catch (error) {
     console.error("Error saving login history:", error);
-    return { ip: '127.0.0.1', userAgent: 'Unknown' };
+    return { ip: '127.0.0.1', userAgent: 'Unknown', sessionId: 'error' };
   }
 }
 

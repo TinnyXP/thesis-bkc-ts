@@ -7,6 +7,10 @@ const loginHistorySchema = new Schema(
       ref: 'User',
       required: true,
     },
+    session_id: {
+      type: String,
+      default: () => new mongoose.Types.ObjectId().toString(),
+    },
     login_time: {
       type: Date,
       default: Date.now,
@@ -29,6 +33,20 @@ const loginHistorySchema = new Schema(
     },
     location: {
       type: String,
+    },
+    // เพิ่มฟิลด์สำหรับเก็บข้อมูลการ logout
+    session_logout_date: {
+      type: Date,
+      default: null,
+    },
+    logout_reason: {
+      type: String,
+      enum: ['user_request', 'timeout', 'security_alert', 'admin_action', 'system'],
+      default: null,
+    },
+    is_current_session: {
+      type: Boolean,
+      default: true,
     }
   },
   { timestamps: true }
@@ -37,6 +55,8 @@ const loginHistorySchema = new Schema(
 // เพิ่ม index
 loginHistorySchema.index({ user_id: 1 });
 loginHistorySchema.index({ login_time: -1 });
+loginHistorySchema.index({ ip_address: 1 });
+loginHistorySchema.index({ session_id: 1 });
 
 const LoginHistory = mongoose.models.LoginHistory || mongoose.model("LoginHistory", loginHistorySchema);
 export default LoginHistory;
