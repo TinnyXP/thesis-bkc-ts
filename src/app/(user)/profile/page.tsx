@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -12,6 +12,7 @@ import { FaCamera, FaRegEdit, FaHistory, FaUser, FaUserEdit, FaTrashAlt } from "
 import { SiLine } from "react-icons/si";
 import { FiLogOut, FiRefreshCw } from "react-icons/fi";
 import { NavBar, Footer } from "@/components";
+
 
 // อินเตอร์เฟซสำหรับประวัติการเข้าสู่ระบบ
 interface LoginHistoryItem {
@@ -109,7 +110,7 @@ export default function ProfilePage() {
     try {
       setIsLoading(true);
       console.log("ProfilePage: Fetching user profile data for user ID:", session.user.id);
-      
+
       const response = await fetch('/api/user/get-profile', {
         // ป้องกันการใช้ cache
         cache: 'no-store',
@@ -150,7 +151,7 @@ export default function ProfilePage() {
 
         // ตั้งค่าการใช้ข้อมูลต้นฉบับ
         setUseOriginalData(data.user.use_original_data || false);
-        
+
         // อัพเดท session ด้วยข้อมูลล่าสุด
         if (data.user.name !== session.user.name || data.user.image !== session.user.image) {
           console.log("ProfilePage: Updating session with new profile data");
@@ -181,7 +182,7 @@ export default function ProfilePage() {
 
     setIsLoadingHistory(true);
     console.log("ProfilePage: Fetching login history, page:", page, "mode:", mode);
-    
+
     try {
       const groupByIp = mode === "grouped";
       const response = await fetch(`/api/user/login-history?page=${page}&limit=10&groupByIp=${groupByIp}`, {
@@ -380,15 +381,22 @@ export default function ProfilePage() {
       formData.append("bio", bio);
       formData.append("use_original_data", useOriginalData.toString());
 
+      // จัดการกับรูปโปรไฟล์
       if (profileImage) {
+        // มีการอัพโหลดรูปใหม่
         formData.append("profileImage", profileImage);
+      } else if (previewUrl === null) {
+        // ผู้ใช้ต้องการลบรูปโปรไฟล์
+        formData.append("profileImage", "null");
       }
+      // ไม่ต้องส่งอะไรถ้าไม่มีการเปลี่ยนแปลงรูปโปรไฟล์
 
       console.log("ProfilePage: Saving profile data", {
         name,
         bio,
         useOriginalData,
-        hasProfileImage: !!profileImage
+        hasProfileImage: !!profileImage,
+        removeImage: previewUrl === null
       });
 
       const response = await fetch('/api/user/update-profile', {
@@ -462,7 +470,7 @@ export default function ProfilePage() {
 
     try {
       console.log("ProfilePage: Restoring LINE data");
-      
+
       const response = await fetch('/api/user/use-line-data', {
         method: 'POST',
         headers: {
@@ -538,7 +546,7 @@ export default function ProfilePage() {
     setIsLoggingOut(ipAddress);
     try {
       console.log("ProfilePage: Logging out IP", ipAddress, "sessionId:", sessionId);
-      
+
       const response = await fetch('/api/user/logout-ip', {
         method: 'POST',
         headers: {
@@ -588,16 +596,32 @@ export default function ProfilePage() {
 
   // ฟังก์ชันล็อกเอาท์และตั้งค่า sessionStorage
   const handleLogout = async () => {
-    // เก็บข้อมูลว่ามีการล็อกเอาท์ เพื่อไม่ให้ redirect กลับมาหน้า profile
-    sessionStorage.setItem('logged_out', 'true');
-    
-    // ล้าง URL.createObjectURL ถ้ามี
-    if (previewUrl && previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(previewUrl);
+    try {
+      // เก็บข้อมูลว่ามีการล็อกเอาท์ เพื่อไม่ให้ redirect กลับมาหน้า profile
+      sessionStorage.setItem('logged_out', 'true');
+
+      // ทำความสะอาด localStorage ทั้งหมด
+      localStorage.removeItem('loginEmail');
+      localStorage.removeItem('otpSent');
+      localStorage.removeItem('otpCountdown');
+      localStorage.removeItem('otpTimestamp');
+      localStorage.removeItem('firstLogin');
+      localStorage.removeItem('session_updated');
+      localStorage.removeItem('line_login_attempt');
+
+      // ล้าง URL.createObjectURL ถ้ามี
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      // ออกจากระบบ
+      console.log("ProfilePage: Logging out user");
+      await signOut({ callbackUrl: '/login' });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // ถ้ามีข้อผิดพลาดให้ใช้ window.location แทน
+      window.location.href = '/login';
     }
-    
-    // ออกจากระบบและไปที่หน้า login
-    router.replace('/login');
   };
 
   // แปลงสตริงวันที่เป็นรูปแบบไทย
@@ -646,7 +670,7 @@ export default function ProfilePage() {
       <main className="container mx-auto max-w-4xl px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">โปรไฟล์ของฉัน</h1>
-          
+
           {needsRefresh && (
             <Button
               color="primary"
@@ -827,7 +851,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* ปุ่มล็อกเอาท์ */}
                       <div className="mt-8">
                         <Button

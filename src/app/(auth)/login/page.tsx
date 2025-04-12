@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, Input, Link, Divider, Tooltip, Spinner, InputOtp } from "@heroui/react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import { signIn, useSession } from "next-auth/react";
@@ -25,12 +25,12 @@ export default function LoginPage() {
 
   // ตรวจสอบสถานะการเข้าสู่ระบบ
   React.useEffect(() => {
-    console.log("Login: Session status check", { 
-      status, 
+    console.log("Login: Session status check", {
+      status,
       userId: session?.user?.id,
       isNewUser: session?.user?.isNewUser
     });
-    
+
     if (status === "authenticated") {
       if (session.user.isNewUser) {
         // ถ้าเป็นผู้ใช้ใหม่ที่เข้าสู่ระบบด้วย OTP ให้ไปที่หน้าสร้างโปรไฟล์
@@ -54,7 +54,7 @@ export default function LoginPage() {
       if (savedEmail) {
         setEmail(savedEmail);
       }
-      
+
       // ตรวจสอบสถานะ OTP
       const otpSentStatus = localStorage.getItem('otpSent');
       if (otpSentStatus === 'true') {
@@ -104,10 +104,10 @@ export default function LoginPage() {
     localStorage.removeItem('otpTimestamp');
   };
 
-  const clearAllLoginLocalStorage = () => {
-    clearOtpLocalStorage();
-    localStorage.removeItem('loginEmail');
-  };
+  // const clearAllLoginLocalStorage = () => {
+  //   clearOtpLocalStorage();
+  //   localStorage.removeItem('loginEmail');
+  // };
 
   const variants = {
     enter: (direction: number) => ({
@@ -136,9 +136,49 @@ export default function LoginPage() {
     }
   };
 
+  // src/app/(auth)/login/page.tsx
+  // สร้าง OTP Manager เป็น object เพื่อจัดการทุกอย่างเกี่ยวกับ OTP
+  const OTPManager = {
+    setOTPData: (email: string, countdown: number) => {
+      const timestamp = Date.now();
+      localStorage.setItem('loginEmail', email);
+      localStorage.setItem('otpSent', 'true');
+      localStorage.setItem('otpTimestamp', timestamp.toString());
+      localStorage.setItem('otpCountdown', countdown.toString());
+      return timestamp;
+    },
+
+    clearOTPData: () => {
+      localStorage.removeItem('otpSent');
+      localStorage.removeItem('otpCountdown');
+      localStorage.removeItem('otpTimestamp');
+    },
+
+    clearAllLoginData: () => {
+      localStorage.removeItem('loginEmail');
+      localStorage.removeItem('otpSent');
+      localStorage.removeItem('otpCountdown');
+      localStorage.removeItem('otpTimestamp');
+    },
+
+    getTimeLeft: () => {
+      const otpSent = localStorage.getItem('otpSent') === 'true';
+      if (!otpSent) return 0;
+
+      const countdown = parseInt(localStorage.getItem('otpCountdown') || '0');
+      const timestamp = parseInt(localStorage.getItem('otpTimestamp') || '0');
+      const now = Date.now();
+
+      // คำนวณเวลาที่เหลือ
+      const elapsed = Math.floor((now - timestamp) / 1000);
+      return Math.max(0, countdown - elapsed);
+    }
+  };
+
+  // ปรับปรุงฟังก์ชัน handleEmailSubmit ให้ใช้ OTPManager
   const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!email.length || !/^\S+@\S+\.\S+$/.test(email)) {
       setIsEmailValid(false);
       setError("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง");
@@ -151,7 +191,7 @@ export default function LoginPage() {
 
     try {
       console.log("Login: Sending OTP to email", email);
-      
+
       // ส่งรหัส OTP
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -163,14 +203,9 @@ export default function LoginPage() {
       console.log("Login: OTP send response", { success: data.success });
 
       if (data.success) {
-        // เก็บข้อมูลใน localStorage
-        localStorage.setItem('loginEmail', email);
-        localStorage.setItem('otpSent', 'true');
-        localStorage.setItem('otpTimestamp', Date.now().toString());
-        localStorage.setItem('otpCountdown', '60');
-
-        // เริ่มนับถอยหลังการขอรหัส OTP ใหม่
-        setResendCooldown(60); // 60 วินาที
+        // ใช้ OTPManager เพื่อจัดการข้อมูล OTP
+        OTPManager.setOTPData(email, 60);
+        setResendCooldown(60);
 
         // เปลี่ยนไปหน้ากรอก OTP
         paginate(1);
@@ -187,14 +222,46 @@ export default function LoginPage() {
     }
   };
 
-  const handleLineLogin = () => {
-    console.log("Login: Initiating LINE login");
-    // ตั้งค่า localStorage เพื่อให้แสดง popup เมื่อเข้าสู่ระบบสำเร็จครั้งแรก
-    localStorage.setItem('firstLogin', 'true');
-    // ล้างข้อมูล OTP ก่อนเข้าสู่ระบบด้วย LINE
-    clearAllLoginLocalStorage();
-    signIn("line", { callbackUrl: "/" });
+  // src/app/(auth)/login/page.tsx
+  const handleLineLogin = async () => {
+    try {
+      console.log("Login: Initiating LINE login");
+      // ล้างข้อมูล OTP ก่อนเข้าสู่ระบบด้วย LINE
+      OTPManager.clearAllLoginData();
+
+      // ตั้งค่า localStorage เพื่อให้แสดง popup เมื่อเข้าสู่ระบบสำเร็จครั้งแรก
+      localStorage.setItem('firstLogin', 'true');
+
+      // เพิ่มการตรวจจับกรณีไม่อนุญาตให้เข้าถึง
+      localStorage.setItem('line_login_attempt', Date.now().toString());
+
+      // เข้าสู่ระบบด้วย LINE
+      await signIn("line", {
+        callbackUrl: "/",
+        redirect: true
+      });
+    } catch (error) {
+      console.error("Failed to initiate LINE login:", error);
+      setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย LINE กรุณาลองใหม่อีกครั้ง");
+    }
   };
+
+  // เพิ่ม useEffect เพื่อตรวจสอบการเชื่อมต่อ LINE
+  useEffect(() => {
+    const lineLoginAttempt = localStorage.getItem('line_login_attempt');
+    if (lineLoginAttempt) {
+      const attemptTime = parseInt(lineLoginAttempt);
+      const now = Date.now();
+
+      // ถ้าเพิ่งพยายามเข้าสู่ระบบด้วย LINE ไม่นาน (ภายใน 10 วินาที) แต่กลับมาที่หน้า login
+      // แสดงว่าอาจมีปัญหา (ผู้ใช้ปฏิเสธการอนุญาตหรือการเชื่อมต่อมีปัญหา)
+      if (now - attemptTime < 10000) {
+        setError("การเข้าสู่ระบบด้วย LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      }
+
+      localStorage.removeItem('line_login_attempt');
+    }
+  }, []);
 
   const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -211,37 +278,56 @@ export default function LoginPage() {
 
     try {
       console.log("Login: Verifying OTP", { email, otpLength: otp.length });
-      
-      // ดำเนินการเข้าสู่ระบบ
+
+      // เพิ่ม timeout สำหรับกรณีเซิร์ฟเวอร์ไม่ตอบสนอง
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+
+      // ดำเนินการเข้าสู่ระบบพร้อมกับ signal สำหรับ timeout
       const result = await signIn("otp", {
         email,
         otp,
-        redirect: false
+        redirect: false,
+        callbackUrl: '/'
       });
 
-      console.log("Login: OTP verification result", { 
-        ok: result?.ok, 
+      clearTimeout(timeoutId);
+
+      console.log("Login: OTP verification result", {
+        ok: result?.ok,
         error: result?.error,
         url: result?.url
       });
 
       if (result?.error) {
+        // จำแนกประเภทข้อผิดพลาด
+        if (result.error.includes("network") || result.error.includes("timeout")) {
+          setError("การเชื่อมต่อล้มเหลว กรุณาตรวจสอบอินเทอร์เน็ตและลองใหม่อีกครั้ง");
+        } else if (result.error.includes("expired")) {
+          setError("รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่");
+        } else {
+          setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
+        }
         setIsOtpValid(false);
-        setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว");
       } else if (result?.ok) {
         // ลบข้อมูลใน localStorage เมื่อเข้าสู่ระบบสำเร็จ
-        clearAllLoginLocalStorage();
-        
-        // เก็บค่า firstLogin
+        OTPManager.clearAllLoginData();
+
+        // ตั้งค่า localStorage สำหรับการแสดง popup ต้อนรับเมื่อเข้าสู่ระบบครั้งแรก
         localStorage.setItem('firstLogin', 'true');
-        
-        console.log("Login: OTP login successful, redirecting to proper page");
-        // การเข้าสู่ระบบสำเร็จ router จะไปหน้าอื่นโดยอัตโนมัติจาก useEffect
+
+        // การเข้าสู่ระบบสำเร็จ - router จะไปหน้าอื่นโดยอัตโนมัติจาก useEffect
+        console.log("Login: OTP login successful, system will redirect to proper page");
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
+      // จัดการกับ AbortError (timeout)
+      if (error instanceof Error && error.name === "AbortError") {
+        setError("การเชื่อมต่อล่าช้าเกินไป กรุณาลองใหม่อีกครั้ง");
+      } else {
+        setError("เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP");
+      }
       setIsOtpValid(false);
-      setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP");
     } finally {
       setIsLoading(false);
     }
@@ -257,7 +343,7 @@ export default function LoginPage() {
 
     try {
       console.log("Login: Resending OTP to email", email);
-      
+
       // ส่งรหัส OTP ใหม่
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -273,7 +359,7 @@ export default function LoginPage() {
         localStorage.setItem('otpSent', 'true');
         localStorage.setItem('otpTimestamp', Date.now().toString());
         localStorage.setItem('otpCountdown', '60');
-        
+
         // เริ่มนับถอยหลังใหม่
         setResendCooldown(60); // 60 วินาที
 
@@ -335,14 +421,14 @@ export default function LoginPage() {
               เข้าสู่ระบบ
             </m.h1>
           </m.div>
-          
+
           {/* แสดงข้อความแจ้งเตือน */}
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2">
               {error}
             </div>
           )}
-          
+
           <AnimatePresence custom={direction} initial={false} mode="wait">
             <m.form
               key={page}

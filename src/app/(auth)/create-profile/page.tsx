@@ -42,21 +42,20 @@ export default function CreateProfilePage() {
       return;
     }
 
-    // ถ้าเป็นผู้ใช้ปกติที่มี id ไม่ใช่ 'new-user' ให้ redirect ไปหน้า profile
-    if (status === "authenticated" && session?.user?.id !== 'new-user' && !session.user.isNewUser) {
-      console.log("CreateProfile: User already has a profile, redirecting to profile page");
-      router.replace('/profile');
-      return;
-    }
+    // เพิ่มเงื่อนไขตรวจสอบว่าเป็นผู้ใช้ที่มี session พร้อมใช้งาน
+    if (status === "authenticated") {
+      // ถ้าไม่ใช่ผู้ใช้ใหม่และไม่ได้มี flag isNewUser ให้ไปหน้า profile
+      if (session?.user?.id !== 'new-user' && !session.user.isNewUser) {
+        console.log("CreateProfile: User already has a profile, redirecting to profile page");
+        router.replace('/profile');
+        return;
+      }
 
-    // ถ้ามีการล็อกอินสำเร็จ ให้ตั้งค่าข้อมูลเริ่มต้น
-    if (status === "authenticated" && session?.user) {
-      // ตั้งค่าชื่อและอีเมลจาก session
+      // ตั้งค่าข้อมูลเริ่มต้นสำหรับผู้ใช้ที่เข้าสู่ระบบแล้ว
       if (session.user.name) {
         setName(session.user.name);
       }
-      
-      // ตั้งค่ารูปโปรไฟล์จาก session
+
       if (session.user.image) {
         setPreviewUrl(session.user.image);
       }
@@ -116,7 +115,7 @@ export default function CreateProfilePage() {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      formData.append("bio", bio);  // ส่งค่า bio ไปด้วย
+      formData.append("bio", bio);
 
       if (profileImage) {
         formData.append("profileImage", profileImage);
@@ -151,54 +150,45 @@ export default function CreateProfilePage() {
       console.log("CreateProfile: API response:", data);
 
       if (data.success) {
-        // ตรวจสอบข้อมูลที่ได้รับกลับมา
-        console.log("CreateProfile: Profile created successfully", {
-          userId: data.user.id,
-          name: data.user.name,
-          image: data.user.image
-        });
+        // ทำความสะอาด localStorage
+        const cleanLocalStorage = () => {
+          localStorage.removeItem('loginEmail');
+          localStorage.removeItem('otpSent');
+          localStorage.removeItem('otpCountdown');
+          localStorage.removeItem('otpTimestamp');
+          // เพิ่ม firstLogin สำหรับ popup ต้อนรับ
+          localStorage.setItem('firstLogin', 'true');
+        };
+
+        cleanLocalStorage();
 
         setSuccess(data.message || "สร้างโปรไฟล์สำเร็จ");
+        setIsRedirecting(true);
 
-        // อัพเดทเซสชันด้วยข้อมูลใหม่ รวมถึง ID
+        // อัพเดทเซสชันด้วยข้อมูลใหม่
         try {
           await update({
             ...session,
             user: {
               ...session?.user,
-              id: data.user.id, // อัพเดท ID
-              isNewUser: false,  // เปลี่ยนสถานะผู้ใช้
+              id: data.user.id,
+              isNewUser: false,
               name: data.user.name,
               image: data.user.image
             }
           });
-          
-          console.log("CreateProfile: Session updated successfully");
 
-          // ตั้งค่า localStorage เพื่อให้แสดง popup ต้อนรับเมื่อไปที่หน้าแรก
-          localStorage.setItem('firstLogin', 'true');
-          // ตั้งค่า session_updated เพื่อบอกว่ามีการอัพเดท session
+          console.log("CreateProfile: Session updated successfully");
           sessionStorage.setItem('session_updated', 'true');
-          
-          // ตั้งเวลาเพื่อ redirect ให้ผู้ใช้เห็นข้อความสำเร็จก่อน
-          setIsRedirecting(true);
-          
-          // เปลี่ยนเส้นทางไปยังหน้าแรก และใช้ window.location.href เพื่อให้มีการโหลดหน้าใหม่
+
+          // ตั้งเวลาเพื่อ redirect
           setTimeout(() => {
             console.log("CreateProfile: Redirecting to home page");
-            // ทำความสะอาด localStorage อื่นๆ ที่เกี่ยวกับการ login
-            localStorage.removeItem('loginEmail');
-            localStorage.removeItem('otpSent');
-            localStorage.removeItem('otpCountdown');
-            localStorage.removeItem('otpTimestamp');
-            
-            // ใช้ window.location เพื่อให้มีการโหลดหน้าเว็บใหม่ทั้งหมด
             window.location.href = '/';
           }, 1500);
         } catch (updateError) {
           console.error("CreateProfile: Error updating session", updateError);
-          // ถ้าไม่สามารถอัพเดท session ได้ ให้เปลี่ยนเส้นทางด้วย window.location
-          localStorage.setItem('session_updated', 'true');
+          sessionStorage.setItem('session_updated', 'true');
           setTimeout(() => {
             window.location.href = '/';
           }, 1500);
@@ -343,8 +333,8 @@ export default function CreateProfilePage() {
               isDisabled={isSaveDisabled}
               startContent={isLoading || isRedirecting ? <Spinner size="sm" /> : <PiPencilSimpleLineFill size={20} />}
             >
-              {isLoading ? "กำลังสร้างโปรไฟล์..." : 
-               isRedirecting ? "กำลังนำไปยังหน้าหลัก..." : "สร้างโปรไฟล์"}
+              {isLoading ? "กำลังสร้างโปรไฟล์..." :
+                isRedirecting ? "กำลังนำไปยังหน้าหลัก..." : "สร้างโปรไฟล์"}
             </Button>
           </form>
 
