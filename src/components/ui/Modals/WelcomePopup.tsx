@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from "@heroui/react";
-import { useSession } from 'next-auth/react';
+import { useMockAuth } from '@/lib/auth/mockAuthContext';
 import { FaCheckCircle } from 'react-icons/fa';
 
 const WelcomePopup = () => {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useMockAuth();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
   useEffect(() => {
     // ถ้ามีการเข้าสู่ระบบและยังไม่เคยแสดง popup
-    if (session?.user?.name && !hasShownWelcome) {
+    if (isAuthenticated && user?.name && !hasShownWelcome) {
       // ตรวจสอบว่าเป็นการเข้าสู่ระบบครั้งแรกหรือไม่จาก localStorage
       const isFirstLogin = localStorage.getItem('firstLogin') === 'true';
       
@@ -26,10 +26,10 @@ const WelcomePopup = () => {
         }, 1000);
       }
     }
-  }, [session, hasShownWelcome, onOpen]);
+  }, [isAuthenticated, user, hasShownWelcome, onOpen]);
 
   // ถ้าไม่มี session ไม่ต้องทำอะไร
-  if (!session) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
@@ -44,7 +44,7 @@ const WelcomePopup = () => {
             </ModalHeader>
             <ModalBody>
               <p>
-                สวัสดีคุณ <strong>{session.user.name}</strong> 🎉
+                สวัสดีคุณ <strong>{user?.name}</strong> 🎉
               </p>
               <p>
                 ขอบคุณที่เข้ามาเป็นส่วนหนึ่งของชุมชนบางกระเจ้า เรายินดีต้อนรับคุณเข้าสู่เว็บไซต์ของเรา

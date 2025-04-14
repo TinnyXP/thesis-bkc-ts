@@ -1,4 +1,3 @@
-// src/app/(user)/profile/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,22 +6,21 @@ import Image from "next/image";
 import {
   Card, CardBody, CardHeader, CardFooter,
   Button, Input, Textarea, Spinner,
-  Divider, Avatar, AvatarGroup, AvatarIcon,
+  Divider, Avatar, AvatarIcon,
   Tabs, Tab, Badge, Switch,
   Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
-  useDisclosure, Tooltip, Pagination, User
+  useDisclosure, Tooltip, Pagination
 } from "@heroui/react";
 import { NavBar, Footer } from "@/components";
-import { useAuth } from "@/lib/auth/useAuth";
-import { useProfileImage } from "@/lib/hooks/useProfileImage";
-import { useLoginHistory } from "@/lib/hooks/useLoginHistory";
+import { useMockAuth } from "@/lib/auth/mockAuthContext";
+import { useMockProfileImage } from "@/lib/hooks/useMockProfileImage";
+import { useMockLoginHistory } from "@/lib/hooks/useMockLoginHistory";
 import { motion } from "framer-motion";
-import { AuthState } from "@/lib/auth/types";
 
 // Icons
 import {
-  FaUser, FaCamera, FaSignOutAlt, FaHistory, FaShieldAlt,
+  FaUser, FaCamera, FaHistory, FaShieldAlt,
   FaEdit, FaTrash, FaSave, FaTimes, FaInfoCircle,
   FaSync, FaExclamationTriangle
 } from "react-icons/fa";
@@ -35,20 +33,16 @@ import { BiLogOut } from "react-icons/bi";
 export default function ProfilePage() {
   const router = useRouter();
 
-  // Custom hooks from our new auth system
+  // Mock hooks
   const {
     user,
     isAuthenticated,
     isLoading: isAuthLoading,
-    authError,
-    isLineUser,
-    useOriginalLineData,
-    originalLineData,
+    error: authError,
     updateProfile,
-    updateLineDataUsage,
-    logout,
-    fetchUserProfile
-  } = useAuth();
+    toggleLineData,
+    logout
+  } = useMockAuth();
 
   // Profile image hook
   const {
@@ -60,7 +54,7 @@ export default function ProfilePage() {
     clearImage,
     resetToInitial,
     isLoading: isImageLoading
-  } = useProfileImage(user?.image || null);
+  } = useMockProfileImage(user?.image || null);
 
   // Login history hook
   const {
@@ -75,7 +69,7 @@ export default function ProfilePage() {
     changeViewMode,
     isLoggingOut,
     refetch: refetchHistory
-  } = useLoginHistory();
+  } = useMockLoginHistory();
 
   // Local state
   const [activeTab, setActiveTab] = useState("profile");
@@ -88,7 +82,6 @@ export default function ProfilePage() {
 
   // Modal states
   const { isOpen: isLogoutModalOpen, onOpen: onLogoutModalOpen, onClose: onLogoutModalClose } = useDisclosure();
-  const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
   const { isOpen: isSuccessModalOpen, onOpen: onSuccessModalOpen, onClose: onSuccessModalClose } = useDisclosure();
 
   // Toast/notification state
@@ -136,7 +129,6 @@ export default function ProfilePage() {
     setSuccess(null);
 
     try {
-      await fetchUserProfile();
       await refetchHistory();
 
       setNotification({
@@ -187,8 +179,7 @@ export default function ProfilePage() {
       const result = await updateProfile({
         name,
         bio,
-        profileImage: imageFile,
-        removeCurrentImage: !imageFile && !previewUrl
+        profileImage: imageFile
       });
 
       if (result.success) {
@@ -205,11 +196,11 @@ export default function ProfilePage() {
 
   // Handle LINE data usage
   const handleToggleLineData = async (useIt: boolean) => {
-    if (!isLineUser) return;
+    if (!user?.provider || user.provider !== 'line') return;
 
-    const result = await updateLineDataUsage(useIt);
+    try {
+      await toggleLineData(useIt);
 
-    if (result.success) {
       setNotification({
         type: 'success',
         message: useIt ? 'กลับไปใช้ข้อมูลจาก LINE แล้ว' : 'เปลี่ยนไปใช้ข้อมูลที่กำหนดเองแล้ว',
@@ -219,33 +210,43 @@ export default function ProfilePage() {
       setTimeout(() => {
         setNotification(null);
       }, 3000);
+    } catch (error) {
+      setError("ไม่สามารถเปลี่ยนข้อมูล LINE ได้");
     }
   };
 
   // Handle logout from current session
   const handleLogout = async () => {
     onLogoutModalClose();
-    await logout();
-    router.replace("/login");
+    try {
+      await logout();
+      router.replace("/login");
+    } catch (error) {
+      setError("ไม่สามารถออกจากระบบได้");
+    }
   };
 
   // Handle logout from other sessions/devices
   const handleLogoutOtherDevice = async (ipAddress: string, sessionId?: string) => {
-    await logoutSession(ipAddress, sessionId);
+    try {
+      await logoutSession(ipAddress, sessionId);
 
-    setNotification({
-      type: 'success',
-      message: `ออกจากระบบ IP ${ipAddress} สำเร็จ`,
-      visible: true
-    });
+      setNotification({
+        type: 'success',
+        message: `ออกจากระบบ IP ${ipAddress} สำเร็จ`,
+        visible: true
+      });
 
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
+      setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+    } catch (error) {
+      setError("ไม่สามารถออกจากระบบได้");
+    }
   };
 
   // Format date for display
-  const formatThaiDate = (dateString: string) => {
+  const formatThaiDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString('th-TH', {
       year: 'numeric',
       month: 'long',
@@ -266,6 +267,11 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  // Check if user is a LINE user
+  const isLineUser = user?.provider === 'line';
+  const useOriginalLineData = isLineUser && user?.useOriginalLineData;
+  const originalLineData = isLineUser ? user?.originalLineData : null;
 
   // Notification component
   const NotificationBox = () => {

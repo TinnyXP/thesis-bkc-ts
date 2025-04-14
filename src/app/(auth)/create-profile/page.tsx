@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FaCamera, FaUser } from "react-icons/fa";
@@ -10,22 +9,31 @@ import {
   Link
 } from "@heroui/react";
 import { PiPencilSimpleLineFill } from "react-icons/pi";
+import { useMockAuth } from '@/lib/auth/mockAuthContext';
+import { useMockProfileImage } from '@/lib/hooks/useMockProfileImage';
 
 export default function CreateProfilePage() {
-  const { data: session, status, update } = useSession();
+  const { user, isAuthenticated, isLoading: isAuthLoading, updateProfile } = useMockAuth();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Profile image hook
+  const {
+    imageFile,
+    previewUrl,
+    fileInputRef,
+    openFileDialog,
+    handleFileChange,
+    clearImage,
+    resetToInitial,
+    isLoading: isImageLoading
+  } = useMockProfileImage(null);
 
-  // สถานะสำหรับข้อมูลโปรไฟล์
+  // Local state
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
-  const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  // สถานะสำหรับการแสดงผล
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   // เช็คว่าปุ่มบันทึกพร้อมกดหรือไม่
@@ -33,71 +41,11 @@ export default function CreateProfilePage() {
 
   // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อคอมโพเนนต์โหลด
   useEffect(() => {
-    console.log("CreateProfile: Session status:", status, "User:", session?.user);
-
-    // ถ้าไม่ได้ล็อกอิน ให้เปลี่ยนเส้นทางไปหน้า login
-    if (status === "unauthenticated") {
-      console.log("CreateProfile: Not authenticated, redirecting to login");
-      router.replace('/login');
-      return;
+    // ถ้ามีโปรไฟล์แล้ว ให้ redirect ไปหน้า profile
+    if (isAuthenticated && user && user.name) {
+      router.replace('/profile');
     }
-
-    // เพิ่มเงื่อนไขตรวจสอบว่าเป็นผู้ใช้ที่มี session พร้อมใช้งาน
-    if (status === "authenticated") {
-      // ถ้าไม่ใช่ผู้ใช้ใหม่และไม่ได้มี flag isNewUser ให้ไปหน้า profile
-      if (session?.user?.id !== 'new-user' && !session.user.isNewUser) {
-        console.log("CreateProfile: User already has a profile, redirecting to profile page");
-        router.replace('/profile');
-        return;
-      }
-
-      // ตั้งค่าข้อมูลเริ่มต้นสำหรับผู้ใช้ที่เข้าสู่ระบบแล้ว
-      if (session.user.name) {
-        setName(session.user.name);
-      }
-
-      if (session.user.image) {
-        setPreviewUrl(session.user.image);
-      }
-    }
-  }, [session, status, router]);
-
-  // จัดการการเปลี่ยนรูปโปรไฟล์
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (file) {
-      // หากมี URL ก่อนหน้า ให้ revoke เพื่อคืนหน่วยความจำ
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-
-      setProfileImage(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    }
-  };
-
-  // จัดการการคลิกที่รูปโปรไฟล์
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  // ล้างรูปโปรไฟล์ - แก้ไขเพื่อให้สามารถอัปโหลดรูปเดิมซ้ำได้
-  const handleClearImage = () => {
-    // ถ้ามี URL ที่สร้างไว้ ให้ revoke เพื่อคืนหน่วยความจำ
-    if (previewUrl && previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    // รีเซ็ต state
-    setProfileImage(null);
-    setPreviewUrl(null);
-
-    // รีเซ็ตค่าใน input element เพื่อให้สามารถเลือกไฟล์เดิมได้อีกครั้ง
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  }, [isAuthenticated, user, router]);
 
   // จัดการการบันทึกโปรไฟล์
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,92 +61,28 @@ export default function CreateProfilePage() {
     setSuccess("");
 
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("bio", bio);
-
-      if (profileImage) {
-        formData.append("profileImage", profileImage);
-      }
-
-      console.log("CreateProfile: Submitting profile data to API", {
+      const result = await updateProfile({
         name,
         bio,
-        hasProfileImage: !!profileImage
+        profileImage: imageFile
       });
 
-      // ส่งข้อมูลไปยัง API
-      const response = await fetch('/api/auth/create-profile', {
-        method: 'POST',
-        body: formData,
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("CreateProfile: API error response", {
-          status: response.status,
-          message: errorData.message || "Unknown error"
-        });
-        throw new Error(errorData.message || `Error ${response.status}: Could not create profile`);
-      }
-
-      const data = await response.json();
-      console.log("CreateProfile: API response:", data);
-
-      if (data.success) {
-        // ทำความสะอาด localStorage
-        const cleanLocalStorage = () => {
-          localStorage.removeItem('loginEmail');
-          localStorage.removeItem('otpSent');
-          localStorage.removeItem('otpCountdown');
-          localStorage.removeItem('otpTimestamp');
-          // เพิ่ม firstLogin สำหรับ popup ต้อนรับ
-          localStorage.setItem('firstLogin', 'true');
-        };
-
-        cleanLocalStorage();
-
-        setSuccess(data.message || "สร้างโปรไฟล์สำเร็จ");
+      if (result.success) {
+        setSuccess("สร้างโปรไฟล์สำเร็จ");
         setIsRedirecting(true);
 
-        // อัพเดทเซสชันด้วยข้อมูลใหม่
-        try {
-          await update({
-            ...session,
-            user: {
-              ...session?.user,
-              id: data.user.id,
-              isNewUser: false,
-              name: data.user.name,
-              image: data.user.image
-            }
-          });
+        // เพิ่ม firstLogin สำหรับ popup ต้อนรับ
+        localStorage.setItem('firstLogin', 'true');
 
-          console.log("CreateProfile: Session updated successfully");
-          sessionStorage.setItem('session_updated', 'true');
-
-          // ตั้งเวลาเพื่อ redirect
-          setTimeout(() => {
-            console.log("CreateProfile: Redirecting to home page");
-            window.location.href = '/';
-          }, 1500);
-        } catch (updateError) {
-          console.error("CreateProfile: Error updating session", updateError);
-          sessionStorage.setItem('session_updated', 'true');
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1500);
-        }
+        // ตั้งเวลาเพื่อ redirect
+        setTimeout(() => {
+          router.replace('/');
+        }, 1500);
       } else {
-        console.error("CreateProfile: Error creating profile", data.message);
-        setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");
+        setError(result.error || "ไม่สามารถสร้างโปรไฟล์ได้");
       }
     } catch (error) {
-      console.error("CreateProfile: Error creating profile:", error);
+      console.error("Error creating profile:", error);
       setError(error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างโปรไฟล์");
     } finally {
       setIsLoading(false);
@@ -206,7 +90,7 @@ export default function CreateProfilePage() {
   };
 
   // แสดงหน้า loading เมื่อกำลังตรวจสอบ session
-  if (status === "loading") {
+  if (isAuthLoading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
         <Spinner
@@ -220,7 +104,6 @@ export default function CreateProfilePage() {
     );
   }
 
-  // แสดงหน้าสร้างโปรไฟล์
   return (
     <section className="font-[family-name:var(--font-line-seed-sans)] min-h-screen flex flex-col items-center justify-center p-4">
 
@@ -259,7 +142,7 @@ export default function CreateProfilePage() {
             <div className="flex flex-col items-center mb-2 gap-2">
               <div
                 className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-gray-300/5 flex items-center justify-center border-2 border-solid border-default-300"
-                onClick={handleImageClick}
+                onClick={openFileDialog}
               >
                 {previewUrl ? (
                   <Image
@@ -279,7 +162,7 @@ export default function CreateProfilePage() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleImageChange}
+                onChange={handleFileChange}
                 className="hidden"
               />
 
@@ -293,7 +176,7 @@ export default function CreateProfilePage() {
                       size="sm"
                       color="danger"
                       className="cursor-pointer"
-                      onPress={handleClearImage}
+                      onPress={clearImage}
                     >
                       ลบ
                     </Link>
@@ -312,6 +195,8 @@ export default function CreateProfilePage() {
               isRequired
               variant="bordered"
               errorMessage={!name.trim() && "กรุณากรอกชื่อของคุณ"}
+              description="ชื่อนี้จะแสดงในหน้าโปรไฟล์และการโพสต์ของคุณ"
+              startContent={<FaUser className="text-default-400" />}
             />
 
             {/* ข้อมูลเพิ่มเติม */}

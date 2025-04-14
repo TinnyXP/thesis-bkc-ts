@@ -3,12 +3,12 @@
 import { HeroUIProvider } from "@heroui/react"
 import { ToastProvider } from "@heroui/toast";
 import { ThemeProvider as NextThemeProvider } from "next-themes"
-import { AuthProvider } from '@/lib/auth/AuthProvider';
+import { MockAuthProvider } from '@/lib/auth/mockAuthContext';
 import { TranslationProvider } from '@/lib/i18n';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
+    <MockAuthProvider>
       <HeroUIProvider>
         <NextThemeProvider
           attribute="class"
@@ -21,6 +21,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </TranslationProvider>
         </NextThemeProvider>
       </HeroUIProvider>
-    </AuthProvider>
+    </MockAuthProvider>
   )
 }
