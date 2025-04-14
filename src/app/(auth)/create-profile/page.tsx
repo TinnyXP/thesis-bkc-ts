@@ -195,18 +195,8 @@ export default function CreateProfilePage() {
               isRequired
               variant="bordered"
               errorMessage={!name.trim() && "กรุณากรอกชื่อของคุณ"}
-              description="ชื่อนี้จะแสดงในหน้าโปรไฟล์และการโพสต์ของคุณ"
+              description="ชื่อนี้จะแสดงในหน้าโปรไฟล์และการคอมเม้นต์ของคุณ"
               startContent={<FaUser className="text-default-400" />}
-            />
-
-            {/* ข้อมูลเพิ่มเติม */}
-            <Textarea
-              label="เกี่ยวกับฉัน"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="เล่าเกี่ยวกับตัวคุณสักเล็กน้อย (ไม่บังคับ)"
-              variant="bordered"
-              minRows={3}
             />
 
             {/* ปุ่มบันทึก */}

@@ -18,4 +18,7 @@ export { default as SlugShareButton } from './ui/ShareButtons/SlugShareButton';
 
 // UI - Modals
 export { default as ImageModal } from './ui/Modals/ImageModal';
-export { default as WelcomePopup } from './ui/Modals/WelcomePopup';
+
+// Profile Page components
+export { default as ProfileDetail } from './profile/ProfileDetail';
+export { default as DeviceHistory } from './profile/DeviceHistory';
