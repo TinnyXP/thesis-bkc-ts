@@ -12,7 +12,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="font-sans">
+    <div className="font-[family-name:var(--font-line-seed-sans)]">
       {children}
     </div>
   );

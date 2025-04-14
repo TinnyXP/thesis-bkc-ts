@@ -149,7 +149,7 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="font-[family-name:var(--font-line-seed-sans)] min-h-screen flex flex-col items-center justify-center mx-4">
+    <section className="min-h-screen flex flex-col items-center justify-center mx-4">
       <Image
         src="/Bkj_logo.svg"
         alt="Bangkrachoa Logo"
