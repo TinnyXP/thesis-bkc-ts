@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from "react";
-import { Form, Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import {
   Button, Input, Tooltip, Spinner,
   Link
@@ -127,6 +126,14 @@ export default function CompleteProfilePage() {
 
       <div className="flex w-full max-w-sm flex-col gap-3 rounded-large bg-content1 px-8 pb-6 pt-6 shadow-small">
         <div>
+          
+          {/* แสดงข้อความแจ้งเตือน */}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
 
             {/* รูปโปรไฟล์ */}

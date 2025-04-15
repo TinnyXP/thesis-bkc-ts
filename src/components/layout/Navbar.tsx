@@ -7,7 +7,7 @@ import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuI
 import { ToggleTheme, BookmarkModal, SettingsModal } from "@/components"
 import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
 import { Avatar, AvatarIcon } from "@heroui/avatar";
-import { FiArrowUpRight, FiBookmark, FiLogIn, FiLogOut, FiSettings } from "react-icons/fi";
+import { FiBookmark, FiLogIn, FiLogOut, FiSettings } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
