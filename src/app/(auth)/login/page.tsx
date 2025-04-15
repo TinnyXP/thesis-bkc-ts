@@ -79,7 +79,7 @@ export default function LoginPage() {
     return () => {
       // ยกเลิก timer หรือ subscription ต่างๆ ที่อาจมี
     };
-  }, []);
+  }, [router, session, status]);
 
   const variants = {
     enter: (direction: number) => ({
