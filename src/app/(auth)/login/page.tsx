@@ -22,6 +22,8 @@ export default function LoginPage() {
   const [isOtpValid, setIsOtpValid] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [resendCooldown, setResendCooldown] = React.useState(0);
+  const [error, setError] = React.useState("");
+  const [connectionError, setConnectionError] = React.useState(false);
 
   // ตรวจสอบสถานะการเข้าสู่ระบบ
   React.useEffect(() => {
@@ -46,6 +48,38 @@ export default function LoginPage() {
       if (timer) clearInterval(timer);
     };
   }, [resendCooldown]);
+
+  // เพิ่ม useEffect สำหรับการรีเซ็ตสถานะเมื่อโหลดหน้า Login ใหม่
+  React.useEffect(() => {
+    // รีเซ็ตค่าเริ่มต้น
+    setPage([0, 0]);
+    setEmail("");
+    setOtp("");
+    setIsEmailValid(true);
+    setIsOtpValid(true);
+    setIsLoading(false);
+    setResendCooldown(0);
+    setError("");
+
+    // ตรวจสอบว่ามีข้อมูลการล็อกอินที่บันทึกไว้หรือไม่
+    const checkSavedLoginState = async () => {
+      // ถ้าอยู่ในโปรเซสล็อกอินอยู่แล้ว ให้เช็คว่ามี session หรือไม่
+      if (status === "authenticated" && session) {
+        if (session.user.isNewUser) {
+          router.replace('/complete-profile');
+        } else {
+          router.replace('/welcome');
+        }
+      }
+    };
+
+    checkSavedLoginState();
+
+    // Cleanup เมื่อ unmount
+    return () => {
+      // ยกเลิก timer หรือ subscription ต่างๆ ที่อาจมี
+    };
+  }, []);
 
   const variants = {
     enter: (direction: number) => ({
@@ -73,6 +107,7 @@ export default function LoginPage() {
     }
   };
 
+  // แก้ไขฟังก์ชัน handleEmailSubmit
   const handleEmailSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email.length || !/^\S+@\S+\.\S+$/.test(email)) {
@@ -82,6 +117,7 @@ export default function LoginPage() {
 
     setIsEmailValid(true);
     setIsLoading(true);
+    setConnectionError(false);
 
     try {
       // ส่งรหัส OTP
@@ -94,12 +130,6 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (data.success) {
-        // เก็บข้อมูลใน localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('loginEmail', email);
-          localStorage.setItem('otpSent', 'true');
-        }
-
         // เริ่มนับถอยหลังการขอรหัส OTP ใหม่
         setResendCooldown(60); // 60 วินาที
 
@@ -107,17 +137,34 @@ export default function LoginPage() {
         paginate(1);
       } else {
         setIsEmailValid(false);
+        setError(data.message || "ไม่สามารถส่งรหัส OTP ได้");
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
       setIsEmailValid(false);
+      setConnectionError(true);
+      setError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ โปรดลองอีกครั้ง");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // เพิ่มฟังก์ชันตรวจสอบความถูกต้องของ OTP
+  const validateOtp = (otpCode: string): boolean => {
+    // ตรวจสอบว่า OTP มีเฉพาะตัวเลขเท่านั้น
+    const digitPattern = /^\d+$/;
+    // ตรวจสอบความยาว 6 หลักและมีเฉพาะตัวเลข
+    return otpCode.length === 6 && digitPattern.test(otpCode);
+  };
+
   const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!validateOtp(otp)) {
+      setIsOtpValid(false);
+      setError("รหัส OTP ต้องเป็นตัวเลข 6 หลักเท่านั้น");
+      return;
+    }
 
     if (!otp.length || otp.length !== 6) {
       setIsOtpValid(false);
@@ -137,13 +184,12 @@ export default function LoginPage() {
 
       if (result?.error) {
         setIsOtpValid(false);
+        // รีเซ็ตค่า OTP เพื่อให้ผู้ใช้กรอกใหม่
+        setOtp("");
+        setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุ โปรดลองใหม่");
       } else if (result?.ok) {
-        // ลบข้อมูลใน localStorage เมื่อเข้าสู่ระบบสำเร็จ
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('loginEmail');
-          localStorage.removeItem('otpSent');
-        }
-        // การเข้าสู่ระบบสำเร็จ router จะไปหน้าอื่นโดยอัตโนมัติจาก useEffect
+        // หากเข้าสู่ระบบสำเร็จ ให้เปลี่ยนเส้นทางไปยังหน้า welcome
+        router.replace("/welcome");
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
@@ -210,6 +256,21 @@ export default function LoginPage() {
         className="mb-4"
       />
       <div className="flex w-full max-w-sm flex-col gap-3 rounded-large bg-content1 px-8 pb-6 pt-6 shadow-small">
+
+        {connectionError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <p className="text-sm">
+              ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณและลองอีกครั้ง
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+            {error}
+          </div>
+        )}
+
         <LazyMotion features={domAnimation}>
           <m.div layout className="flex min-h-[40px] items-center gap-2 pb-2">
             {page === 1 && (
@@ -267,13 +328,13 @@ export default function LoginPage() {
                     variant="bordered"
                     onValueChange={(value) => {
                       setOtp(value);
-                      setIsOtpValid(true);
+                      setIsOtpValid(validateOtp(value) || value.length < 6);
                     }}
                     isInvalid={!isOtpValid}
-                    errorMessage="ควย"
+                    errorMessage={!isOtpValid ? "รหัส OTP ไม่ถูกต้อง" : undefined}
                     classNames={{
                       helperWrapper: "flex justify-center items-center",
-                      errorMessage: "hidden"
+                      errorMessage: !isOtpValid ? "text-danger text-tiny" : "hidden"
                     }}
                   />
                   <div className="flex flex-col items-center">

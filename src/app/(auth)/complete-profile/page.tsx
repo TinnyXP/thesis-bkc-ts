@@ -44,6 +44,23 @@ export default function CompleteProfilePage() {
     }
   };
 
+  // ฟังก์ชันสำหรับลบรูปโปรไฟล์
+  const clearImage = () => {
+    // รีเซ็ตไฟล์ที่เลือกและ URL สำหรับแสดงตัวอย่าง
+    setProfileImage(null);
+
+    // ถ้ามี URL สำหรับแสดงตัวอย่าง ให้ยกเลิกและล้าง URL ออก
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+
+    // รีเซ็ต input ไฟล์
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
@@ -74,7 +91,7 @@ export default function CompleteProfilePage() {
       const data = await response.json();
 
       if (data.success) {
-        // อัพเดทเซสชัน (session) แบบเดิม
+        // อัพเดท session แบบเดิม
         await update({
           ...session,
           user: {
@@ -88,7 +105,9 @@ export default function CompleteProfilePage() {
         // แทนที่จะใช้ router.replace ซึ่งใช้ client-side navigation
         // ให้ใช้ window.location.href เพื่อทำการ full page reload
         // เพื่อให้ได้ session ล่าสุดจากเซิร์ฟเวอร์
-        window.location.href = '/welcome';
+        setTimeout(() => {
+          router.replace('/welcome');
+        }, 500);
       } else {
         setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");
       }
@@ -126,7 +145,7 @@ export default function CompleteProfilePage() {
 
       <div className="flex w-full max-w-sm flex-col gap-3 rounded-large bg-content1 px-8 pb-6 pt-6 shadow-small">
         <div>
-          
+
           {/* แสดงข้อความแจ้งเตือน */}
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -173,7 +192,7 @@ export default function CompleteProfilePage() {
                       size="sm"
                       color="danger"
                       className="cursor-pointer"
-                    // onPress={clearImage}
+                      onPress={clearImage}
                     >
                       ลบ
                     </Link>
