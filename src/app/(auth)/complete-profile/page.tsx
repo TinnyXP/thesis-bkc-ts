@@ -12,6 +12,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FaCamera, FaUser } from "react-icons/fa";
+import { Loading } from "@/components";
 
 export default function CompleteProfilePage() {
   const { data: session, status, update } = useSession();
@@ -106,16 +107,7 @@ export default function CompleteProfilePage() {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <Spinner
-          classNames={{
-            label: "text-foreground mt-4 font-[family-name:var(--font-line-seed-sans)]"
-          }}
-          label="กำลังโหลด"
-          variant="gradient"
-          size="lg"
-        />
-      </div>
+      <Loading message='กำลังโหลดข้อมูล...' fullScreen={true} size="lg" />
     );
   }
 

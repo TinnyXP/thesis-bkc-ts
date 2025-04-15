@@ -9,6 +9,7 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 import { BsLine } from "react-icons/bs";
 import Image from "next/image";
 import { IoLogIn, IoMail } from "react-icons/io5";
+import { Loading } from "@/components";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
@@ -195,16 +196,7 @@ export default function LoginPage() {
   // แสดงหน้า loading เมื่อกำลังตรวจสอบ session
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <Spinner
-          classNames={{
-            label: "text-foreground mt-4 font-[family-name:var(--font-line-seed-sans)]"
-          }}
-          label="กำลังโหลด"
-          variant="gradient"
-          size="lg"
-        />
-      </div>
+      <Loading message='กำลังโหลดข้อมูล...' fullScreen={true} size="lg" />
     );
   }
 

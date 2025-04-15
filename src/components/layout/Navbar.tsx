@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import React from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider } from "@heroui/react";
-import { ToggleTheme } from "@/components"
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider, useDisclosure } from "@heroui/react";
+import { ToggleTheme, BookmarkModal, SettingsModal } from "@/components"
 import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
 import { Avatar, AvatarIcon } from "@heroui/avatar";
-import { FiArrowUpRight, FiLogIn, FiLogOut } from "react-icons/fi";
+import { FiArrowUpRight, FiBookmark, FiLogIn, FiLogOut, FiSettings } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
@@ -176,6 +176,18 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
 
   const { data: session } = useSession()
 
+  const {
+    isOpen: isSettingsOpen,
+    onOpen: onSettingsOpen,
+    onOpenChange: onSettingsOpenChange
+  } = useDisclosure();
+
+  const {
+    isOpen: isBookmarksOpen,
+    onOpen: onBookmarksOpen,
+    onOpenChange: onBookmarksOpenChange
+  } = useDisclosure();
+
   return (
     <div>
       <Dropdown>
@@ -205,20 +217,39 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
             </DropdownItem>
           </DropdownSection>
           <DropdownItem
-            key="help_and_feedback"
-            startContent={<FiArrowUpRight />}
-          >ช่วยเหลือ & ฟีดแบ็ค
+            key="bookmark"
+            startContent={<FiBookmark />}
+            onPress={onBookmarksOpen}
+          >
+            บุ๊คมาร์ค
+          </DropdownItem>
+          <DropdownItem
+            key="settings"
+            startContent={<FiSettings />}
+            onPress={onSettingsOpen}
+          >
+            การตั้งค่า
           </DropdownItem>
           <DropdownItem
             key="logout"
             color="danger"
             startContent={<FiLogOut />}
-            onClick={() => signOut()}
+            onPress={() => signOut()}
           >
             ออกจากระบบ
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onOpenChange={onSettingsOpenChange}
+      />
+
+      <BookmarkModal
+        isOpen={isBookmarksOpen}
+        onOpenChange={onBookmarksOpenChange}
+      />
     </div>
   )
 }

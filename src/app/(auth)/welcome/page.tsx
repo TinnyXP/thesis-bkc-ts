@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Button, Link } from "@heroui/react";
-import { NavBar } from "@/components";
+import { Loading, NavBar } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
 
 import { useSession } from "next-auth/react";
@@ -32,10 +32,7 @@ export default function WelcomePage() {
   // แสดง Loading state ที่สวยงาม
   if (status === "loading" || loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-primary-color mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">กำลังโหลด...</p>
-      </div>
+      <Loading message='กำลังโหลดข้อมูล...' fullScreen={true} size="lg" />
     );
   }
 
