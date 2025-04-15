@@ -1,4 +1,4 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 
 // สร้าง interface สำหรับ result จาก Cloudinary
 interface CloudinaryUploadResult {
@@ -64,12 +64,19 @@ export async function uploadToCloudinary(file: File): Promise<CloudinaryUploadRe
  */
 export async function deleteFromCloudinary(publicId: string) {
   try {
-    const result = await new Promise((resolve, reject) => {
+    console.log("Deleting file from Cloudinary with publicId:", publicId);
+    
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
       cloudinary.uploader.destroy(
         publicId,
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+        (error: UploadApiErrorResponse | undefined, result: UploadApiResponse) => {
+          if (error) {
+            console.error("Cloudinary delete error:", error);
+            reject(error);
+          } else {
+            console.log("Cloudinary delete success:", result);
+            resolve(result);
+          }
         }
       );
     });

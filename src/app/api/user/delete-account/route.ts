@@ -1,4 +1,3 @@
-// src/app/api/user/delete-account/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -6,6 +5,7 @@ import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
 import LoginHistory from "@/models/loginHistory";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
+import mongoose from "mongoose";
 
 export async function DELETE(request: Request) {
   try {
@@ -31,8 +31,25 @@ export async function DELETE(request: Request) {
     // เชื่อมต่อกับฐานข้อมูล
     await connectDB();
 
-    // ค้นหาข้อมูลผู้ใช้
-    const user = await UserModel.findById(userId);
+    // ค้นหาผู้ใช้โดยใช้การตรวจสอบว่า userId เป็น ObjectId หรือไม่
+    let user;
+    
+    // ตรวจสอบว่า userId เป็น ObjectId หรือไม่
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+    
+    if (isValidObjectId) {
+      // ค้นหาด้วย _id ถ้าเป็น ObjectId ที่ถูกต้อง
+      user = await UserModel.findById(userId);
+    } else {
+      // ค้นหาด้วย provider_id หรือ email ขึ้นอยู่กับวิธีการล็อกอิน
+      if (session.user.provider === 'line') {
+        user = await UserModel.findOne({ provider: 'line', provider_id: userId });
+      } else {
+        // ถ้าเป็น OTP หรือวิธีอื่นๆ ลองค้นหาด้วยอีเมล
+        user = await UserModel.findOne({ email: session.user.email });
+      }
+    }
+
     if (!user) {
       return NextResponse.json({ 
         success: false, 
@@ -43,14 +60,31 @@ export async function DELETE(request: Request) {
     // ลบรูปโปรไฟล์จาก Cloudinary (ถ้ามี)
     if (user.profile_image && user.profile_image.includes('cloudinary')) {
       try {
-        // ดึง public_id จาก URL
-        const urlParts = user.profile_image.split('/');
-        const filenameWithExt = urlParts[urlParts.length - 1];
-        const filename = filenameWithExt.split('.')[0];
-        const folderPath = urlParts[urlParts.length - 2];
-        const publicId = `${folderPath}/${filename}`;
+        // ดึง public_id จาก URL โดยทำอย่างระมัดระวังมากขึ้น
+        const url = new URL(user.profile_image);
+        const pathname = url.pathname;
         
-        await deleteFromCloudinary(publicId);
+        // แยกส่วนที่เป็น path ออกมา
+        const pathParts = pathname.split('/');
+        const uploadIndex = pathParts.indexOf('upload');
+        
+        // ข้ามส่วนของ version เช่น v1234567890 (มักอยู่หลัง upload)
+        let startIndex = uploadIndex + 1;
+        if (startIndex < pathParts.length && pathParts[startIndex].startsWith('v')) {
+          startIndex++;
+        }
+        
+        // สร้าง public_id จากส่วนที่เหลือของ path
+        const publicIdParts = pathParts.slice(startIndex).filter(Boolean);
+        const publicId = publicIdParts.join('/');
+        
+        // นำ extension ของไฟล์ออก ถ้ามี
+        const publicIdWithoutExt = publicId.replace(/\.[^/.]+$/, "");
+        
+        console.log("Attempting to delete image with public_id:", publicIdWithoutExt);
+        
+        const result = await deleteFromCloudinary(publicIdWithoutExt);
+        console.log("Cloudinary delete result:", result);
       } catch (error) {
         console.error("Error deleting profile image from Cloudinary:", error);
         // ไม่หยุดการดำเนินการหากไม่สามารถลบรูปได้
@@ -58,10 +92,10 @@ export async function DELETE(request: Request) {
     }
 
     // ลบประวัติการเข้าสู่ระบบ
-    await LoginHistory.deleteMany({ user_id: userId });
+    await LoginHistory.deleteMany({ user_id: user._id });
 
     // ลบบัญชีผู้ใช้
-    await UserModel.findByIdAndDelete(userId);
+    await UserModel.findByIdAndDelete(user._id);
 
     return NextResponse.json({ 
       success: true, 
