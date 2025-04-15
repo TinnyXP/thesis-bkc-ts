@@ -26,7 +26,7 @@ export default function NavBar() {
   const menuItems = [
     {
       label: t('history'),
-      href: "/test/download"
+      href: "/history"
     },
     {
       label: t('place'),
