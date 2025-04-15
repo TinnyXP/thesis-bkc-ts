@@ -17,7 +17,6 @@
     "framer-motion": "^12.6.2",
     "i18next": "^24.2.3",
     "js-cookie": "^3.0.5",
-    "lucide-react": "^0.485.0",
     "mongoose": "^8.13.2",
     "next": "14.2.24",
     "next-auth": "^4.24.11",

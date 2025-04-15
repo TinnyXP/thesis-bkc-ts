@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
-import { House } from 'lucide-react';
+import { FaHouse } from 'react-icons/fa6';
 
 interface SlugBreadcrumbProps {
   postTitle: string;
@@ -34,7 +34,7 @@ export default function SlugBreadcrumb({
         {/* ลิงก์ไปหน้าแรก */}
         <BreadcrumbItem href="/" className="flex-shrink-0">
           <div className="w-6 h-6 rounded-full bg-primary-color flex items-center justify-center transition-all duration-200 shadow hover:shadow-lg">
-            <House size={16} className="text-background" aria-label="หน้าแรก" />
+            <FaHouse size={16} className="text-background" aria-label="หน้าแรก" />
           </div>
         </BreadcrumbItem>
 

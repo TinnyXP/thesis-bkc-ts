@@ -12,8 +12,8 @@ import {
   Spinner,
   addToast
 } from "@heroui/react";
-import { X, Download, FileType } from 'lucide-react';
 import { FaCheckCircle } from 'react-icons/fa';
+import { IoClose, IoCloudDownload, IoDocumentText } from 'react-icons/io5';
 
 interface ImageWithModalProps {
   src: string;
@@ -475,7 +475,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
                 <div className="absolute top-3 left-0 right-0 flex justify-between items-center px-3 z-10 pointer-events-none">
                   {/* ข้อมูลประเภทไฟล์ (ไม่แสดงขนาดไฟล์) */}
                   <div className="bg-zinc-800/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full flex items-center gap-2 pointer-events-auto">
-                    <FileType size={16} />
+                    <IoDocumentText  size={16} />
                     <span className="text-sm font-medium">{imageType}</span>
                   </div>
 
@@ -488,7 +488,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
                     onPress={onClose}
                     aria-label="ปิดโมดัล"
                   >
-                    <X size={18} />
+                    <IoClose size={18} />
                   </Button>
                 </div>
 
@@ -509,7 +509,7 @@ const ImageWithModal: React.FC<ImageWithModalProps> = ({
                         className="bg-primary-color/90 hover:bg-primary-color backdrop-blur-sm text-white shadow-lg hover:shadow-xl transition-all"
                         aria-label="ดาวน์โหลดรูปภาพ"
                       >
-                        {isDownloading ? <Spinner size="sm" color="white" /> : <Download size={20} />}
+                        {isDownloading ? <Spinner size="sm" color="white" /> : <IoCloudDownload size={20} />}
                       </Button>
                     </Tooltip>
                   </div>
