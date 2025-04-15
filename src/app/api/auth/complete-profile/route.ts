@@ -10,9 +10,9 @@ export async function POST(request: Request) {
     // ตรวจสอบว่ามีการเข้าสู่ระบบและเป็นผู้ใช้ใหม่
     const session = await getServerSession(authOptions);
     if (!session || !session.user || !session.user.isNewUser) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "ไม่ได้รับอนุญาต" 
+      return NextResponse.json({
+        success: false,
+        message: "ไม่ได้รับอนุญาต"
       }, { status: 401 });
     }
 
@@ -22,9 +22,9 @@ export async function POST(request: Request) {
     const profileImage = formData.get("profileImage") as File | null;
 
     if (!name) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "กรุณากรอกชื่อ" 
+      return NextResponse.json({
+        success: false,
+        message: "กรุณากรอกชื่อ"
       }, { status: 400 });
     }
 
@@ -39,32 +39,34 @@ export async function POST(request: Request) {
       }
     }
 
-    // สร้างผู้ใช้ใหม่
-    const newUser = await UserModel.create({
-      name,
-      email,
-      provider: "otp",
-      provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`, 
-      profile_image: profileImageUrl,
-      is_active: true
-    });
+    // แทนการสร้างผู้ใช้ใหม่ ให้อัปเดตผู้ใช้ที่มีอยู่แล้ว
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { email: email, provider: "otp" }, // ค้นหาด้วยอีเมลแทนการใช้ ID
+      {
+        name,
+        profile_image: profileImageUrl,
+        profile_completed: true, // อัปเดตสถานะว่ากรอกข้อมูลเรียบร้อยแล้ว
+        is_active: true
+      },
+      { new: true }
+    );
 
     // ส่งข้อมูลกลับให้ครบถ้วนมากขึ้น
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: "สร้างโปรไฟล์สำเร็จ",
       user: {
-        id: newUser._id.toString(), // แปลงเป็น string ให้ชัดเจน
-        name: newUser.name,
-        email: newUser.email,
-        image: newUser.profile_image,
-        isNewUser: false // ชี้ชัดว่าไม่ใช่ผู้ใช้ใหม่แล้ว
+        id: updatedUser._id.toString(),
+        name: updatedUser.name,
+        email: updatedUser.email,
+        image: updatedUser.profile_image,
+        isNewUser: false
       }
     });
   } catch (error) {
     console.error("Error creating user profile:", error);
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       message: "เกิดข้อผิดพลาดในการสร้างโปรไฟล์",
       error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });

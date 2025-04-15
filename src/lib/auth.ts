@@ -98,16 +98,29 @@ export const authOptions: AuthOptions = {
           // ค้นหาผู้ใช้
           const user = await UserModel.findOne({ email, provider: 'otp' });
 
+          // ใน authorize callback ของ OTP provider
           if (!user) {
-            // ถ้าเป็นการล็อกอินครั้งแรก ให้ส่งค่ากลับพิเศษ
-            return {
-              id: 'new-user',
+            // สร้างผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
+            const newUser = await UserModel.create({
               email,
-              name: '',
+              name: email.split('@')[0], // ใช้ส่วนแรกของอีเมลเป็นชื่อชั่วคราว
+              provider: 'otp',
+              provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+              profile_completed: false // เพิ่ม field นี้ในโมเดล
+            });
+
+            // บันทึกประวัติการล็อกอิน
+            await saveLoginHistory(newUser._id.toString(), 'success');
+
+            return {
+              id: newUser._id.toString(),
+              email: newUser.email,
+              name: newUser.name,
               image: null,
               provider: 'otp',
-              isNewUser: true
-            } as CustomUser;
+              isNewUser: true, // ยังใช้ flag นี้ในระบบได้
+              profile_completed: false
+            };
           }
 
           // บันทึกประวัติการล็อกอิน
@@ -130,10 +143,10 @@ export const authOptions: AuthOptions = {
       }
     })
   ],
-   callbacks: {
+  callbacks: {
     async signIn({ user, account, profile }) {
       console.log("Sign in attempt:", { provider: account?.provider, user });
-      
+
       try {
         await connectDB();
 
@@ -186,13 +199,13 @@ export const authOptions: AuthOptions = {
             return true;
           }
         }
-        
+
         // เพิ่มเงื่อนไขสำหรับ OTP หลังจากสร้างโปรไฟล์สำเร็จ
         // ถ้าเป็น OTP และเป็นผู้ใช้ที่สร้างโปรไฟล์เสร็จแล้ว (ไม่ใช่ new-user)
         if (account?.provider === "otp" && user.id !== 'new-user') {
           // บันทึกประวัติการล็อกอิน
           const clientInfo = await saveLoginHistory(user.id, 'success');
-          
+
           // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
           if (user.email) {
             sendLoginNotificationEmail(user.email, user.name || '', clientInfo);
@@ -217,7 +230,7 @@ export const authOptions: AuthOptions = {
         }
         return token;
       }
-      
+
       // กรณีสร้าง token ครั้งแรกเมื่อ user login
       if (user) {
         const customUser = user as CustomUser;
@@ -240,7 +253,7 @@ export const authOptions: AuthOptions = {
         // อัพเดตชื่อและรูปโปรไฟล์จาก token ล่าสุด
         if (token.name) session.user.name = token.name;
         if (token.picture) session.user.image = token.picture;
-        
+
         // ตรวจสอบว่ามี isNewUser ในโทเค็นหรือไม่
         if (token.hasOwnProperty('isNewUser')) {
           session.user.isNewUser = token.isNewUser;

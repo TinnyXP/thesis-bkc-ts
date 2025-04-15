@@ -19,7 +19,6 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
-    const userId = session.user.id;
     const profileImage = formData.get("profileImage") as File | null;
     const removeProfileImage = formData.get("removeProfileImage") === "true";
 
@@ -33,16 +32,28 @@ export async function POST(request: Request) {
     // เชื่อมต่อกับฐานข้อมูล
     await connectDB();
 
-    // ค้นหาผู้ใช้
-    const user = await UserModel.findById(userId);
+    // ใช้อีเมลในการค้นหาข้อมูลผู้ใช้ (เนื่องจาก session.user.id อาจเป็น 'new-user')
+    if (!session.user.email) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่พบข้อมูลอีเมล์ของผู้ใช้" 
+      }, { status: 400 });
+    }
+    
+    // ค้นหาผู้ใช้ด้วยอีเมล แทนการใช้ ID
+    const user = await UserModel.findOne({ 
+      email: session.user.email,
+      provider: session.user.provider || 'otp'
+    });
+
     if (!user) {
       return NextResponse.json({ 
         success: false, 
-        message: "ไม่พบผู้ใช้" 
+        message: "ไม่พบบัญชีผู้ใช้" 
       }, { status: 404 });
     }
 
-    // อัปเดตข้อมูลผู้ใช้
+    // เตรียมข้อมูลที่จะอัปเดต
     const updateData: { name: string; profile_image?: string | null } = { name };
 
     // จัดการกับรูปโปรไฟล์
@@ -66,6 +77,7 @@ export async function POST(request: Request) {
           await deleteFromCloudinary(publicIdWithoutExt);
         } catch (error) {
           console.error("Error deleting profile image:", error);
+          // ไม่หยุดการทำงานหากไม่สามารถลบรูปได้
         }
       }
       updateData.profile_image = null;
@@ -89,6 +101,7 @@ export async function POST(request: Request) {
           await deleteFromCloudinary(publicIdWithoutExt);
         } catch (error) {
           console.error("Error deleting old profile image:", error);
+          // ไม่หยุดการทำงานหากไม่สามารถลบรูปได้
         }
       }
 
@@ -101,7 +114,7 @@ export async function POST(request: Request) {
 
     // อัปเดตข้อมูลในฐานข้อมูล
     const updatedUser = await UserModel.findByIdAndUpdate(
-      userId,
+      user._id,
       updateData,
       { new: true }
     );

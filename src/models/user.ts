@@ -33,6 +33,10 @@ const userSchema = new Schema(
     is_active: {
       type: Boolean,
       default: true
+    },
+    profile_completed: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }
