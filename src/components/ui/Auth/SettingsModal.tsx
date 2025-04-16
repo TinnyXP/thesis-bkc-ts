@@ -146,28 +146,32 @@ export default function SettingsModal({
       setProfileUpdateError("กรุณากรอกชื่อ");
       return;
     }
-
+  
     setIsUpdatingProfile(true);
     setProfileUpdateError("");
     setProfileUpdateSuccess(false);
-
+  
     try {
       const formData = new FormData();
       formData.append("name", userName);
-
+  
       if (profileImage) {
+        // ถ้ามีไฟล์รูปที่อัพโหลดใหม่
         formData.append("profileImage", profileImage);
+      } else if (previewUrl && !removeProfileImage) {
+        // ถ้ามี previewUrl (รูปจาก LINE) และไม่ได้ตั้งค่าลบรูป
+        formData.append("imageUrl", previewUrl);
       }
-
+  
       formData.append("removeProfileImage", removeProfileImage.toString());
-
+  
       const response = await fetch('/api/user/update-profile', {
         method: 'POST',
         body: formData
       });
-
+  
       const data = await response.json();
-
+  
       if (data.success) {
         // อัพเดต session
         await update({
@@ -178,19 +182,19 @@ export default function SettingsModal({
             image: data.user.image
           }
         });
-
+  
         // รีเฟรชข้อมูลโปรไฟล์
         if (refreshProfile) {
           await refreshProfile();
         }
-
+  
         setProfileUpdateSuccess(true);
-
+  
         // รีเซ็ตสถานะ
         setProfileImage(null);
         setPreviewUrl(null);
         setRemoveProfileImage(false);
-
+  
         // แสดงข้อความสำเร็จชั่วคราว
         setTimeout(() => {
           setProfileUpdateSuccess(false);
@@ -230,16 +234,19 @@ export default function SettingsModal({
       const data = await response.json();
 
       if (data.success && data.lineDefaultData) {
-        // อัพเดตค่าใน form
+        // อัพเดตชื่อ
         setUserName(data.lineDefaultData.name);
 
-        // ถ้ามีรูปโปรไฟล์จาก LINE
+        // อัพเดตรูปภาพ - ใช้ URL โดยตรงจาก lineDefaultData
         if (data.lineDefaultData.profile_image) {
-          // ล้างการอัพโหลดรูปใหม่ (ถ้ามี)
+          // ตั้งค่า previewUrl เป็น URL รูปจาก LINE
+          setPreviewUrl(data.lineDefaultData.profile_image);
+          // รีเซ็ตไฟล์รูปที่อาจมีการอัพโหลดไว้ก่อนหน้า
           setProfileImage(null);
-          setPreviewUrl(null);
-          // ล้างการตั้งค่าลบรูป
+          // ยกเลิกการตั้งค่าลบรูป
           setRemoveProfileImage(false);
+
+          console.log("Setting profile image from LINE:", data.lineDefaultData.profile_image);
         }
 
         setResetSuccess(true);
@@ -374,7 +381,6 @@ export default function SettingsModal({
                                 style={{ objectFit: 'cover' }}
                               />
                             ) : (
-                              // ตรวจสอบเงื่อนไขให้เข้มงวดมากขึ้น ใช้เฉพาะ userProfile.image ที่ไม่ใช่ null หรือ undefined
                               userProfile?.image ? (
                                 <Image
                                   src={userProfile.image}

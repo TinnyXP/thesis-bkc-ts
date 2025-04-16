@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const profileImage = formData.get("profileImage") as File | null;
+    const imageUrl = formData.get("imageUrl") as string | null; // เพิ่มการรับ imageUrl
     const removeProfileImage = formData.get("removeProfileImage") === "true";
 
     if (!name) {
@@ -86,10 +87,10 @@ export async function POST(request: Request) {
     const updateData: {
       name: string;
       profile_image?: string | null;
-      profile_completed: boolean; // เพิ่มฟิลด์นี้
+      profile_completed: boolean;
     } = {
       name,
-      profile_completed: true // ตั้งค่าให้เป็น true เสมอเมื่อผู้ใช้อัพเดตโปรไฟล์ด้วยตัวเอง
+      profile_completed: true
     };
 
     // จัดการกับรูปโปรไฟล์
@@ -143,6 +144,9 @@ export async function POST(request: Request) {
       if (uploadResult && uploadResult.secure_url) {
         updateData.profile_image = uploadResult.secure_url;
       }
+    } else if (imageUrl) {
+      // ถ้ามี URL ของรูปภาพที่ส่งมา (เช่น จาก LINE)
+      updateData.profile_image = imageUrl;
     }
 
     // อัปเดตข้อมูลในฐานข้อมูล
