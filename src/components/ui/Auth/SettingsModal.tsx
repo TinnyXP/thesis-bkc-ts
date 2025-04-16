@@ -146,15 +146,15 @@ export default function SettingsModal({
       setProfileUpdateError("กรุณากรอกชื่อ");
       return;
     }
-  
+
     setIsUpdatingProfile(true);
     setProfileUpdateError("");
     setProfileUpdateSuccess(false);
-  
+
     try {
       const formData = new FormData();
       formData.append("name", userName);
-  
+
       if (profileImage) {
         // ถ้ามีไฟล์รูปที่อัพโหลดใหม่
         formData.append("profileImage", profileImage);
@@ -162,16 +162,16 @@ export default function SettingsModal({
         // ถ้ามี previewUrl (รูปจาก LINE) และไม่ได้ตั้งค่าลบรูป
         formData.append("imageUrl", previewUrl);
       }
-  
+
       formData.append("removeProfileImage", removeProfileImage.toString());
-  
+
       const response = await fetch('/api/user/update-profile', {
         method: 'POST',
         body: formData
       });
-  
+
       const data = await response.json();
-  
+
       if (data.success) {
         // อัพเดต session
         await update({
@@ -182,19 +182,19 @@ export default function SettingsModal({
             image: data.user.image
           }
         });
-  
+
         // รีเฟรชข้อมูลโปรไฟล์
         if (refreshProfile) {
           await refreshProfile();
         }
-  
+
         setProfileUpdateSuccess(true);
-  
+
         // รีเซ็ตสถานะ
         setProfileImage(null);
         setPreviewUrl(null);
         setRemoveProfileImage(false);
-  
+
         // แสดงข้อความสำเร็จชั่วคราว
         setTimeout(() => {
           setProfileUpdateSuccess(false);
@@ -373,24 +373,28 @@ export default function SettingsModal({
                             className="relative w-24 h-24 rounded-full cursor-pointer overflow-hidden bg-gray-200/20 dark:bg-gray-200/5 flex items-center justify-center border-2 border-solid border-default-300"
                             onClick={handleImageClick}
                           >
-                            {previewUrl ? (
+                            {removeProfileImage ? (
+                              // แสดง AvatarIcon เมื่อตั้งค่าให้ลบรูปโปรไฟล์
+                              <AvatarIcon />
+                            ) : previewUrl ? (
+                              // แสดงรูปพรีวิวกรณีมีการอัพโหลดรูปใหม่หรือใช้รูปจาก LINE
                               <Image
                                 src={previewUrl}
                                 alt="ตัวอย่างโปรไฟล์"
                                 fill
                                 style={{ objectFit: 'cover' }}
                               />
+                            ) : userProfile?.image ? (
+                              // แสดงรูปโปรไฟล์ปัจจุบัน
+                              <Image
+                                src={userProfile.image}
+                                alt="รูปโปรไฟล์"
+                                fill
+                                style={{ objectFit: 'cover' }}
+                              />
                             ) : (
-                              userProfile?.image ? (
-                                <Image
-                                  src={userProfile.image}
-                                  alt="รูปโปรไฟล์"
-                                  fill
-                                  style={{ objectFit: 'cover' }}
-                                />
-                              ) : (
-                                <AvatarIcon />
-                              )
+                              // แสดง AvatarIcon เมื่อไม่มีรูปโปรไฟล์
+                              <AvatarIcon />
                             )}
                             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                               <FaCamera size={24} className="text-white" />
