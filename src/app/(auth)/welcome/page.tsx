@@ -55,6 +55,9 @@ export default function WelcomePage() {
           <p className="text-default-500 mt-1">
             ยินดีต้อนรับสู่บางกระเจ้า
           </p>
+          <p className="text-xs text-gray-500 mt-1">
+            ID ของคุณ: {session.user.bkcId}
+          </p>
         </div>
 
         {/* แถบสถานะ */}

@@ -1,3 +1,4 @@
+// src/app/api/user/delete-account/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -5,7 +6,6 @@ import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
 import LoginHistory from "@/models/loginHistory";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
-import mongoose from "mongoose";
 
 export async function DELETE(request: Request) {
   try {
@@ -18,43 +18,36 @@ export async function DELETE(request: Request) {
       }, { status: 401 });
     }
 
-    const { userId } = await request.json();
-
-    // ตรวจสอบว่า userId ตรงกับ session
-    if (session.user.id !== userId) {
+    // อาจรับพารามิเตอร์เพิ่มเติมจาก URL หรือ body ถ้าต้องการ
+    // เช่น การยืนยันการลบด้วยรหัสผ่าน หรือเหตุผลในการลบบัญชี
+    const { confirmDelete } = await request.json().catch(() => ({ confirmDelete: true }));
+    
+    if (!confirmDelete) {
       return NextResponse.json({ 
         success: false, 
-        message: "ไม่มีสิทธิ์ลบบัญชีนี้" 
-      }, { status: 403 });
+        message: "ยังไม่ได้ยืนยันการลบบัญชี" 
+      }, { status: 400 });
     }
 
     // เชื่อมต่อกับฐานข้อมูล
     await connectDB();
 
-    // ค้นหาผู้ใช้โดยใช้การตรวจสอบว่า userId เป็น ObjectId หรือไม่
-    let user;
-    
-    // ตรวจสอบว่า userId เป็น ObjectId หรือไม่
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
-    
-    if (isValidObjectId) {
-      // ค้นหาด้วย _id ถ้าเป็น ObjectId ที่ถูกต้อง
-      user = await UserModel.findById(userId);
-    } else {
-      // ค้นหาด้วย provider_id หรือ email ขึ้นอยู่กับวิธีการล็อกอิน
-      if (session.user.provider === 'line') {
-        user = await UserModel.findOne({ provider: 'line', provider_id: userId });
-      } else {
-        // ถ้าเป็น OTP หรือวิธีอื่นๆ ลองค้นหาด้วยอีเมล
-        user = await UserModel.findOne({ email: session.user.email });
-      }
-    }
+    // ค้นหาผู้ใช้ด้วย bkc_id
+    const user = await UserModel.findOne({ bkc_id: session.user.bkcId });
 
     if (!user) {
       return NextResponse.json({ 
         success: false, 
         message: "ไม่พบบัญชีผู้ใช้" 
       }, { status: 404 });
+    }
+
+    // ตรวจสอบว่า provider ตรงกันหรือไม่ (เพิ่มความปลอดภัย)
+    if (user.provider !== session.user.provider) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่สามารถลบบัญชีนี้ได้" 
+      }, { status: 403 });
     }
 
     // ลบรูปโปรไฟล์จาก Cloudinary (ถ้ามี)

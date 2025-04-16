@@ -1,14 +1,15 @@
+// src/lib/auth.ts
 import { AuthOptions, Session, Profile } from "next-auth";
-import { User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import LineProvider from "next-auth/providers/line";
 import { connectDB } from "@/lib/mongodb";
-import UserModel from "@/models/user"; // เปลี่ยนชื่อ import จาก User เป็น UserModel
+import UserModel from "@/models/user";
 import OTP from "@/models/otp";
 import LoginHistory from "@/models/loginHistory";
 import { headers } from "next/headers";
 import { sendLoginNotificationEmail } from "@/lib/otpService";
 import { JWT } from "next-auth/jwt";
+import { v4 as uuidv4 } from "uuid";
 
 interface ClientInfo {
   ip: string;
@@ -51,11 +52,6 @@ interface OTPUserCredentials {
   otp: string;
 }
 
-interface CustomUser extends NextAuthUser {
-  provider?: string;
-  isNewUser?: boolean;
-}
-
 export const authOptions: AuthOptions = {
   providers: [
     LineProvider({
@@ -74,8 +70,14 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-
-        const { email, otp } = credentials as OTPUserCredentials;
+      
+        // ใช้ type OTPUserCredentials แทน
+        const otpCredentials: OTPUserCredentials = {
+          email: credentials.email,
+          otp: credentials.otp
+        };
+      
+        const { email, otp } = otpCredentials;
         try {
           await connectDB();
 
@@ -100,13 +102,16 @@ export const authOptions: AuthOptions = {
 
           // ใน authorize callback ของ OTP provider
           if (!user) {
+            // สร้าง bkc_id ใหม่
+            const bkc_id = uuidv4();
+            
             // สร้างผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
             const newUser = await UserModel.create({
               email,
               name: email.split('@')[0], // ใช้ส่วนแรกของอีเมลเป็นชื่อชั่วคราว
               provider: 'otp',
-              provider_id: `otp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-              profile_completed: false // เพิ่ม field นี้ในโมเดล
+              bkc_id, // กำหนดค่า bkc_id ที่สร้างใหม่
+              profile_completed: false
             });
 
             // บันทึกประวัติการล็อกอิน
@@ -118,8 +123,8 @@ export const authOptions: AuthOptions = {
               name: newUser.name,
               image: null,
               provider: 'otp',
-              isNewUser: true, // ยังใช้ flag นี้ในระบบได้
-              profile_completed: false
+              bkc_id,  // ส่ง bkc_id กลับไป (required)
+              isNewUser: true
             };
           }
 
@@ -134,8 +139,9 @@ export const authOptions: AuthOptions = {
             name: user.name,
             email: user.email,
             image: user.profile_image,
-            provider: 'otp'
-          } as CustomUser;
+            provider: 'otp',
+            bkc_id: user.bkc_id  // ส่ง bkc_id กลับไป (required)
+          };
         } catch (error) {
           console.error("Error in OTP authorize:", error);
           return null;
@@ -154,12 +160,12 @@ export const authOptions: AuthOptions = {
         if (account?.provider === "line" && profile) {
           const lineProfile = profile as LineProfile;
           const { name, email, picture } = lineProfile;
-          const provider_id = lineProfile.sub;
+          const line_id = lineProfile.sub;
 
-          // ค้นหาผู้ใช้จาก provider_id
+          // ค้นหาผู้ใช้จาก line_id
           let existingUser = await UserModel.findOne({
             provider: 'line',
-            provider_id
+            line_id
           });
 
           if (existingUser) {
@@ -184,13 +190,17 @@ export const authOptions: AuthOptions = {
 
             return true;
           } else {
+            // สร้าง bkc_id ใหม่
+            const bkc_id = uuidv4();
+            
             // สร้างผู้ใช้ใหม่
             const newUser = await UserModel.create({
               email,
               name,
               profile_image: picture,
               provider: 'line',
-              provider_id
+              line_id,
+              bkc_id // กำหนดค่า bkc_id ที่สร้างใหม่
             });
 
             // บันทึกประวัติการล็อกอิน
@@ -233,12 +243,18 @@ export const authOptions: AuthOptions = {
 
       // กรณีสร้าง token ครั้งแรกเมื่อ user login
       if (user) {
-        const customUser = user as CustomUser;
-        token.userId = customUser.id;
-        token.provider = customUser.provider || 'unknown';
+        // เก็บข้อมูล MongoDB ID และ bkc_id
+        token.userId = user.id;
+        
+        // ตรวจสอบว่ามี bkc_id หรือไม่ (ควรมีเสมอตามที่กำหนดใน interface)
+        if (user.bkc_id) {
+          token.bkcId = user.bkc_id;
+        }
+
+        token.provider = user.provider || 'unknown';
 
         // สำหรับผู้ใช้ใหม่ที่ล็อกอินด้วย OTP
-        if (customUser.isNewUser) {
+        if (user.isNewUser) {
           token.isNewUser = true;
         }
       }
@@ -248,6 +264,10 @@ export const authOptions: AuthOptions = {
     async session({ session, token }: { session: Session; token: JWT }) {
       if (token && session.user) {
         session.user.id = token.userId;
+        if (token.bkcId) {
+          session.user.bkcId = token.bkcId;
+        }
+
         session.user.provider = token.provider;
 
         // อัพเดตชื่อและรูปโปรไฟล์จาก token ล่าสุด

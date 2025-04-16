@@ -1,7 +1,15 @@
+// src/models/user.ts
 import mongoose, { Schema } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 const userSchema = new Schema(
   {
+    bkc_id: {
+      type: String,
+      required: true,
+      unique: true, // ระบุ unique แทนการใช้ index
+      default: () => uuidv4()
+    },
     name: {
       type: String,
       required: true,
@@ -16,11 +24,12 @@ const userSchema = new Schema(
       default: 'otp',
       required: true
     },
-    provider_id: {
+    line_id: {
       type: String,
       default: null,
+      unique: true, // ใช้ unique ในการกำหนด field แทน
+      sparse: true // ยังคง sparse ไว้เพื่อให้ค่า null ซ้ำกันได้
     },
-    // ลบ password field ออก เนื่องจากไม่ได้ใช้อีกต่อไป
     profile_image: {
       type: String,
       default: null,
@@ -42,11 +51,12 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-// สร้าง compound index สำหรับป้องกันการซ้ำกัน
-// ผู้ใช้ otp ไม่สามารถมีอีเมลซ้ำกัน
-// ผู้ใช้ line ไม่สามารถมี provider_id ซ้ำกัน
+// ลบการประกาศ index แบบ manual ออก เพราะเราใช้ unique: true ในการกำหนดฟิลด์แล้ว
+// userSchema.index({ bkc_id: 1 }, { unique: true });
+// userSchema.index({ line_id: 1 }, { unique: true, sparse: true });
+
+// ยังคงเก็บ compound index ไว้
 userSchema.index({ email: 1, provider: 1 }, { unique: true });
-userSchema.index({ provider_id: 1 }, { unique: true, sparse: true });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;

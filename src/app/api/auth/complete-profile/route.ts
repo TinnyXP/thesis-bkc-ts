@@ -1,3 +1,4 @@
+// src/app/api/auth/complete-profile/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
@@ -16,9 +17,16 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
+    // ต้องมี bkc_id และ email
+    if (!session.user.bkcId || !session.user.email) {
+      return NextResponse.json({
+        success: false,
+        message: "ข้อมูลผู้ใช้ไม่ครบถ้วน"
+      }, { status: 400 });
+    }
+
     const formData = await request.formData();
     const name = formData.get("name") as string;
-    const email = session.user.email;
     const profileImage = formData.get("profileImage") as File | null;
 
     if (!name) {
@@ -39,19 +47,31 @@ export async function POST(request: Request) {
       }
     }
 
-    // แทนการสร้างผู้ใช้ใหม่ ให้อัปเดตผู้ใช้ที่มีอยู่แล้ว
-    const updatedUser = await UserModel.findOneAndUpdate(
-      { email: email, provider: "otp" }, // ค้นหาด้วยอีเมลแทนการใช้ ID
+    // ค้นหาผู้ใช้ด้วย bkc_id
+    const user = await UserModel.findOne({ 
+      bkc_id: session.user.bkcId,
+      provider: 'otp'  // อนุญาตเฉพาะผู้ใช้ OTP เท่านั้น
+    });
+
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        message: "ไม่พบบัญชีผู้ใช้"
+      }, { status: 404 });
+    }
+
+    // อัปเดตข้อมูลผู้ใช้
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      user._id,
       {
         name,
         profile_image: profileImageUrl,
-        profile_completed: true, // อัปเดตสถานะว่ากรอกข้อมูลเรียบร้อยแล้ว
+        profile_completed: true,
         is_active: true
       },
       { new: true }
     );
 
-    // ส่งข้อมูลกลับให้ครบถ้วนมากขึ้น
     return NextResponse.json({
       success: true,
       message: "สร้างโปรไฟล์สำเร็จ",
@@ -60,6 +80,7 @@ export async function POST(request: Request) {
         name: updatedUser.name,
         email: updatedUser.email,
         image: updatedUser.profile_image,
+        bkcId: updatedUser.bkc_id,
         isNewUser: false
       }
     });

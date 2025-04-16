@@ -355,7 +355,6 @@ export default function LoginPage() {
                   </div>
                 </div>
               )}
-
               <Button fullWidth color="primary" type="submit"
                 className="font-bold"
                 startContent={isLoading ? <Spinner size="sm" color="white" variant="gradient" /> : (page === 0 ? <IoMail size={20} /> : <IoLogIn size={20} />)}

@@ -173,7 +173,7 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
 
   // ฟังก์ชันลบบัญชีผู้ใช้
   const handleDeleteAccount = async () => {
-    if (!session?.user?.id) {
+    if (!session?.user?.bkcId) {
       setDeleteError("ไม่พบข้อมูลผู้ใช้");
       return;
     }
@@ -188,7 +188,7 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: session.user.id })
+        body: JSON.stringify({ bkcId: session.user.bkcId })
       });
 
       const data = await response.json();
@@ -244,6 +244,17 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                           {profileUpdateError}
                         </div>
                       )}
+
+                      {/* แสดงข้อมูลการล็อกอิน */}
+                      <div className="flex flex-col items-center mb-3">
+                        <div className="bg-gray-100 dark:bg-gray-800 rounded-md p-2 text-xs text-center w-full">
+                          <p>เข้าสู่ระบบด้วย: <span className="font-bold">
+                            {session?.user?.provider === 'line' ? 'LINE' : 'อีเมล'}
+                          </span></p>
+                          <p>{session?.user?.email}</p>
+                          <p className="text-xs text-gray-500 mt-1">bkc_id: {session?.user?.bkcId}</p>
+                        </div>
+                      </div>
 
                       {/* รูปโปรไฟล์ */}
                       <div className="flex flex-col items-center gap-4">
