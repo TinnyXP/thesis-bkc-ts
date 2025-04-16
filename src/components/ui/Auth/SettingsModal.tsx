@@ -206,19 +206,18 @@ export default function SettingsModal({
     }
   };
 
-  // ฟังก์ชันรีเซ็ตข้อมูลโปรไฟล์จาก LINE
-  const handleResetLineProfile = async () => {
-    // // ตรวจสอบว่าเป็นผู้ใช้ LINE
-    // if ((userProfile?.provider || session?.user?.provider) !== 'line') {
-    //   return; // ทำงานเฉพาะกับผู้ใช้ LINE เท่านั้น
-    // }
+  const handleFillLineData = async () => {
+    if (!session?.user?.bkcId) {
+      setResetError("ไม่พบข้อมูลผู้ใช้");
+      return;
+    }
 
     setIsResetting(true);
     setResetError("");
     setResetSuccess(false);
 
     try {
-      const response = await fetch('/api/user/reset-line-profile', {
+      const response = await fetch('/api/user/get-line-default-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -230,40 +229,31 @@ export default function SettingsModal({
 
       const data = await response.json();
 
-      if (data.success) {
-        // อัพเดต session
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            name: data.user.name,
-            image: data.user.image
-          }
-        });
-
+      if (data.success && data.lineDefaultData) {
         // อัพเดตค่าใน form
-        setUserName(data.user.name);
-        setPreviewUrl(null);
-        setProfileImage(null);
-        setRemoveProfileImage(false);
+        setUserName(data.lineDefaultData.name);
+
+        // ถ้ามีรูปโปรไฟล์จาก LINE
+        if (data.lineDefaultData.profile_image) {
+          // ล้างการอัพโหลดรูปใหม่ (ถ้ามี)
+          setProfileImage(null);
+          setPreviewUrl(null);
+          // ล้างการตั้งค่าลบรูป
+          setRemoveProfileImage(false);
+        }
 
         setResetSuccess(true);
-
-        // รีเฟรชข้อมูลโปรไฟล์
-        if (refreshProfile) {
-          await refreshProfile();
-        }
 
         // แสดงข้อความสำเร็จชั่วคราว
         setTimeout(() => {
           setResetSuccess(false);
         }, 3000);
       } else {
-        setResetError(data.message || "ไม่สามารถรีเซ็ตข้อมูลจาก LINE ได้");
+        setResetError(data.message || "ไม่สามารถดึงข้อมูลจาก LINE ได้");
       }
     } catch (error) {
-      console.error("Error resetting LINE profile:", error);
-      setResetError("เกิดข้อผิดพลาดในการรีเซ็ตข้อมูลจาก LINE");
+      console.error("Error getting LINE default data:", error);
+      setResetError("เกิดข้อผิดพลาดในการดึงข้อมูลจาก LINE");
     } finally {
       setIsResetting(false);
     }
@@ -348,7 +338,7 @@ export default function SettingsModal({
                       {resetSuccess && (
                         <div className="bg-blue-100 text-blue-700 p-3 rounded-md flex items-center gap-2">
                           <FaCheck size={16} />
-                          <span>รีเซ็ตข้อมูลจาก LINE สำเร็จ</span>
+                          <span>ดึงข้อมูลจาก LINE สำเร็จแล้ว</span>
                         </div>
                       )}
 
@@ -457,16 +447,16 @@ export default function SettingsModal({
                         <div className="mt-2 flex flex-col gap-2">
                           <Divider className="my-1" />
                           <p className="text-xs text-default-500">
-                            คุณสามารถรีเซ็ตข้อมูลให้ตรงกับข้อมูล LINE ของคุณได้
+                            คุณสามารถดึงข้อมูลจาก LINE มาใส่ในฟอร์ม และกดอัปเดตเพื่อบันทึก
                           </p>
                           <Button
                             color="secondary"
                             variant="flat"
-                            onPress={handleResetLineProfile}
+                            onPress={handleFillLineData}
                             isLoading={isResetting}
                             startContent={!isResetting && <FaSyncAlt size={16} />}
                           >
-                            รีเซ็ตข้อมูลจาก LINE
+                            ดึงข้อมูลจาก LINE
                           </Button>
                         </div>
                       )}
