@@ -13,17 +13,17 @@ export async function POST(request: Request) {
     // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "ไม่ได้รับอนุญาต กรุณาเข้าสู่ระบบ" 
+      return NextResponse.json({
+        success: false,
+        message: "ไม่ได้รับอนุญาต กรุณาเข้าสู่ระบบ"
       }, { status: 401 });
     }
 
     // ต้องการ bkc_id เป็นหลักเสมอ
     if (!session.user.bkcId) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "ไม่สามารถระบุตัวตนของผู้ใช้ได้" 
+      return NextResponse.json({
+        success: false,
+        message: "ไม่สามารถระบุตัวตนของผู้ใช้ได้"
       }, { status: 400 });
     }
 
@@ -33,9 +33,9 @@ export async function POST(request: Request) {
     const removeProfileImage = formData.get("removeProfileImage") === "true";
 
     if (!name) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "กรุณากรอกชื่อ" 
+      return NextResponse.json({
+        success: false,
+        message: "กรุณากรอกชื่อ"
       }, { status: 400 });
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     // ถ้าไม่พบ ลองใช้ MongoDB ID เป็นทางเลือกสุดท้าย (สำหรับข้อมูลเก่า)
     if (!user && session.user.id && mongoose.Types.ObjectId.isValid(session.user.id)) {
       user = await UserModel.findById(session.user.id);
-      
+
       // ถ้าพบผู้ใช้ที่ยังไม่มี bkc_id ให้สร้างใหม่และอัพเดต
       if (user && !user.bkc_id) {
         user.bkc_id = uuidv4();
@@ -57,13 +57,21 @@ export async function POST(request: Request) {
     }
 
     if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "ไม่พบบัญชีผู้ใช้" 
+      return NextResponse.json({
+        success: false,
+        message: "ไม่พบบัญชีผู้ใช้"
       }, { status: 404 });
     }
 
-    // ตรวจสอบว่า provider ตรงกันหรือไม่ (เพิ่มความปลอดภัย)
+    // เก็บข้อมูล provider เพื่อล็อก
+    const sessionProvider = session.user.provider;
+    const userProvider = user.provider;
+
+    // ล็อกข้อมูลเพื่อดีบัก
+    console.log(`Update profile attempt - Session provider: ${sessionProvider}, DB provider: ${userProvider}`);
+
+    // ยกเลิกการตรวจสอบ provider - อนุญาตให้ทั้ง LINE และ OTP สามารถอัพเดตได้
+    /* 
     if (user.provider !== session.user.provider) {
       console.log(`Provider mismatch: DB=${user.provider}, Session=${session.user.provider}`);
       return NextResponse.json({ 
@@ -71,9 +79,18 @@ export async function POST(request: Request) {
         message: "ไม่สามารถอัพเดตโปรไฟล์ของบัญชีนี้ได้" 
       }, { status: 403 });
     }
+    */
 
     // เตรียมข้อมูลที่จะอัปเดต
-    const updateData: { name: string; profile_image?: string | null } = { name };
+    // เตรียมข้อมูลที่จะอัปเดต
+    const updateData: {
+      name: string;
+      profile_image?: string | null;
+      profile_completed: boolean; // เพิ่มฟิลด์นี้
+    } = {
+      name,
+      profile_completed: true // ตั้งค่าให้เป็น true เสมอเมื่อผู้ใช้อัพเดตโปรไฟล์ด้วยตัวเอง
+    };
 
     // จัดการกับรูปโปรไฟล์
     if (removeProfileImage) {
@@ -91,7 +108,7 @@ export async function POST(request: Request) {
           const publicIdParts = pathParts.slice(startIndex).filter(Boolean);
           const publicId = publicIdParts.join('/');
           const publicIdWithoutExt = publicId.replace(/\.[^/.]+$/, "");
-          
+
           await deleteFromCloudinary(publicIdWithoutExt);
         } catch (error) {
           console.error("Error deleting profile image:", error);
@@ -114,7 +131,7 @@ export async function POST(request: Request) {
           const publicIdParts = pathParts.slice(startIndex).filter(Boolean);
           const publicId = publicIdParts.join('/');
           const publicIdWithoutExt = publicId.replace(/\.[^/.]+$/, "");
-          
+
           await deleteFromCloudinary(publicIdWithoutExt);
         } catch (error) {
           console.error("Error deleting old profile image:", error);
@@ -137,8 +154,8 @@ export async function POST(request: Request) {
 
     console.log(`Profile updated for user ${updatedUser._id} (${updatedUser.provider}) with bkc_id ${updatedUser.bkc_id}`);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: "อัปเดตโปรไฟล์สำเร็จ",
       user: {
         id: updatedUser._id.toString(),
@@ -147,11 +164,11 @@ export async function POST(request: Request) {
         bkcId: updatedUser.bkc_id
       }
     });
-    
+
   } catch (error) {
     console.error("Error updating profile:", error);
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       message: "เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์",
       error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });

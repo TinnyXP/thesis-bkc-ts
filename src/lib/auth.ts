@@ -16,6 +16,18 @@ interface ClientInfo {
   userAgent: string;
 }
 
+interface LineDefaultData {
+  name: string;
+  profile_image: string;
+}
+
+interface UpdateFields {
+  email?: string;
+  name?: string;
+  profile_image?: string;
+  line_default_data?: LineDefaultData;
+}
+
 // ฟังก์ชันช่วยบันทึกประวัติการล็อกอิน
 export async function saveLoginHistory(userId: string, status: 'success' | 'failed'): Promise<ClientInfo> {
   try {
@@ -70,13 +82,13 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-      
+
         // ใช้ type OTPUserCredentials แทน
         const otpCredentials: OTPUserCredentials = {
           email: credentials.email,
           otp: credentials.otp
         };
-      
+
         const { email, otp } = otpCredentials;
         try {
           await connectDB();
@@ -104,7 +116,7 @@ export const authOptions: AuthOptions = {
           if (!user) {
             // สร้าง bkc_id ใหม่
             const bkc_id = uuidv4();
-            
+
             // สร้างผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
             const newUser = await UserModel.create({
               email,
@@ -157,6 +169,7 @@ export const authOptions: AuthOptions = {
         await connectDB();
 
         // จัดการกับการล็อกอินผ่าน LINE
+        // แก้ไขที่ src/lib/auth.ts ในส่วน signIn ของ LINE
         if (account?.provider === "line" && profile) {
           const lineProfile = profile as LineProfile;
           const { name, email, picture } = lineProfile;
@@ -169,15 +182,31 @@ export const authOptions: AuthOptions = {
           });
 
           if (existingUser) {
-            // อัพเดทข้อมูลถ้าจำเป็น
-            if (existingUser.email !== email || existingUser.name !== name) {
+            // อัพเดตเฉพาะข้อมูลที่จำเป็น
+            const updateData: UpdateFields = {};
+
+            // อัพเดตอีเมลเสมอ เพราะเป็นข้อมูลสำคัญ
+            if (existingUser.email !== email) {
+              updateData.email = email;
+            }
+
+            // อัพเดตข้อมูล default จาก LINE เสมอ เพื่อเก็บข้อมูลล่าสุด
+            updateData.line_default_data = {
+              name,
+              profile_image: picture
+            };
+
+            // ถ้ายังไม่เคยตั้งค่าโปรไฟล์เอง ให้อัพเดตข้อมูลจาก LINE
+            if (!existingUser.profile_completed) {
+              if (existingUser.name !== name) updateData.name = name;
+              if (existingUser.profile_image !== picture) updateData.profile_image = picture;
+            }
+
+            // ถ้ามีข้อมูลที่ต้องอัพเดต
+            if (Object.keys(updateData).length > 0) {
               existingUser = await UserModel.findByIdAndUpdate(
                 existingUser._id,
-                {
-                  email,
-                  name,
-                  profile_image: picture
-                },
+                updateData,
                 { new: true }
               );
             }
@@ -188,11 +217,14 @@ export const authOptions: AuthOptions = {
             // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
             sendLoginNotificationEmail(existingUser.email, existingUser.name, clientInfo);
 
+            // เพิ่มบรรทัดนี้ เพื่อให้แน่ใจว่าจะส่ง bkc_id กลับไป
+            user.bkc_id = existingUser.bkc_id;
+
             return true;
           } else {
             // สร้าง bkc_id ใหม่
             const bkc_id = uuidv4();
-            
+
             // สร้างผู้ใช้ใหม่
             const newUser = await UserModel.create({
               email,
@@ -200,11 +232,20 @@ export const authOptions: AuthOptions = {
               profile_image: picture,
               provider: 'line',
               line_id,
-              bkc_id // กำหนดค่า bkc_id ที่สร้างใหม่
+              bkc_id, // กำหนดค่า bkc_id ที่สร้างใหม่
+              // เก็บข้อมูล default ตั้งแต่ตอนสร้างบัญชี
+              line_default_data: {
+                name,
+                profile_image: picture
+              },
+              profile_completed: false
             });
 
             // บันทึกประวัติการล็อกอิน
             await saveLoginHistory(newUser._id.toString(), 'success');
+
+            // เพิ่มบรรทัดนี้ เพื่อให้แน่ใจว่าจะส่ง bkc_id กลับไป
+            user.bkc_id = bkc_id;
 
             return true;
           }
@@ -237,6 +278,8 @@ export const authOptions: AuthOptions = {
           if (session.user.name) token.name = session.user.name;
           if (session.user.image) token.picture = session.user.image;
           if (session.user.hasOwnProperty('isNewUser')) token.isNewUser = session.user.isNewUser;
+          // เพิ่มบรรทัดนี้เพื่อรองรับการอัพเดต bkcId
+          if (session.user.bkcId) token.bkcId = session.user.bkcId;
         }
         return token;
       }
@@ -245,7 +288,7 @@ export const authOptions: AuthOptions = {
       if (user) {
         // เก็บข้อมูล MongoDB ID และ bkc_id
         token.userId = user.id;
-        
+
         // ตรวจสอบว่ามี bkc_id หรือไม่ (ควรมีเสมอตามที่กำหนดใน interface)
         if (user.bkc_id) {
           token.bkcId = user.bkc_id;
@@ -264,8 +307,13 @@ export const authOptions: AuthOptions = {
     async session({ session, token }: { session: Session; token: JWT }) {
       if (token && session.user) {
         session.user.id = token.userId;
+
+        // ตรวจสอบ bkcId อย่างชัดเจน
         if (token.bkcId) {
           session.user.bkcId = token.bkcId;
+        } else {
+          // ถ้าไม่มี bkcId ในโทเค็น ให้ล็อกข้อผิดพลาด
+          console.error("Missing bkcId in token:", token);
         }
 
         session.user.provider = token.provider;

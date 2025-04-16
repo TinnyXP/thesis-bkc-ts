@@ -18,14 +18,28 @@ export async function DELETE(request: Request) {
       }, { status: 401 });
     }
 
-    // อาจรับพารามิเตอร์เพิ่มเติมจาก URL หรือ body ถ้าต้องการ
-    // เช่น การยืนยันการลบด้วยรหัสผ่าน หรือเหตุผลในการลบบัญชี
-    const { confirmDelete } = await request.json().catch(() => ({ confirmDelete: true }));
+    // ดึงข้อมูลจาก request body
+    let confirmDelete = true;
+    try {
+      const body = await request.json();
+      confirmDelete = body.confirmDelete !== false; // ค่าเริ่มต้นเป็น true ถ้าไม่ได้ส่งค่ามา
+    } catch {
+      // ถ้าไม่มี body หรือ parse ไม่ได้ ให้ใช้ค่าเริ่มต้น
+      console.warn("Failed to parse request body, using default values");
+    }
     
     if (!confirmDelete) {
       return NextResponse.json({ 
         success: false, 
         message: "ยังไม่ได้ยืนยันการลบบัญชี" 
+      }, { status: 400 });
+    }
+
+    // ตรวจสอบว่ามี bkcId หรือไม่
+    if (!session.user.bkcId) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่พบข้อมูลผู้ใช้ (Missing bkcId)" 
       }, { status: 400 });
     }
 
@@ -42,18 +56,20 @@ export async function DELETE(request: Request) {
       }, { status: 404 });
     }
 
-    // ตรวจสอบว่า provider ตรงกันหรือไม่ (เพิ่มความปลอดภัย)
-    if (user.provider !== session.user.provider) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "ไม่สามารถลบบัญชีนี้ได้" 
-      }, { status: 403 });
-    }
+    console.log("Found user to delete:", {
+      id: user._id,
+      bkc_id: user.bkc_id,
+      provider: user.provider,
+      session_provider: session.user.provider
+    });
+
+    // ไม่ต้องตรวจสอบ provider เนื่องจากอาจทำให้เกิดปัญหา
+    // เราใช้ bkc_id เป็นตัวระบุหลักอยู่แล้ว ซึ่งควรจะเพียงพอสำหรับความปลอดภัย
 
     // ลบรูปโปรไฟล์จาก Cloudinary (ถ้ามี)
     if (user.profile_image && user.profile_image.includes('cloudinary')) {
       try {
-        // ดึง public_id จาก URL โดยทำอย่างระมัดระวังมากขึ้น
+        // ดึง public_id จาก URL
         const url = new URL(user.profile_image);
         const pathname = url.pathname;
         
@@ -85,10 +101,26 @@ export async function DELETE(request: Request) {
     }
 
     // ลบประวัติการเข้าสู่ระบบ
-    await LoginHistory.deleteMany({ user_id: user._id });
+    try {
+      await LoginHistory.deleteMany({ user_id: user._id });
+      console.log(`Deleted login history for user ${user._id}`);
+    } catch (error) {
+      console.error("Error deleting login history:", error);
+      // ไม่หยุดการดำเนินการหากไม่สามารถลบประวัติได้
+    }
 
     // ลบบัญชีผู้ใช้
-    await UserModel.findByIdAndDelete(user._id);
+    try {
+      const deleteResult = await UserModel.findByIdAndDelete(user._id);
+      console.log("Delete result:", deleteResult);
+    } catch (error) {
+      console.error("Error deleting user account:", error);
+      return NextResponse.json({ 
+        success: false, 
+        message: "เกิดข้อผิดพลาดในการลบบัญชี",
+        error: error instanceof Error ? error.message : String(error)
+      }, { status: 500 });
+    }
 
     return NextResponse.json({ 
       success: true, 

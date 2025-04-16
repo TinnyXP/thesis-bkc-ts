@@ -3,9 +3,29 @@
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import React from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Link, Button, Divider, useDisclosure } from "@heroui/react";
+import {
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
+  Link,
+  Button,
+  Divider,
+  useDisclosure,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
+  DropdownTrigger,
+  DropdownSection,
+  Spinner
+} from "@heroui/react";
 import { ToggleTheme, BookmarkModal, SettingsModal } from "@/components"
-import { Dropdown, DropdownMenu, DropdownItem, DropdownTrigger, DropdownSection } from "@heroui/dropdown";
+
+import { useProfile } from "@/hooks/useProfile";
+
 import { Avatar, AvatarIcon } from "@heroui/avatar";
 import { FiBookmark, FiLogIn, FiLogOut, FiSettings } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
@@ -173,8 +193,8 @@ export default function NavBar() {
 }
 
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
-
-  const { data: session } = useSession()
+  const { data: session } = useSession();
+  const { profile, isLoading, refreshProfile } = useProfile(); // ใช้ custom hook
 
   const {
     isOpen: isSettingsOpen,
@@ -192,17 +212,21 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
     <div>
       <Dropdown>
         <DropdownTrigger>
-          <Avatar
-            as="button"
-            classNames={{
-              base: "transition-transform bg-transparent border-1.5 border-default-200 dark:border-default-200",
-              icon: "text-zinc-400 dark:text-zinc-400",
-            }}
-            size={size}
-            src={session?.user?.image ?? "https://images.unsplash.com/broken"}
-            icon={<AvatarIcon />}
-            showFallback
-          />
+          {isLoading ? (
+            <Spinner size={size} />
+          ) : (
+            <Avatar
+              as="button"
+              classNames={{
+                base: "transition-transform bg-transparent border-1.5 border-default-200 dark:border-default-200",
+                icon: "text-zinc-400 dark:text-zinc-400",
+              }}
+              size={size}
+              src={profile?.image || session?.user?.image || undefined}
+              icon={<AvatarIcon />}
+              showFallback
+            />
+          )}
         </DropdownTrigger>
         <DropdownMenu aria-label="Profile Actions" variant="solid" className="font-[family-name:var(--font-line-seed-sans)]">
           <DropdownSection showDivider>
@@ -213,7 +237,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
               <p className="font-regular text-default-500">
                 ลงชื่อด้วย
               </p>
-              <p className="font-semibold">{session?.user?.name ?? "Guest"}</p>
+              <p className="font-semibold">{profile?.name || session?.user?.name || "Guest"}</p>
             </DropdownItem>
           </DropdownSection>
           <DropdownItem
@@ -244,6 +268,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onOpenChange={onSettingsOpenChange}
+        userProfile={profile} // ส่งข้อมูลโปรไฟล์ไปให้ SettingsModal
+        refreshProfile={refreshProfile} // ส่ง refreshProfile function ไปด้วย
       />
 
       <BookmarkModal

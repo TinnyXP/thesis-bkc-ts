@@ -17,18 +17,38 @@ import {
   Input,
   Tooltip,
 } from "@heroui/react";
-import { FaBell, FaMoon, FaTrash, FaExclamationTriangle, FaUserEdit, FaCamera, FaCheck, FaTimes } from "react-icons/fa";
+import { FaBell, FaMoon, FaTrash, FaExclamationTriangle, FaUserEdit, FaCamera, FaCheck, FaTimes, FaSyncAlt } from "react-icons/fa";
 import { FiSettings, FiUser } from "react-icons/fi";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 
+// กำหนด interface สำหรับ userProfile
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  provider: string;
+  bkcId: string;
+  isActive: boolean;
+  profileCompleted: boolean;
+}
+
+// Export interface เพื่อให้คอมโพเนนต์อื่นสามารถเรียกใช้ได้
 export interface SettingsModalProps {
   isOpen: boolean;
   onOpenChange: () => void;
+  userProfile?: UserProfile | null;
+  refreshProfile?: () => Promise<void>;
 }
 
-export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalProps) {
+export default function SettingsModal({
+  isOpen,
+  onOpenChange,
+  userProfile,
+  refreshProfile
+}: SettingsModalProps) {
   const { data: session, update } = useSession();
   const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
@@ -38,13 +58,18 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // สถานะสำหรับการแก้ไขโปรไฟล์
-  const [userName, setUserName] = useState(session?.user?.name || "");
+  const [userName, setUserName] = useState(userProfile?.name || session?.user?.name || "");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeProfileImage, setRemoveProfileImage] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [profileUpdateError, setProfileUpdateError] = useState("");
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
+
+  // สถานะสำหรับการรีเซ็ตโปรไฟล์ LINE
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // ใช้ useDisclosure สำหรับการควบคุม modal ยืนยันการลบบัญชี
   const {
@@ -54,11 +79,14 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
     onClose: onDeleteConfirmClose
   } = useDisclosure();
 
-  // อัปเดต state เมื่อ session เปลี่ยน
+  // อัพเดต userName เมื่อ userProfile หรือ session เปลี่ยน
   useEffect(() => {
-    if (session?.user?.name) {
+    if (userProfile?.name) {
+      setUserName(userProfile.name);
+    } else if (session?.user?.name) {
       setUserName(session.user.name);
     }
+
     // รีเซ็ตสถานะการอัปเดตโปรไฟล์เมื่อ modal ถูกเปิด
     if (isOpen) {
       setProfileUpdateSuccess(false);
@@ -66,10 +94,12 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
       setProfileImage(null);
       setPreviewUrl(null);
       setRemoveProfileImage(false);
+      setResetSuccess(false);
+      setResetError("");
     }
-  }, [session, isOpen]);
+  }, [userProfile, session, isOpen]);
 
-  // อัปเดต isDarkMode เมื่อ theme เปลี่ยน
+  // อัพเดต isDarkMode เมื่อ theme เปลี่ยน
   useEffect(() => {
     setIsDarkMode(theme === "dark");
   }, [theme]);
@@ -124,11 +154,11 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
     try {
       const formData = new FormData();
       formData.append("name", userName);
-      
+
       if (profileImage) {
         formData.append("profileImage", profileImage);
       }
-      
+
       formData.append("removeProfileImage", removeProfileImage.toString());
 
       const response = await fetch('/api/user/update-profile', {
@@ -139,7 +169,7 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
       const data = await response.json();
 
       if (data.success) {
-        // อัปเดต session
+        // อัพเดต session
         await update({
           ...session,
           user: {
@@ -149,8 +179,13 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
           }
         });
 
+        // รีเฟรชข้อมูลโปรไฟล์
+        if (refreshProfile) {
+          await refreshProfile();
+        }
+
         setProfileUpdateSuccess(true);
-        
+
         // รีเซ็ตสถานะ
         setProfileImage(null);
         setPreviewUrl(null);
@@ -171,6 +206,69 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
     }
   };
 
+  // ฟังก์ชันรีเซ็ตข้อมูลโปรไฟล์จาก LINE
+  const handleResetLineProfile = async () => {
+    // // ตรวจสอบว่าเป็นผู้ใช้ LINE
+    // if ((userProfile?.provider || session?.user?.provider) !== 'line') {
+    //   return; // ทำงานเฉพาะกับผู้ใช้ LINE เท่านั้น
+    // }
+
+    setIsResetting(true);
+    setResetError("");
+    setResetSuccess(false);
+
+    try {
+      const response = await fetch('/api/user/reset-line-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bkcId: userProfile?.bkcId || session?.user?.bkcId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // อัพเดต session
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: data.user.name,
+            image: data.user.image
+          }
+        });
+
+        // อัพเดตค่าใน form
+        setUserName(data.user.name);
+        setPreviewUrl(null);
+        setProfileImage(null);
+        setRemoveProfileImage(false);
+
+        setResetSuccess(true);
+
+        // รีเฟรชข้อมูลโปรไฟล์
+        if (refreshProfile) {
+          await refreshProfile();
+        }
+
+        // แสดงข้อความสำเร็จชั่วคราว
+        setTimeout(() => {
+          setResetSuccess(false);
+        }, 3000);
+      } else {
+        setResetError(data.message || "ไม่สามารถรีเซ็ตข้อมูลจาก LINE ได้");
+      }
+    } catch (error) {
+      console.error("Error resetting LINE profile:", error);
+      setResetError("เกิดข้อผิดพลาดในการรีเซ็ตข้อมูลจาก LINE");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   // ฟังก์ชันลบบัญชีผู้ใช้
   const handleDeleteAccount = async () => {
     if (!session?.user?.bkcId) {
@@ -182,13 +280,15 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
     setDeleteError("");
 
     try {
-      // เรียก API สำหรับลบบัญชี
       const response = await fetch('/api/user/delete-account', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ bkcId: session.user.bkcId })
+        body: JSON.stringify({
+          confirmDelete: true,
+          bkcId: session.user.bkcId
+        })
       });
 
       const data = await response.json();
@@ -221,8 +321,8 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
               <ModalBody>
                 <Tabs aria-label="ตั้งค่า" color="primary" variant="underlined">
                   {/* แท็บโปรไฟล์ */}
-                  <Tab 
-                    key="profile" 
+                  <Tab
+                    key="profile"
                     title={
                       <div className="flex items-center gap-2">
                         <FiUser />
@@ -238,10 +338,23 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                           <span>อัปเดตโปรไฟล์สำเร็จ</span>
                         </div>
                       )}
-                      
+
                       {profileUpdateError && (
                         <div className="bg-red-100 text-red-700 p-3 rounded-md">
                           {profileUpdateError}
+                        </div>
+                      )}
+
+                      {resetSuccess && (
+                        <div className="bg-blue-100 text-blue-700 p-3 rounded-md flex items-center gap-2">
+                          <FaCheck size={16} />
+                          <span>รีเซ็ตข้อมูลจาก LINE สำเร็จ</span>
+                        </div>
+                      )}
+
+                      {resetError && (
+                        <div className="bg-red-100 text-red-700 p-3 rounded-md">
+                          {resetError}
                         </div>
                       )}
 
@@ -249,10 +362,10 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                       <div className="flex flex-col items-center mb-3">
                         <div className="bg-gray-100 dark:bg-gray-800 rounded-md p-2 text-xs text-center w-full">
                           <p>เข้าสู่ระบบด้วย: <span className="font-bold">
-                            {session?.user?.provider === 'line' ? 'LINE' : 'อีเมล'}
+                            {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
                           </span></p>
-                          <p>{session?.user?.email}</p>
-                          <p className="text-xs text-gray-500 mt-1">bkc_id: {session?.user?.bkcId}</p>
+                          <p>{userProfile?.email || session?.user?.email}</p>
+                          <p className="text-xs text-gray-500 mt-1">bkc_id: {userProfile?.bkcId || session?.user?.bkcId}</p>
                         </div>
                       </div>
 
@@ -274,9 +387,10 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                               removeProfileImage ? (
                                 <AvatarIcon />
                               ) : (
-                                session?.user?.image ? (
+                                // ใช้รูปจาก userProfile ก่อน แล้วค่อยใช้จาก session
+                                userProfile?.image || session?.user?.image ? (
                                   <Image
-                                    src={session.user.image}
+                                    src={userProfile?.image || session?.user?.image || ""}
                                     alt="รูปโปรไฟล์"
                                     fill
                                     style={{ objectFit: 'cover' }}
@@ -290,9 +404,9 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                               <FaCamera size={24} className="text-white" />
                             </div>
                           </div>
-                          
+
                           {/* ปุ่มลบรูปโปรไฟล์ */}
-                          {(previewUrl || (!removeProfileImage && session?.user?.image)) && (
+                          {(previewUrl || (!removeProfileImage && (userProfile?.image || session?.user?.image))) && (
                             <Tooltip content="ลบรูปโปรไฟล์">
                               <Button
                                 isIconOnly
@@ -307,7 +421,7 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                             </Tooltip>
                           )}
                         </div>
-                        
+
                         <input
                           ref={fileInputRef}
                           type="file"
@@ -315,7 +429,7 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                           onChange={handleImageChange}
                           className="hidden"
                         />
-                        
+
                         <p className="text-xs text-default-500">
                           คลิกที่รูปภาพเพื่ออัปโหลดรูปโปรไฟล์ใหม่
                         </p>
@@ -333,20 +447,39 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                       />
 
                       {/* ปุ่มบันทึกการเปลี่ยนแปลง */}
-                      <Button 
-                        color="primary" 
+                      <Button
+                        color="primary"
                         onPress={handleUpdateProfile}
                         isLoading={isUpdatingProfile}
                         startContent={!isUpdatingProfile && <FaCheck size={16} />}
                       >
-                        {isUpdatingProfile ? "กำลังอัปเดต..." : "อัปเดตโปรไฟล์"}
+                        {isUpdatingProfile ? "กำลังอัพเดต..." : "อัปเดตโปรไฟล์"}
                       </Button>
+
+                      {/* เพิ่มปุ่ม Reset สำหรับผู้ใช้ LINE */}
+                      {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                        <div className="mt-2 flex flex-col gap-2">
+                          <Divider className="my-1" />
+                          <p className="text-xs text-default-500">
+                            คุณสามารถรีเซ็ตข้อมูลให้ตรงกับข้อมูล LINE ของคุณได้
+                          </p>
+                          <Button
+                            color="secondary"
+                            variant="flat"
+                            onPress={handleResetLineProfile}
+                            isLoading={isResetting}
+                            startContent={!isResetting && <FaSyncAlt size={16} />}
+                          >
+                            รีเซ็ตข้อมูลจาก LINE
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Tab>
-                  
+
                   {/* แท็บตั้งค่า */}
-                  <Tab 
-                    key="settings" 
+                  <Tab
+                    key="settings"
                     title={
                       <div className="flex items-center gap-2">
                         <FiSettings />
@@ -375,15 +508,15 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                           onValueChange={handleDarkModeChange}
                         />
                       </div>
-                      
+
                       <Divider className="my-1" />
-                      
+
                       <div className="mt-2">
-                        <Button 
-                          color="danger" 
-                          variant="flat" 
+                        <Button
+                          color="danger"
+                          variant="flat"
                           startContent={<FaTrash />}
-                          className="w-full" 
+                          className="w-full"
                           onPress={onDeleteConfirmOpen}
                         >
                           ลบบัญชีผู้ใช้
@@ -407,8 +540,8 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
       </Modal>
 
       {/* Modal ยืนยันการลบบัญชี */}
-      <Modal 
-        isOpen={isDeleteConfirmOpen} 
+      <Modal
+        isOpen={isDeleteConfirmOpen}
         onOpenChange={onDeleteConfirmChange}
         size="sm"
       >
@@ -424,7 +557,7 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                   <p className="mb-3">คุณกำลังจะลบบัญชีของคุณอย่างถาวร</p>
                   <p className="font-bold mb-3">การกระทำนี้ไม่สามารถยกเลิกได้</p>
                   <p className="text-sm text-default-500">ข้อมูลทั้งหมดของคุณจะถูกลบออกจากระบบ</p>
-                  
+
                   {deleteError && (
                     <div className="bg-red-100 text-danger p-2 rounded mt-3 text-sm">
                       {deleteError}
@@ -433,16 +566,16 @@ export default function SettingsModal({ isOpen, onOpenChange }: SettingsModalPro
                 </div>
               </ModalBody>
               <ModalFooter className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  className="flex-1" 
-                  variant="flat" 
+                <Button
+                  className="flex-1"
+                  variant="flat"
                   onPress={onDeleteConfirmClose}
                   autoFocus
                 >
                   ยกเลิก
                 </Button>
-                <Button 
-                  className="flex-1" 
+                <Button
+                  className="flex-1"
                   color="danger"
                   isLoading={isDeleting}
                   onPress={handleDeleteAccount}
