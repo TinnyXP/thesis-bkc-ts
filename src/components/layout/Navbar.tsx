@@ -222,7 +222,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
                 icon: "text-zinc-400 dark:text-zinc-400",
               }}
               size={size}
-              src={profile?.image || session?.user?.image || undefined}
+              // เปลี่ยนเป็นใช้เงื่อนไขที่เข้มงวดมากขึ้น
+              src={profile?.image ? profile.image : undefined}  // ใช้เฉพาะ profile.image ถ้ามีค่า
               icon={<AvatarIcon />}
               showFallback
             />

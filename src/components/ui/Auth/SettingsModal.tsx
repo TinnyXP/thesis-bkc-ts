@@ -384,20 +384,16 @@ export default function SettingsModal({
                                 style={{ objectFit: 'cover' }}
                               />
                             ) : (
-                              removeProfileImage ? (
-                                <AvatarIcon />
+                              // ตรวจสอบเงื่อนไขให้เข้มงวดมากขึ้น ใช้เฉพาะ userProfile.image ที่ไม่ใช่ null หรือ undefined
+                              userProfile?.image ? (
+                                <Image
+                                  src={userProfile.image}
+                                  alt="รูปโปรไฟล์"
+                                  fill
+                                  style={{ objectFit: 'cover' }}
+                                />
                               ) : (
-                                // ใช้รูปจาก userProfile ก่อน แล้วค่อยใช้จาก session
-                                userProfile?.image || session?.user?.image ? (
-                                  <Image
-                                    src={userProfile?.image || session?.user?.image || ""}
-                                    alt="รูปโปรไฟล์"
-                                    fill
-                                    style={{ objectFit: 'cover' }}
-                                  />
-                                ) : (
-                                  <AvatarIcon />
-                                )
+                                <AvatarIcon />
                               )
                             )}
                             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
