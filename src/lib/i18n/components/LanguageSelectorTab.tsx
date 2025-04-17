@@ -7,8 +7,20 @@ import { Key } from 'react';
 
 /**
  * คอมโพเนนต์เลือกภาษาแบบแท็บ
+ * @param {Object} props - คุณสมบัติของคอมโพเนนต์
+ * @param {string} props.placement - ตำแหน่งการวางแท็บ ("top" หรือ "start")
+ * @param {boolean} props.fullWidth - กำหนดให้แท็บขยายเต็มความกว้างที่มี
+ * @param {string} props.variant - รูปแบบของแท็บ (underlined, bordered, light, solid)
  */
-export default function LanguageSelectorTab() {
+export default function LanguageSelectorTab({ 
+  placement = "start",
+  fullWidth = false,
+  variant = "underlined"
+}: { 
+  placement?: "top" | "start",
+  fullWidth?: boolean,
+  variant?: "underlined" | "bordered" | "light" | "solid"
+}) {
   // ไม่ได้ใช้ t แต่อาจจะใช้ในอนาคต ใส่ underscore เพื่อแสดงว่าไม่ได้ใช้
   // const { t: _t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
@@ -38,16 +50,22 @@ export default function LanguageSelectorTab() {
     }
   };
 
+  // กำหนด classNames สำหรับ Tabs component
+  const tabsClassNames = {
+    base: fullWidth ? "w-full" : "",
+    tabList: fullWidth ? "w-full flex" : "",
+    tab: fullWidth ? "flex-1 flex justify-center" : "",
+    tabContent: "font-[family-name:var(--font-line-seed-sans)] text-md group-data-[selected=true]:primary-color",
+  };
+
   return (
-    <Tabs 
-      aria-label="Language Tabs" 
-      color="primary" 
-      variant="underlined"
-      placement="start"
+    <Tabs
+      aria-label="Language Tabs"
+      color="primary"
+      variant={variant}
+      placement={placement}
       selectedKey={getCurrentKey()}
-      classNames={{
-        tabContent: "font-[family-name:var(--font-line-seed-sans)] text-md group-data-[selected=true]:primary-color",
-      }}
+      classNames={tabsClassNames}
       onSelectionChange={handleTabChange}
     >
       <Tab key="thai" title="ไทย" />

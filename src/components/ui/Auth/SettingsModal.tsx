@@ -22,6 +22,7 @@ import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { FaUser } from "react-icons/fa6";
+import { LanguageSelectorTab } from "@/lib/i18n";
 
 // กำหนด interface สำหรับ userProfile
 interface UserProfile {
@@ -323,14 +324,94 @@ export default function SettingsModal({
               การตั้งค่า
             </ModalHeader>
             <ModalBody>
-              <Tabs aria-label="ตั้งค่า" color="primary" variant="underlined" disableAnimation={false}>
+              <Tabs
+                aria-label="ตั้งค่า"
+                color="primary"
+                variant="underlined"
+                disableAnimation={false}
+                classNames={{
+                  base: "w-full",
+                  tabList: "w-full flex",
+                  tab: "flex-1 flex justify-center"
+                }}
+              >
+                {/* แท็บตั้งค่า */}
+                <Tab
+                  key="settings"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FiSettings />
+                      <span>ตั้งค่าบัญชี</span>
+                    </div>
+                  }
+                >
+                  <div className="flex flex-col gap-6 py-2">
+                    {/* แสดงข้อมูลการล็อกอิน */}
+                    <div className="flex flex-col items-center mb-3">
+                      <div className="bg-zinc-100 dark:bg-zinc-800 rounded-md p-2 text-xs text-center w-full">
+                        <p>เข้าสู่ระบบด้วย: <span className="font-bold">
+                          {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
+                        </span></p>
+                        <p>{userProfile?.email || session?.user?.email}</p>
+                        <p className="text-xs text-zinc-500 mt-1">{userProfile?.bkcId || session?.user?.bkcId}</p>
+                      </div>
+                    </div>
+
+                    <LanguageSelectorTab placement="top" variant="bordered" fullWidth />
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <FaBell size={22} />
+                        <span>การแจ้งเตือน</span>
+                      </div>
+                      <Switch
+                        isSelected={notifications}
+                        onValueChange={setNotifications}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <FaMoon size={22} />
+                        <span>โหมดกลางคืน</span>
+                      </div>
+                      <Switch
+                        isSelected={isDarkMode}
+                        onValueChange={handleDarkModeChange}
+                      />
+                    </div>
+
+                    <Divider className="my-1" />
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <div>
+                        <Button
+                          color="danger"
+                          variant="shadow"
+                          startContent={<FaTrash />}
+                          className="w-full"
+                          onPress={onDeleteConfirmOpen}
+                        >
+                          ลบบัญชีผู้ใช้
+                        </Button>
+                      </div>
+
+                      <div className="text-center">
+                        <Divider className="my-1.5" />
+                        <p className="text-xs text-default-500">
+                          การลบบัญชีจะไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะถูกลบออกจากระบบอย่างถาวร
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+                </Tab>
                 {/* แท็บโปรไฟล์ */}
                 <Tab
-                  key="profile"
+                  key="edit-profile"
                   title={
                     <div className="flex items-center gap-2">
                       <FiUser />
-                      <span>โปรไฟล์</span>
+                      <span>แก้ไขโปรไฟล์</span>
                     </div>
                   }
                 >
@@ -361,17 +442,6 @@ export default function SettingsModal({
                         {resetError}
                       </div>
                     )}
-
-                    {/* แสดงข้อมูลการล็อกอิน */}
-                    {/* <div className="flex flex-col items-center mb-3">
-                        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-md p-2 text-xs text-center w-full">
-                          <p>เข้าสู่ระบบด้วย: <span className="font-bold">
-                            {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
-                          </span></p>
-                          <p>{userProfile?.email || session?.user?.email}</p>
-                          <p className="text-xs text-zinc-500 mt-1">{userProfile?.bkcId || session?.user?.bkcId}</p>
-                        </div>
-                      </div> */}
 
                     {/* รูปโปรไฟล์ */}
                     <div className="flex flex-col items-center gap-2">
@@ -496,57 +566,6 @@ export default function SettingsModal({
                     </div>
                   </div>
                 </Tab>
-
-                {/* แท็บตั้งค่า */}
-                <Tab
-                  key="settings"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <FiSettings />
-                      <span>ตั้งค่า</span>
-                    </div>
-                  }
-                >
-                  <div className="flex flex-col gap-6 py-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-2 items-center">
-                        <FaBell size={22} />
-                        <span>การแจ้งเตือน</span>
-                      </div>
-                      <Switch
-                        isSelected={notifications}
-                        onValueChange={setNotifications}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-2 items-center">
-                        <FaMoon size={22} />
-                        <span>โหมดกลางคืน</span>
-                      </div>
-                      <Switch
-                        isSelected={isDarkMode}
-                        onValueChange={handleDarkModeChange}
-                      />
-                    </div>
-
-                    <Divider className="my-1" />
-
-                    <div>
-                      <Button
-                        color="danger"
-                        variant="flat"
-                        startContent={<FaTrash />}
-                        className="w-full"
-                        onPress={onDeleteConfirmOpen}
-                      >
-                        ลบบัญชีผู้ใช้
-                      </Button>
-                      <p className="text-tiny text-default-500 mt-1">
-                        การลบบัญชีจะไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะถูกลบออกจากระบบอย่างถาวร
-                      </p>
-                    </div>
-                  </div>
-                </Tab>
               </Tabs>
             </ModalBody>
           </>
@@ -557,7 +576,13 @@ export default function SettingsModal({
       <Modal
         isOpen={isDeleteConfirmOpen}
         onOpenChange={onDeleteConfirmChange}
+        backdrop="blur"
         size="sm"
+        classNames={{
+          body: "py-2",
+          base: "font-[family-name:var(--font-line-seed-sans)]",
+          closeButton: "hover:bg-white/5 active:bg-white/10 right-4 top-3.5",
+        }}
       >
         <ModalContent>
           {(onDeleteConfirmClose) => (
