@@ -22,7 +22,6 @@ import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { FaUser } from "react-icons/fa6";
-import { BsLine } from "react-icons/bs";
 
 // กำหนด interface สำหรับ userProfile
 interface UserProfile {
@@ -319,53 +318,52 @@ export default function SettingsModal({
         }}
       >
         <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                การตั้งค่า
-              </ModalHeader>
-              <ModalBody>
-                <Tabs aria-label="ตั้งค่า" color="primary" variant="underlined" disableAnimation={false}>
-                  {/* แท็บโปรไฟล์ */}
-                  <Tab
-                    key="profile"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <FiUser />
-                        <span>โปรไฟล์</span>
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              การตั้งค่า
+            </ModalHeader>
+            <ModalBody>
+              <Tabs aria-label="ตั้งค่า" color="primary" variant="underlined" disableAnimation={false}>
+                {/* แท็บโปรไฟล์ */}
+                <Tab
+                  key="profile"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FiUser />
+                      <span>โปรไฟล์</span>
+                    </div>
+                  }
+                >
+                  <div className="flex flex-col gap-6 py-2">
+                    {/* แสดงข้อความแจ้งเตือนความสำเร็จ/ล้มเหลว */}
+                    {profileUpdateSuccess && (
+                      <div className="bg-green-100 text-green-700 p-3 rounded-md flex items-center gap-2">
+                        <FaCheck size={16} />
+                        <span>อัปเดตโปรไฟล์สำเร็จ</span>
                       </div>
-                    }
-                  >
-                    <div className="flex flex-col gap-6 py-2">
-                      {/* แสดงข้อความแจ้งเตือนความสำเร็จ/ล้มเหลว */}
-                      {profileUpdateSuccess && (
-                        <div className="bg-green-100 text-green-700 p-3 rounded-md flex items-center gap-2">
-                          <FaCheck size={16} />
-                          <span>อัปเดตโปรไฟล์สำเร็จ</span>
-                        </div>
-                      )}
+                    )}
 
-                      {profileUpdateError && (
-                        <div className="bg-red-100 text-red-700 p-3 rounded-md">
-                          {profileUpdateError}
-                        </div>
-                      )}
+                    {profileUpdateError && (
+                      <div className="bg-red-100 text-red-700 p-3 rounded-md">
+                        {profileUpdateError}
+                      </div>
+                    )}
 
-                      {resetSuccess && (
-                        <div className="bg-blue-100 text-blue-700 p-3 rounded-md flex items-center gap-2">
-                          <FaCheck size={16} />
-                          <span>ดึงข้อมูลจาก LINE สำเร็จแล้ว</span>
-                        </div>
-                      )}
+                    {resetSuccess && (
+                      <div className="bg-blue-100 text-blue-700 p-3 rounded-md flex items-center gap-2">
+                        <FaCheck size={16} />
+                        <span>ดึงข้อมูลจาก LINE สำเร็จแล้ว</span>
+                      </div>
+                    )}
 
-                      {resetError && (
-                        <div className="bg-red-100 text-red-700 p-3 rounded-md">
-                          {resetError}
-                        </div>
-                      )}
+                    {resetError && (
+                      <div className="bg-red-100 text-red-700 p-3 rounded-md">
+                        {resetError}
+                      </div>
+                    )}
 
-                      {/* แสดงข้อมูลการล็อกอิน */}
-                      {/* <div className="flex flex-col items-center mb-3">
+                    {/* แสดงข้อมูลการล็อกอิน */}
+                    {/* <div className="flex flex-col items-center mb-3">
                         <div className="bg-zinc-100 dark:bg-zinc-800 rounded-md p-2 text-xs text-center w-full">
                           <p>เข้าสู่ระบบด้วย: <span className="font-bold">
                             {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
@@ -375,184 +373,183 @@ export default function SettingsModal({
                         </div>
                       </div> */}
 
-                      {/* รูปโปรไฟล์ */}
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="relative">
-                          <div
-                            className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-zinc-200/20 dark:bg-zinc-200/5 flex items-center justify-center border-2 border-solid border-default-300"
-                            onClick={handleImageClick}
-                          >
-                            {removeProfileImage ? (
-                              // แสดง AvatarIcon เมื่อตั้งค่าให้ลบรูปโปรไฟล์
-                              <FaUser size={60} className="text-zinc-400" />
-                            ) : previewUrl ? (
-                              // แสดงรูปพรีวิวกรณีมีการอัพโหลดรูปใหม่หรือใช้รูปจาก LINE
-                              <Image
-                                src={previewUrl}
-                                alt="Profile preview"
-                                fill
-                                style={{ objectFit: 'cover' }}
-                              />
-                            ) : userProfile?.image ? (
-                              // แสดงรูปโปรไฟล์ปัจจุบัน
-                              <Image
-                                src={userProfile.image}
-                                alt="รูปโปรไฟล์"
-                                fill
-                                style={{ objectFit: 'cover' }}
-                              />
-                            ) : (
-                              // แสดง AvatarIcon เมื่อไม่มีรูปโปรไฟล์
-                              <FaUser size={60} className="text-zinc-400" />
-                            )}
-                            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                              <FaCamera size={44} className="text-white" />
-                            </div>
-                          </div>
-
-                          {/* ปุ่มลบรูปโปรไฟล์ */}
-                          {(previewUrl || (!removeProfileImage && (userProfile?.image || session?.user?.image))) && (
-                            <Tooltip
-                              showArrow
-                              content="ลบรูปโปรไฟล์"
-                              placement="right"
-                              color="danger"
-                              delay={500}
-                              closeDelay={100}
-                            >
-                              <Button
-                                isIconOnly
-                                color="danger"
-                                size="md"
-                                variant="shadow"
-                                radius="full"
-                                className="absolute bottom-2 right-2"
-                                onPress={handleRemoveImage}
-                              >
-                                <FaTimes size={22} />
-                              </Button>
-                            </Tooltip>
+                    {/* รูปโปรไฟล์ */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="relative">
+                        <div
+                          className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-zinc-200/20 dark:bg-zinc-200/5 flex items-center justify-center border-2 border-solid border-default-300"
+                          onClick={handleImageClick}
+                        >
+                          {removeProfileImage ? (
+                            // แสดง AvatarIcon เมื่อตั้งค่าให้ลบรูปโปรไฟล์
+                            <FaUser size={60} className="text-zinc-400" />
+                          ) : previewUrl ? (
+                            // แสดงรูปพรีวิวกรณีมีการอัพโหลดรูปใหม่หรือใช้รูปจาก LINE
+                            <Image
+                              src={previewUrl}
+                              alt="Profile preview"
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          ) : userProfile?.image ? (
+                            // แสดงรูปโปรไฟล์ปัจจุบัน
+                            <Image
+                              src={userProfile.image}
+                              alt="รูปโปรไฟล์"
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          ) : (
+                            // แสดง AvatarIcon เมื่อไม่มีรูปโปรไฟล์
+                            <FaUser size={60} className="text-zinc-400" />
                           )}
+                          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <FaCamera size={44} className="text-white" />
+                          </div>
                         </div>
 
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="hidden"
-                        />
-
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                          คลิกที่รูปภาพเพื่ออัปโหลดรูปโปรไฟล์ใหม่
-                        </p>
-                      </div>
-
-                      {/* ชื่อผู้ใช้ */}
-                      <Input
-                        label="ชื่อที่แสดง"
-                        placeholder="กรอกชื่อที่ต้องการแสดง"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        variant="bordered"
-                        startContent={<FaUserEdit className="text-default-400" />}
-                        description="ชื่อนี้จะแสดงในโปรไฟล์และการโพสต์ของคุณ"
-                      />
-
-                      {/* ส่วนของปุ่มต่างๆ */}
-                      <div className="flex flex-col gap-2 w-full">
-                        {/* ปุ่มบันทึกการเปลี่ยนแปลงและปุ่ม Reset สำหรับผู้ใช้ LINE */}
-                        <div className="flex flex-row gap-2 w-full">
-                          <Button
-                            color="primary"
-                            onPress={handleUpdateProfile}
-                            isLoading={isUpdatingProfile}
-                            startContent={!isUpdatingProfile && <FaCheck size={16} />}
-                            className={(userProfile?.provider === 'line' || session?.user?.provider === 'line') ? "w-[90%]" : "w-full"}
+                        {/* ปุ่มลบรูปโปรไฟล์ */}
+                        {(previewUrl || (!removeProfileImage && (userProfile?.image || session?.user?.image))) && (
+                          <Tooltip
+                            showArrow
+                            content="ลบรูปโปรไฟล์"
+                            placement="right"
+                            color="danger"
+                            delay={500}
+                            closeDelay={100}
                           >
-                            {isUpdatingProfile ? "กำลังอัพเดต..." : "อัปเดตโปรไฟล์"}
-                          </Button>
-
-                          {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
                             <Button
-                              variant="faded"
-                              onPress={handleFillLineData}
-                              isLoading={isResetting}
                               isIconOnly
-                              className="w-[10%]"
+                              color="danger"
+                              size="md"
+                              variant="shadow"
+                              radius="full"
+                              className="absolute bottom-2 right-2"
+                              onPress={handleRemoveImage}
                             >
-                              <FaSyncAlt size={16} />
+                              <FaTimes size={22} />
                             </Button>
-                          )}
-                        </div>
-
-                        {/* ข้อความคำอธิบายสำหรับผู้ใช้ LINE */}
-                        {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
-                          <div className="text-center">
-                            <Divider className="my-1.5" />
-                            <p className="text-xs text-default-500">
-                              คุณสามารถดึงข้อมูลจาก LINE มา และกดอัปเดตเพื่อบันทึก
-                            </p>
-                          </div>
+                          </Tooltip>
                         )}
                       </div>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        คลิกที่รูปภาพเพื่ออัปโหลดรูปโปรไฟล์ใหม่
+                      </p>
                     </div>
-                  </Tab>
 
-                  {/* แท็บตั้งค่า */}
-                  <Tab
-                    key="settings"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <FiSettings />
-                        <span>ตั้งค่า</span>
-                      </div>
-                    }
-                  >
-                    <div className="flex flex-col gap-6 py-2">
-                      <div className="flex justify-between items-center">
-                        <div className="flex gap-2 items-center">
-                          <FaBell size={22} />
-                          <span>การแจ้งเตือน</span>
-                        </div>
-                        <Switch
-                          isSelected={notifications}
-                          onValueChange={setNotifications}
-                        />
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex gap-2 items-center">
-                          <FaMoon size={22} />
-                          <span>โหมดกลางคืน</span>
-                        </div>
-                        <Switch
-                          isSelected={isDarkMode}
-                          onValueChange={handleDarkModeChange}
-                        />
-                      </div>
+                    {/* ชื่อผู้ใช้ */}
+                    <Input
+                      label="ชื่อที่แสดง"
+                      placeholder="กรอกชื่อที่ต้องการแสดง"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      variant="bordered"
+                      startContent={<FaUserEdit className="text-default-400" />}
+                      description="ชื่อนี้จะแสดงในโปรไฟล์และการโพสต์ของคุณ"
+                    />
 
-                      <Divider className="my-1" />
-
-                      <div>
+                    {/* ส่วนของปุ่มต่างๆ */}
+                    <div className="flex flex-col gap-2 w-full">
+                      {/* ปุ่มบันทึกการเปลี่ยนแปลงและปุ่ม Reset สำหรับผู้ใช้ LINE */}
+                      <div className="flex flex-row gap-2 w-full">
                         <Button
-                          color="danger"
-                          variant="flat"
-                          startContent={<FaTrash />}
-                          className="w-full"
-                          onPress={onDeleteConfirmOpen}
+                          color="primary"
+                          onPress={handleUpdateProfile}
+                          isLoading={isUpdatingProfile}
+                          startContent={!isUpdatingProfile && <FaCheck size={16} />}
+                          className={(userProfile?.provider === 'line' || session?.user?.provider === 'line') ? "w-[90%]" : "w-full"}
                         >
-                          ลบบัญชีผู้ใช้
+                          {isUpdatingProfile ? "กำลังอัพเดต..." : "อัปเดตโปรไฟล์"}
                         </Button>
-                        <p className="text-tiny text-default-500 mt-1">
-                          การลบบัญชีจะไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะถูกลบออกจากระบบอย่างถาวร
-                        </p>
+
+                        {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                          <Button
+                            variant="faded"
+                            onPress={handleFillLineData}
+                            isLoading={isResetting}
+                            isIconOnly
+                            className="w-[10%]"
+                          >
+                            <FaSyncAlt size={16} />
+                          </Button>
+                        )}
                       </div>
+
+                      {/* ข้อความคำอธิบายสำหรับผู้ใช้ LINE */}
+                      {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                        <div className="text-center">
+                          <Divider className="my-1.5" />
+                          <p className="text-xs text-default-500">
+                            คุณสามารถดึงข้อมูลจาก LINE มา และกดอัปเดตเพื่อบันทึก
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </Tab>
-                </Tabs>
-              </ModalBody>
-            </>
-          )}
+                  </div>
+                </Tab>
+
+                {/* แท็บตั้งค่า */}
+                <Tab
+                  key="settings"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FiSettings />
+                      <span>ตั้งค่า</span>
+                    </div>
+                  }
+                >
+                  <div className="flex flex-col gap-6 py-2">
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <FaBell size={22} />
+                        <span>การแจ้งเตือน</span>
+                      </div>
+                      <Switch
+                        isSelected={notifications}
+                        onValueChange={setNotifications}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <FaMoon size={22} />
+                        <span>โหมดกลางคืน</span>
+                      </div>
+                      <Switch
+                        isSelected={isDarkMode}
+                        onValueChange={handleDarkModeChange}
+                      />
+                    </div>
+
+                    <Divider className="my-1" />
+
+                    <div>
+                      <Button
+                        color="danger"
+                        variant="flat"
+                        startContent={<FaTrash />}
+                        className="w-full"
+                        onPress={onDeleteConfirmOpen}
+                      >
+                        ลบบัญชีผู้ใช้
+                      </Button>
+                      <p className="text-tiny text-default-500 mt-1">
+                        การลบบัญชีจะไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะถูกลบออกจากระบบอย่างถาวร
+                      </p>
+                    </div>
+                  </div>
+                </Tab>
+              </Tabs>
+            </ModalBody>
+          </>
         </ModalContent>
       </Modal>
 

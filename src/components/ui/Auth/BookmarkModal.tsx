@@ -7,7 +7,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter,
   Button,
   Listbox,
   ListboxItem,
