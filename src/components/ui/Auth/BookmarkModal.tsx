@@ -45,7 +45,13 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
       isOpen={isOpen} 
       onOpenChange={onOpenChange}
       size="md"
+      backdrop='blur'
       scrollBehavior="inside"
+      classNames={{
+        body: "py-2",
+        base: "font-[family-name:var(--font-line-seed-sans)]",
+        closeButton: "hover:bg-white/5 active:bg-white/10",
+      }}
     >
       <ModalContent>
         {(onClose) => (
@@ -63,8 +69,8 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
                 </div>
               ) : bookmarks.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">คุณยังไม่มีบุ๊คมาร์ก</p>
-                  <p className="text-sm text-gray-400 mt-2">บุ๊คมาร์กบทความที่คุณสนใจเพื่อให้สามารถกลับมาอ่านได้ภายหลัง</p>
+                  <p className="text-zinc-500">คุณยังไม่มีบุ๊คมาร์ก</p>
+                  <p className="text-sm text-zinc-400 mt-2">บุ๊คมาร์กบทความที่คุณสนใจเพื่อให้สามารถกลับมาอ่านได้ภายหลัง</p>
                 </div>
               ) : (
                 <Listbox
@@ -83,8 +89,8 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
                             className="w-12 h-12 object-cover rounded-md"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
-                            <FaBookmark className="text-gray-400" />
+                          <div className="w-12 h-12 bg-zinc-200 rounded-md flex items-center justify-center">
+                            <FaBookmark className="text-zinc-400" />
                           </div>
                         )
                       }

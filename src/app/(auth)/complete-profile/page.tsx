@@ -158,7 +158,7 @@ export default function CompleteProfilePage() {
             {/* รูปโปรไฟล์ */}
             <div className="flex flex-col items-center mb-2 gap-2">
               <div
-                className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-gray-200/20 dark:bg-gray-200/5 flex items-center justify-center border-2 border-solid border-default-300"
+                className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-zinc-200/20 dark:bg-zinc-200/5 flex items-center justify-center border-2 border-solid border-default-300"
                 onClick={handleImageClick}
               >
                 {previewUrl ? (
@@ -169,7 +169,7 @@ export default function CompleteProfilePage() {
                     style={{ objectFit: 'cover' }}
                   />
                 ) : (
-                  <FaUser size={60} className="text-gray-400" />
+                  <FaUser size={60} className="text-zinc-400" />
                 )}
                 <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                   <FaCamera size={44} className="text-white" />
@@ -183,8 +183,8 @@ export default function CompleteProfilePage() {
                 className="hidden"
               />
               <div className="flex items-center gap-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  คลิกเพื่ออัปโหลดรูปโปรไฟล์
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  คลิกที่รูปภาพเพื่ออัปโหลดรูปโปรไฟล์
                 </p>
                 {previewUrl && (
                   <Tooltip content="ลบรูปโปรไฟล์">

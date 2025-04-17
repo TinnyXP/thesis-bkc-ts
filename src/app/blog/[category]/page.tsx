@@ -25,7 +25,7 @@ const CategoryNotFound = () => (
   <div className="container mx-auto max-w-5xl flex-grow px-4 my-10 flex flex-col items-center justify-center gap-6 min-h-[50vh] font-[family-name:var(--font-bai-jamjuree)]">
     <div className="text-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-4">ไม่พบหมวดหมู่</h1>
-      <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+      <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
         ขออภัย ไม่พบหมวดหมู่ที่คุณกำลังมองหา
       </p>
       <Link href="/blog" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">

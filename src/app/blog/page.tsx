@@ -38,7 +38,7 @@ export default async function BlogPage() {
             ))}
             <Link 
               href="/blog/uncategorized"
-              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-full transition-colors"
+              className="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full transition-colors"
             >
               ไม่มีหมวดหมู่
             </Link>

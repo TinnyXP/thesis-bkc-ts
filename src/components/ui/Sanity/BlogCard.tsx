@@ -51,7 +51,7 @@ export default function BlogCard({ posts }: CardClientProps) {
     return (
       <div className="text-center py-10">
         <h2 className="text-2xl font-bold mb-4">ไม่พบบทความ</h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-zinc-600 dark:text-zinc-400">
           ขออภัย ยังไม่มีบทความในหมวดหมู่นี้
         </p>
       </div>
@@ -85,8 +85,8 @@ export default function BlogCard({ posts }: CardClientProps) {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full aspect-video bg-gray-200 rounded-xl flex items-center justify-center">
-                      <p className="text-gray-500 text-sm">ไม่มีรูปภาพ</p>
+                    <div className="w-full aspect-video bg-zinc-200 rounded-xl flex items-center justify-center">
+                      <p className="text-zinc-500 text-sm">ไม่มีรูปภาพ</p>
                     </div>
                   )}
                   <div className="absolute bottom-1 left-1 flex gap-2 z-10">

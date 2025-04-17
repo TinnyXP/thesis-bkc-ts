@@ -43,7 +43,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
 
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* ส่วนหัวของหน้า */}
@@ -54,7 +54,7 @@ export default function WelcomePage() {
           <p className="text-default-500 mt-1">
             ยินดีต้อนรับสู่บางกระเจ้า
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-zinc-500 mt-1">
             ID ของคุณ: {session.user.bkcId}
           </p>
         </div>

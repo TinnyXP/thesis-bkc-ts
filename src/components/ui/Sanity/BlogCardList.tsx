@@ -10,7 +10,7 @@ export default function BlogCardList() {
   if (isLoading) {
     return (
       <div className="text-center py-10">
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-zinc-600 dark:text-zinc-400">
           กำลังโหลดบทความ...
         </p>
       </div>
@@ -30,7 +30,7 @@ export default function BlogCardList() {
     return (
       <div className="text-center py-10">
         <h2 className="text-2xl font-bold mb-4">ไม่พบบทความ</h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-zinc-600 dark:text-zinc-400">
           ขออภัย ยังไม่มีบทความในขณะนี้ โปรดกลับมาใหม่ในภายหลัง
         </p>
       </div>

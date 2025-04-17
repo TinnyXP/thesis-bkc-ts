@@ -95,7 +95,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             </div>
           </form>
         ) : (
-          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-center">
+          <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg text-center">
             <p className="mb-2">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
             <Button
               color="primary"
@@ -119,7 +119,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           </div>
         ) : comments.length > 0 ? (
           comments.map((comment: Comment) => (
-            <div key={comment._id} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div key={comment._id} className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
               <div className="flex items-start gap-3">
                 <Avatar
                   src={comment.user_image || undefined}
@@ -130,7 +130,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-semibold">{comment.user_name}</h4>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-zinc-500">
                         {formatDistanceToNow(new Date(comment.createdAt), {
                           addSuffix: true,
                           locale: th
@@ -155,7 +155,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             </div>
           ))
         ) : (
-          <p className="text-center py-4 text-gray-500">ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็น</p>
+          <p className="text-center py-4 text-zinc-500">ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็น</p>
         )}
       </div>
     </div>

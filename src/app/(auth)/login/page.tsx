@@ -316,7 +316,7 @@ export default function LoginPage() {
                 />
               ) : (
                 <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     รหัส OTP ถูกส่งไปยัง <span className="font-semibold">{email}</span>
                   </p>
                   {!isOtpValid && (

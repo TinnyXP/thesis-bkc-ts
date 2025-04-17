@@ -65,7 +65,7 @@ const portableTextComponents: Partial<PortableTextReactComponents> = {
         <div className="absolute top-0 left-0 w-1 h-full bg-primary-color rounded-l-lg"></div>
         <div className="relative">
           <FaQuoteLeft className="absolute -top-2 -left-4 h-4 w-4 text-primary-color" fill="currentColor" />
-          <div className="text-lg text-gray-700 dark:text-gray-300 italic">
+          <div className="text-lg text-zinc-700 dark:text-zinc-300 italic">
             {children}
           </div>
         </div>
@@ -110,7 +110,7 @@ const PostNotFound = () => (
   <div className="container mx-auto max-w-5xl flex-grow px-4 my-10 flex flex-col items-center justify-center gap-6 min-h-[50vh] font-[family-name:var(--font-bai-jamjuree)]">
     <div className="text-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-4">ไม่พบบทความ</h1>
-      <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+      <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
         ขออภัย ไม่พบบทความที่คุณกำลังมองหา
       </p>
       <Link href="/blog" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
@@ -176,8 +176,8 @@ export default async function PostPage({
                 className="rounded-lg shadow-lg w-full my-1"
               />
             ) : (
-              <div className="aspect-video bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
-                <p className="text-gray-500">ไม่มีรูปภาพ</p>
+              <div className="aspect-video bg-zinc-200 rounded-lg shadow-lg flex items-center justify-center">
+                <p className="text-zinc-500">ไม่มีรูปภาพ</p>
               </div>
             )}
           </div>
@@ -232,7 +232,7 @@ export default async function PostPage({
             {Array.isArray(post.body) ? (
               <PortableText value={post.body} components={portableTextComponents} />
             ) : (
-              <p className="text-gray-500">ไม่มีเนื้อหา</p>
+              <p className="text-zinc-500">ไม่มีเนื้อหา</p>
             )}
           </article>
 

@@ -22,6 +22,7 @@ import { FiSettings, FiUser } from "react-icons/fi";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
+import { FaUser } from "react-icons/fa6";
 
 // กำหนด interface สำหรับ userProfile
 interface UserProfile {
@@ -187,7 +188,7 @@ export default function SettingsModal({
         if (refreshProfile) {
           refreshProfile();
         }
-  
+
         setProfileUpdateSuccess(true);
 
         // รีเซ็ตสถานะ
@@ -310,7 +311,13 @@ export default function SettingsModal({
 
   return (
     <>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md">
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md" backdrop='blur'
+        classNames={{
+          body: "py-2",
+          base: "font-[family-name:var(--font-line-seed-sans)]",
+          closeButton: "hover:bg-white/5 active:bg-white/10",
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -357,12 +364,12 @@ export default function SettingsModal({
 
                       {/* แสดงข้อมูลการล็อกอิน */}
                       <div className="flex flex-col items-center mb-3">
-                        <div className="bg-gray-100 dark:bg-gray-800 rounded-md p-2 text-xs text-center w-full">
+                        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-md p-2 text-xs text-center w-full">
                           <p>เข้าสู่ระบบด้วย: <span className="font-bold">
                             {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
                           </span></p>
                           <p>{userProfile?.email || session?.user?.email}</p>
-                          <p className="text-xs text-gray-500 mt-1">bkc_id: {userProfile?.bkcId || session?.user?.bkcId}</p>
+                          <p className="text-xs text-zinc-500 mt-1">{userProfile?.bkcId || session?.user?.bkcId}</p>
                         </div>
                       </div>
 
@@ -370,17 +377,17 @@ export default function SettingsModal({
                       <div className="flex flex-col items-center gap-4">
                         <div className="relative">
                           <div
-                            className="relative w-24 h-24 rounded-full cursor-pointer overflow-hidden bg-gray-200/20 dark:bg-gray-200/5 flex items-center justify-center border-2 border-solid border-default-300"
+                            className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-zinc-200/20 dark:bg-zinc-200/5 flex items-center justify-center border-2 border-solid border-default-300"
                             onClick={handleImageClick}
                           >
                             {removeProfileImage ? (
                               // แสดง AvatarIcon เมื่อตั้งค่าให้ลบรูปโปรไฟล์
-                              <AvatarIcon />
+                              <FaUser size={60} className="text-zinc-400" />
                             ) : previewUrl ? (
                               // แสดงรูปพรีวิวกรณีมีการอัพโหลดรูปใหม่หรือใช้รูปจาก LINE
                               <Image
                                 src={previewUrl}
-                                alt="ตัวอย่างโปรไฟล์"
+                                alt="Profile preview"
                                 fill
                                 style={{ objectFit: 'cover' }}
                               />
@@ -394,25 +401,33 @@ export default function SettingsModal({
                               />
                             ) : (
                               // แสดง AvatarIcon เมื่อไม่มีรูปโปรไฟล์
-                              <AvatarIcon />
+                              <FaUser size={60} className="text-zinc-400" />
                             )}
                             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                              <FaCamera size={24} className="text-white" />
+                              <FaCamera size={44} className="text-white" />
                             </div>
                           </div>
 
                           {/* ปุ่มลบรูปโปรไฟล์ */}
                           {(previewUrl || (!removeProfileImage && (userProfile?.image || session?.user?.image))) && (
-                            <Tooltip content="ลบรูปโปรไฟล์">
+                            <Tooltip
+                              showArrow
+                              content="ลบรูปโปรไฟล์"
+                              placement="right"
+                              color="danger"
+                              delay={500}
+                              closeDelay={100}
+                            >
                               <Button
                                 isIconOnly
                                 color="danger"
-                                size="sm"
-                                variant="flat"
-                                className="absolute -bottom-2 -right-2"
+                                size="md"
+                                variant="shadow"
+                                radius="full"
+                                className="absolute bottom-2 right-2"
                                 onPress={handleRemoveImage}
                               >
-                                <FaTimes size={14} />
+                                <FaTimes size={22} />
                               </Button>
                             </Tooltip>
                           )}
@@ -426,7 +441,7 @@ export default function SettingsModal({
                           className="hidden"
                         />
 
-                        <p className="text-xs text-default-500">
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
                           คลิกที่รูปภาพเพื่ออัปโหลดรูปโปรไฟล์ใหม่
                         </p>
                       </div>

@@ -41,7 +41,7 @@ export default function CategoryCard({ posts, category }: CategoryCardClientProp
     return (
       <div className="text-center py-10">
         <h2 className="text-2xl font-bold mb-4">ไม่พบบทความในหมวดหมู่นี้</h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-zinc-600 dark:text-zinc-400">
           ขออภัย ยังไม่มีบทความในหมวดหมู่ {category}
         </p>
       </div>
@@ -74,8 +74,8 @@ export default function CategoryCard({ posts, category }: CategoryCardClientProp
                   height={180}
                 />
               ) : (
-                <div className="w-[330px] h-[180px] bg-gray-200 rounded-xl flex items-center justify-center">
-                  <p className="text-gray-500 text-sm">No image available</p>
+                <div className="w-[330px] h-[180px] bg-zinc-200 rounded-xl flex items-center justify-center">
+                  <p className="text-zinc-500 text-sm">No image available</p>
                 </div>
               )}
             </CardBody>
