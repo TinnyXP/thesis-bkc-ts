@@ -13,7 +13,6 @@ import {
   useDisclosure,
   Tabs,
   Tab,
-  AvatarIcon,
   Input,
   Tooltip,
 } from "@heroui/react";
