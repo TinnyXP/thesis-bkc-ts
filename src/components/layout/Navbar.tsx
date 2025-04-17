@@ -1,3 +1,4 @@
+// src/components/layout/Navbar.tsx
 "use client";
 
 import Image from "next/image";
@@ -24,6 +25,7 @@ import {
 } from "@heroui/react";
 import { ToggleTheme, BookmarkModal, SettingsModal } from "@/components"
 
+// เพิ่ม import useProfile กลับมา
 import { useProfile } from "@/hooks/useProfile";
 
 import { Avatar, AvatarIcon } from "@heroui/avatar";
@@ -192,9 +194,11 @@ export default function NavBar() {
   );
 }
 
+// ในส่วน ProfileAvatar component ของ Navbar.tsx
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
   const { data: session } = useSession();
-  const { profile, isLoading, refreshProfile } = useProfile(); // ใช้ custom hook
+  // แก้ไขเป็น useProfile แทน profile ที่อาจกำหนดไว้ผิดที่
+  const { profile, isLoading, refreshProfile } = useProfile();
 
   const {
     isOpen: isSettingsOpen,
@@ -207,6 +211,10 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
     onOpen: onBookmarksOpen,
     onOpenChange: onBookmarksOpenChange
   } = useDisclosure();
+
+  // ใช้ session เป็น fallback เมื่อไม่มีข้อมูลจาก profile API
+  const avatarImage = profile?.image || session?.user?.image;
+  const userName = profile?.name || session?.user?.name;
 
   return (
     <div>
@@ -222,8 +230,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
                 icon: "text-zinc-400 dark:text-zinc-400",
               }}
               size={size}
-              // เปลี่ยนเป็นใช้เงื่อนไขที่เข้มงวดมากขึ้น
-              src={profile?.image ? profile.image : undefined}  // ใช้เฉพาะ profile.image ถ้ามีค่า
+              src={avatarImage || undefined}
               icon={<AvatarIcon />}
               showFallback
             />
@@ -238,7 +245,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
               <p className="font-regular text-default-500">
                 ลงชื่อด้วย
               </p>
-              <p className="font-semibold">{profile?.name || session?.user?.name || "Guest"}</p>
+              <p className="font-semibold">{userName || "Guest"}</p>
             </DropdownItem>
           </DropdownSection>
           <DropdownItem
@@ -269,8 +276,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
       <SettingsModal
         isOpen={isSettingsOpen}
         onOpenChange={onSettingsOpenChange}
-        userProfile={profile} // ส่งข้อมูลโปรไฟล์ไปให้ SettingsModal
-        refreshProfile={refreshProfile} // ส่ง refreshProfile function ไปด้วย
+        userProfile={profile}
+        refreshProfile={refreshProfile}
       />
 
       <BookmarkModal
@@ -278,5 +285,5 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
         onOpenChange={onBookmarksOpenChange}
       />
     </div>
-  )
+  );
 }

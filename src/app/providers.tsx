@@ -5,6 +5,7 @@ import { ToastProvider } from "@heroui/toast";
 import { ThemeProvider as NextThemeProvider } from "next-themes"
 import { SessionProvider } from "next-auth/react";
 import { TranslationProvider } from '@/lib/i18n';
+import { NavbarProvider } from '@/contexts/NavbarContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -16,8 +17,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           themes={["light", "dark"]}
         >
           <TranslationProvider>
-            {children}
-            <ToastProvider />
+            <NavbarProvider>
+              {children}
+              <ToastProvider />
+            </NavbarProvider>
           </TranslationProvider>
         </NextThemeProvider>
       </HeroUIProvider>

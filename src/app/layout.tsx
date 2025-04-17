@@ -1,11 +1,12 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 
 import { Providers } from "@/app/providers";
+import { ScrollToTop } from "@/components";
 
 import localFont from "next/font/local";
 import { Bai_Jamjuree } from "next/font/google";
-import { ScrollToTop } from "@/components";
 
 const lineSeedSans = localFont({
   src: [
@@ -38,8 +39,12 @@ export default function RootLayout({
     <html lang="th" className="light">
       <body className={`${lineSeedSans.variable} ${baiJamjuree.variable} antialiased`} >
         <Providers>
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-grow">
+              {children}
+            </main>
+          </div>
           <ScrollToTop/>
-          {children}
         </Providers>
       </body>
     </html>

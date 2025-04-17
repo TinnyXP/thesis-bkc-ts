@@ -185,9 +185,9 @@ export default function SettingsModal({
 
         // รีเฟรชข้อมูลโปรไฟล์
         if (refreshProfile) {
-          await refreshProfile();
+          refreshProfile();
         }
-
+  
         setProfileUpdateSuccess(true);
 
         // รีเซ็ตสถานะ

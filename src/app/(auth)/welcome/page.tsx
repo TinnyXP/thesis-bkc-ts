@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Button, Link } from "@heroui/react";
-import { Loading, NavBar } from "@/components";
+import { Loading } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
 
 import { useSession } from "next-auth/react";
@@ -44,7 +44,6 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
-      <NavBar />
 
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* ส่วนหัวของหน้า */}
@@ -111,16 +110,6 @@ export default function WelcomePage() {
             </CardBody>
           </Card>
         </div>
-
-        {/* แสดงข้อมูล Session สำหรับตรวจสอบ (เฉพาะโหมด development)
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">ข้อมูล Session (สำหรับการพัฒนา)</h3>
-            <pre className="text-xs overflow-auto p-2 bg-gray-200 dark:bg-gray-700 rounded">
-              {JSON.stringify(session, null, 2)}
-            </pre>
-          </div>
-        )} */}
       </main>
     </div>
   );
