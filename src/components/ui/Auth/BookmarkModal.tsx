@@ -50,7 +50,7 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
       classNames={{
         body: "py-2",
         base: "font-[family-name:var(--font-line-seed-sans)]",
-        closeButton: "hover:bg-white/5 active:bg-white/10",
+        closeButton: "hover:bg-white/5 active:bg-white/10 right-4 top-3.5",
       }}
     >
       <ModalContent>
@@ -122,11 +122,6 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
                 </Listbox>
               )}
             </ModalBody>
-            <ModalFooter>
-              <Button color="danger" variant="light" onPress={onClose}>
-                ปิด
-              </Button>
-            </ModalFooter>
           </>
         )}
       </ModalContent>

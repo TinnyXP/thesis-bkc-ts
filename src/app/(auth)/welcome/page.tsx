@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Button, Link } from "@heroui/react";
-import { Loading } from "@/components";
+import { Loading, NavBar } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
 
 import { useSession } from "next-auth/react";
@@ -45,6 +45,8 @@ export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
 
+      <NavBar />
+      
       <main className="container mx-auto max-w-4xl px-4 py-8">
         {/* ส่วนหัวของหน้า */}
         <div className="mb-6">

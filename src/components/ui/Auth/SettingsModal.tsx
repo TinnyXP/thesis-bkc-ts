@@ -22,6 +22,7 @@ import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { FaUser } from "react-icons/fa6";
+import { BsLine } from "react-icons/bs";
 
 // กำหนด interface สำหรับ userProfile
 interface UserProfile {
@@ -314,15 +315,17 @@ export default function SettingsModal({
         classNames={{
           body: "py-2",
           base: "font-[family-name:var(--font-line-seed-sans)]",
-          closeButton: "hover:bg-white/5 active:bg-white/10",
+          closeButton: "hover:bg-white/5 active:bg-white/10 right-4 top-3.5",
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">การตั้งค่า</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                การตั้งค่า
+              </ModalHeader>
               <ModalBody>
-                <Tabs aria-label="ตั้งค่า" color="primary" variant="underlined">
+                <Tabs aria-label="ตั้งค่า" color="primary" variant="underlined" disableAnimation={false}>
                   {/* แท็บโปรไฟล์ */}
                   <Tab
                     key="profile"
@@ -362,7 +365,7 @@ export default function SettingsModal({
                       )}
 
                       {/* แสดงข้อมูลการล็อกอิน */}
-                      <div className="flex flex-col items-center mb-3">
+                      {/* <div className="flex flex-col items-center mb-3">
                         <div className="bg-zinc-100 dark:bg-zinc-800 rounded-md p-2 text-xs text-center w-full">
                           <p>เข้าสู่ระบบด้วย: <span className="font-bold">
                             {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
@@ -370,10 +373,10 @@ export default function SettingsModal({
                           <p>{userProfile?.email || session?.user?.email}</p>
                           <p className="text-xs text-zinc-500 mt-1">{userProfile?.bkcId || session?.user?.bkcId}</p>
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* รูปโปรไฟล์ */}
-                      <div className="flex flex-col items-center gap-4">
+                      <div className="flex flex-col items-center gap-2">
                         <div className="relative">
                           <div
                             className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-zinc-200/20 dark:bg-zinc-200/5 flex items-center justify-center border-2 border-solid border-default-300"
@@ -456,34 +459,43 @@ export default function SettingsModal({
                         description="ชื่อนี้จะแสดงในโปรไฟล์และการโพสต์ของคุณ"
                       />
 
-                      {/* ปุ่มบันทึกการเปลี่ยนแปลง */}
-                      <Button
-                        color="primary"
-                        onPress={handleUpdateProfile}
-                        isLoading={isUpdatingProfile}
-                        startContent={!isUpdatingProfile && <FaCheck size={16} />}
-                      >
-                        {isUpdatingProfile ? "กำลังอัพเดต..." : "อัปเดตโปรไฟล์"}
-                      </Button>
-
-                      {/* เพิ่มปุ่ม Reset สำหรับผู้ใช้ LINE */}
-                      {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
-                        <div className="mt-2 flex flex-col gap-2">
-                          <Divider className="my-1" />
-                          <p className="text-xs text-default-500">
-                            คุณสามารถดึงข้อมูลจาก LINE มาใส่ในฟอร์ม และกดอัปเดตเพื่อบันทึก
-                          </p>
+                      {/* ส่วนของปุ่มต่างๆ */}
+                      <div className="flex flex-col gap-2 w-full">
+                        {/* ปุ่มบันทึกการเปลี่ยนแปลงและปุ่ม Reset สำหรับผู้ใช้ LINE */}
+                        <div className="flex flex-row gap-2 w-full">
                           <Button
-                            color="secondary"
-                            variant="flat"
-                            onPress={handleFillLineData}
-                            isLoading={isResetting}
-                            startContent={!isResetting && <FaSyncAlt size={16} />}
+                            color="primary"
+                            onPress={handleUpdateProfile}
+                            isLoading={isUpdatingProfile}
+                            startContent={!isUpdatingProfile && <FaCheck size={16} />}
+                            className={(userProfile?.provider === 'line' || session?.user?.provider === 'line') ? "w-[90%]" : "w-full"}
                           >
-                            ดึงข้อมูลจาก LINE
+                            {isUpdatingProfile ? "กำลังอัพเดต..." : "อัปเดตโปรไฟล์"}
                           </Button>
+
+                          {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                            <Button
+                              variant="faded"
+                              onPress={handleFillLineData}
+                              isLoading={isResetting}
+                              isIconOnly
+                              className="w-[10%]"
+                            >
+                              <FaSyncAlt size={16} />
+                            </Button>
+                          )}
                         </div>
-                      )}
+
+                        {/* ข้อความคำอธิบายสำหรับผู้ใช้ LINE */}
+                        {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                          <div className="text-center">
+                            <Divider className="my-1.5" />
+                            <p className="text-xs text-default-500">
+                              คุณสามารถดึงข้อมูลจาก LINE มา และกดอัปเดตเพื่อบันทึก
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </Tab>
 
@@ -521,7 +533,7 @@ export default function SettingsModal({
 
                       <Divider className="my-1" />
 
-                      <div className="mt-2">
+                      <div>
                         <Button
                           color="danger"
                           variant="flat"
@@ -539,11 +551,6 @@ export default function SettingsModal({
                   </Tab>
                 </Tabs>
               </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  ปิด
-                </Button>
-              </ModalFooter>
             </>
           )}
         </ModalContent>
