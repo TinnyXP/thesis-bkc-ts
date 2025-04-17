@@ -5,13 +5,37 @@ import { Button, Tooltip, addToast } from "@heroui/react";
 import { FiCopy, FiShare2 } from 'react-icons/fi';
 import { SiLine } from 'react-icons/si';
 import { FaFacebook, FaXTwitter } from 'react-icons/fa6';
+import { BookmarkButton } from "@/components";
+
+// interface ShareButtonsProps {
+//   url: string;
+//   title: string;
+//   post: any; // ข้อมูลโพสต์สำหรับส่งไปยัง BookmarkButton
+// }
 
 interface ShareButtonsProps {
   url: string;
   title: string;
+  post: {
+    _id: string;  // Changed from id to _id
+    title: string;
+    slug: {
+      current: string;
+    };
+    categories: Array<{
+      slug: string;
+      title?: string;
+    }>;
+    mainImage?: {
+      asset?: {
+        url?: string;
+        ref?: string;
+      };
+    };
+  };
 }
 
-export default function SlugShareButton({ url, title }: ShareButtonsProps) {
+export default function SlugShareButton({ url, title, post }: ShareButtonsProps) {
   const currentUrl = typeof window !== 'undefined'
     ? window.location.href  // ใช้ URL ปัจจุบันจาก client side
     : url;
@@ -80,6 +104,9 @@ export default function SlugShareButton({ url, title }: ShareButtonsProps) {
         Share:
       </p>
       <div className="flex items-center gap-1">
+        {/* เพิ่ม BookmarkButton */}
+        <BookmarkButton post={post} />
+        
         <Tooltip content="Copy link" className='bg-default-100 dark:bg-default-100' offset={3} placement='bottom'>
           <Button
             onPress={() => {

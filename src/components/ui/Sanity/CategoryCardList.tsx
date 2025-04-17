@@ -1,7 +1,9 @@
-// src/components/ui/Cards/SanityCards/Category/CategoryCardServer.tsx
+// src/components/ui/Sanity/CategoryCardList.tsx
+"use client";
+
 import { CategoryCard } from "@/components";
 import { Link } from "@heroui/react";
-import { getPostsByCategory } from "@/lib/sanity";
+import { usePosts } from "@/hooks/usePosts";
 
 // Component แสดงข้อความเมื่อไม่พบบทความในหมวดหมู่
 const EmptyCategory = ({ category }: { category: string }) => (
@@ -18,23 +20,31 @@ const EmptyCategory = ({ category }: { category: string }) => (
   </div>
 );
 
-/**
- * คอมโพเนนต์สำหรับแสดงบทความตามหมวดหมู่
- */
-export default async function CategoryCardList({ category }: { category: string }) {
-  try {
-    // ดึงบทความตามหมวดหมู่
-    const posts = await getPostsByCategory(category);
-    
-    // หากไม่มีบทความในหมวดหมู่
-    if (!posts || posts.length === 0) {
-      return <EmptyCategory category={category} />;
-    }
+export default function CategoryCardList({ category }: { category: string }) {
+  const { posts, isLoading, isError } = usePosts(category);
 
-    // ส่งข้อมูลไปให้ CategoryCard แสดงผล
-    return <CategoryCard posts={posts} category={category} />;
-  } catch (error) {
-    console.error('Error fetching category posts:', error);
+  if (isLoading) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-600 dark:text-gray-400">
+          กำลังโหลดบทความ...
+        </p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-10 text-red-500">
+        <h2 className="text-2xl font-bold mb-4">เกิดข้อผิดพลาด</h2>
+        <p>ไม่สามารถโหลดข้อมูลบทความได้ โปรดลองใหม่อีกครั้ง</p>
+      </div>
+    );
+  }
+
+  if (!posts || posts.length === 0) {
     return <EmptyCategory category={category} />;
   }
+
+  return <CategoryCard posts={posts} category={category} />;
 }

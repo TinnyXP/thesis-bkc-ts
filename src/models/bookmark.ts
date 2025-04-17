@@ -1,0 +1,40 @@
+// src/models/bookmark.ts
+import mongoose, { Schema } from "mongoose";
+
+const bookmarkSchema = new Schema(
+  {
+    // ลบการอ้างอิง user_id เป็น ObjectId ออก และใช้ user_bkc_id เป็นหลัก
+    user_bkc_id: {
+      type: String,
+      required: true,
+      index: true
+    },
+    post_id: {
+      type: String,
+      required: true,
+    },
+    post_title: {
+      type: String,
+      required: true,
+    },
+    post_slug: {
+      type: String,
+      required: true,
+    },
+    post_category: {
+      type: String,
+      required: true,
+    },
+    post_image: {
+      type: String,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
+
+// สร้าง unique index ที่ user_bkc_id และ post_id เพื่อป้องกันการบุ๊คมาร์กซ้ำ
+bookmarkSchema.index({ user_bkc_id: 1, post_id: 1 }, { unique: true });
+
+const Bookmark = mongoose.models.Bookmark || mongoose.model("Bookmark", bookmarkSchema);
+export default Bookmark;

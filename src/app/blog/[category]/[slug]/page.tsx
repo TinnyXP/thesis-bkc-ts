@@ -1,6 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { ImageModal, SlugBreadcrumb, SlugShareButton } from "@/components";
+import { CommentSection, ImageModal, SlugBreadcrumb, SlugShareButton } from "@/components";
 import { getPostBySlug, urlFor, formatThaiDate } from "@/lib/sanity";
 
 import { Image, Link } from "@heroui/react";
@@ -18,23 +18,23 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   // ดึงข้อมูลบทความ
   const post = await getPostBySlug(params.slug);
-  
+
   if (!post) {
     return {
       title: "ไม่พบบทความ",
       description: "ไม่พบบทความที่คุณกำลังมองหา",
     };
   }
-  
+
   // สร้าง URL สำหรับ Open Graph
   const headersList = headers();
   const domain = headersList.get('host') || '';
   const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
   const categorySlug = post.categories?.[0]?.slug || 'uncategorized';
   const ogUrl = `${protocol}://${domain}/blog/${categorySlug}/${post.slug.current}`;
-  
+
   // กำหนด URL รูปภาพสำหรับ Open Graph
-  const ogImageUrl = post.mainImage?.asset?.url 
+  const ogImageUrl = post.mainImage?.asset?.url
     ? `${post.mainImage.asset.url}?w=1200&h=630&fit=crop&auto=format`
     : null;
 
@@ -150,8 +150,8 @@ export default async function PostPage({
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const categorySlug = post.categories?.[0]?.slug || 'uncategorized';
     const fullUrl = `${protocol}://${domain}/blog/${categorySlug}/${post.slug.current}`;
-    
-    const mainImageUrl = post.mainImage?.asset?.url 
+
+    const mainImageUrl = post.mainImage?.asset?.url
       ? `${post.mainImage.asset.url}?w=1600&auto=format`
       : null;
     const originalMainImageUrl = post.mainImage?.asset?.url || null;
@@ -219,6 +219,7 @@ export default async function PostPage({
             <SlugShareButton
               url={fullUrl}
               title={post.title}
+              post={post} // ส่งข้อมูลโพสต์ทั้งหมด
             />
           </div>
 
@@ -234,6 +235,9 @@ export default async function PostPage({
               <p className="text-gray-500">ไม่มีเนื้อหา</p>
             )}
           </article>
+
+          {/* เพิ่ม CommentSection ตรงนี้ */}
+          <CommentSection postId={post.slug.current} />
         </section>
       </div>
     );

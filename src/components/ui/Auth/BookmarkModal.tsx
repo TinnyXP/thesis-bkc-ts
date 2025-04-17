@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -8,26 +10,27 @@ import {
   Button,
   Listbox,
   ListboxItem,
+  Image,
+  Spinner,
 } from "@heroui/react";
-import { FaBookmark } from "react-icons/fa6";
+import { FaBookmark, FaTrash } from "react-icons/fa";
+import { useBookmarks, Bookmark } from "@/hooks/useBookmarks";
+import Link from "next/link";
 
 export interface BookmarkModalProps {
   isOpen: boolean;
   onOpenChange: () => void;
 }
 
-interface Bookmark {
-  id: string;
-  title: string;
-  url: string;
-}
-
 export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalProps) {
-  const bookmarks: Bookmark[] = [
-    { id: "1", title: "HeroUI Documentation", url: "https://heroui.dev" },
-    { id: "2", title: "React Documentation", url: "https://react.dev" },
-    { id: "3", title: "TypeScript Documentation", url: "https://typescriptlang.org" },
-  ];
+  const { bookmarks, isLoading, removeBookmark } = useBookmarks();
+  const [isRemoving, setIsRemoving] = useState<string | null>(null);
+
+  const handleRemoveBookmark = async (postId: string) => {
+    setIsRemoving(postId);
+    await removeBookmark(postId);
+    setIsRemoving(null);
+  };
 
   return (
     <Modal 
@@ -39,30 +42,75 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1">Bookmarks</ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <FaBookmark className="text-primary-color" />
+                <span>บุ๊คมาร์กของฉัน</span>
+              </div>
+            </ModalHeader>
             <ModalBody>
-              <Listbox
-                aria-label="Bookmark list"
-                variant="flat"
-                className="p-0 gap-0 divide-y divide-default-200"
-              >
-                {bookmarks.map((bookmark) => (
-                  <ListboxItem
-                    key={bookmark.id}
-                    startContent={<FaBookmark size={22}/>}
-                    description={bookmark.url}
-                  >
-                    {bookmark.title}
-                  </ListboxItem>
-                ))}
-              </Listbox>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Spinner color="primary" />
+                </div>
+              ) : bookmarks.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">คุณยังไม่มีบุ๊คมาร์ก</p>
+                  <p className="text-sm text-gray-400 mt-2">บุ๊คมาร์กบทความที่คุณสนใจเพื่อให้สามารถกลับมาอ่านได้ภายหลัง</p>
+                </div>
+              ) : (
+                <Listbox
+                  aria-label="Bookmark list"
+                  variant="flat"
+                  className="p-0 gap-0 divide-y divide-default-200"
+                >
+                  {bookmarks.map((bookmark: Bookmark) => (
+                    <ListboxItem
+                      key={bookmark._id}
+                      startContent={
+                        bookmark.post_image ? (
+                          <Image
+                            src={bookmark.post_image}
+                            alt={bookmark.post_title}
+                            className="w-12 h-12 object-cover rounded-md"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                            <FaBookmark className="text-gray-400" />
+                          </div>
+                        )
+                      }
+                      endContent={
+                        <Button
+                          isIconOnly
+                          color="danger"
+                          variant="light"
+                          size="sm"
+                          isLoading={isRemoving === bookmark.post_id}
+                          onPress={() => handleRemoveBookmark(bookmark.post_id)}
+                        >
+                          <FaTrash size={14} />
+                        </Button>
+                      }
+                      description={
+                        <Link 
+                          href={`/blog/${bookmark.post_category}/${bookmark.post_slug}`}
+                          className="text-sm text-primary-color hover:underline"
+                          onClick={onClose}
+                        >
+                          อ่านบทความ
+                        </Link>
+                      }
+                    >
+                      {bookmark.post_title}
+                    </ListboxItem>
+                  ))}
+                </Listbox>
+              )}
             </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="light" onPress={onClose}>
-                Close
-              </Button>
-              <Button color="primary" onPress={onClose}>
-                Add Bookmark
+                ปิด
               </Button>
             </ModalFooter>
           </>
