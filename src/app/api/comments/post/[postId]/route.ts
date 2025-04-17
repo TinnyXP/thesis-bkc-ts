@@ -1,9 +1,10 @@
-// src/app/api/comments/[postId]/route.ts
+// src/app/api/comments/post/[postId]/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Comment from "@/models/comment";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import User from "@/models/user";
 
 // ดึงคอมเมนต์ทั้งหมดของบทความ
 export async function GET(
@@ -13,9 +14,10 @@ export async function GET(
   try {
     await connectDB();
     
+    // เพิ่มเงื่อนไข is_deleted: false เพื่อกรองคอมเมนต์ที่ถูกลบแล้ว
     const comments = await Comment.find({ 
       post_id: params.postId,
-      is_deleted: false 
+      is_deleted: false // เพิ่มเงื่อนไขนี้เพื่อไม่ดึงคอมเมนต์ที่ถูกลบแล้ว
     }).sort({ createdAt: -1 });
     
     return NextResponse.json({ 
@@ -32,6 +34,8 @@ export async function GET(
 }
 
 // เพิ่มคอมเมนต์ใหม่
+// แก้ไขในส่วนของ POST request
+
 export async function POST(
   request: Request,
   { params }: { params: { postId: string } }
@@ -56,15 +60,26 @@ export async function POST(
       }, { status: 400 });
     }
     
-    // ใช้ bkcId เป็นตัวอ้างอิงหลัก แต่ยังเก็บ id ไว้เพื่อรองรับระบบเก่า
+    // ดึงข้อมูลผู้ใช้ล่าสุดจาก database
+    const user = await User.findOne({ bkc_id: session.user.bkcId });
+    
+    if (!user) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่พบข้อมูลผู้ใช้" 
+      }, { status: 404 });
+    }
+    
+    // ใช้ข้อมูลจาก database แทนที่จาก session
     const newComment = await Comment.create({
       post_id: params.postId,
-      user_id: session.user.id,
-      user_bkc_id: session.user.bkcId,
-      user_name: session.user.name || "ผู้ใช้ไม่ระบุชื่อ",
-      user_image: session.user.image,
+      user_id: user._id.toString(),
+      user_bkc_id: user.bkc_id,
+      user_name: user.name, // ใช้ชื่อจาก database
+      user_image: user.profile_image, // ใช้รูปโปรไฟล์จาก database
       content: content.trim(),
-      parent_id: parentId || null
+      parent_id: parentId || null,
+      is_deleted: false
     });
     
     return NextResponse.json({ 
