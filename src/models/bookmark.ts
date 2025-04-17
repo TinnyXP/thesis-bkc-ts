@@ -7,7 +7,7 @@ const bookmarkSchema = new Schema(
     user_bkc_id: {
       type: String,
       required: true,
-      index: true
+      // ลบ index: true ตรงนี้ออก เพราะเราจะใช้ schema.index() ข้างล่าง
     },
     post_id: {
       type: String,

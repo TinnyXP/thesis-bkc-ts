@@ -237,6 +237,9 @@ export default async function PostPage({
           </article>
 
           {/* เพิ่ม CommentSection ตรงนี้ */}
+        </section>
+
+        <section className="container mx-auto max-w-5xl flex-grow px-4 my-5 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
           <CommentSection postId={post.slug.current} />
         </section>
       </div>

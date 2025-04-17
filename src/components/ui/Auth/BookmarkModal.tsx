@@ -1,6 +1,7 @@
+// src/components/ui/Auth/BookmarkModal.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -23,8 +24,15 @@ export interface BookmarkModalProps {
 }
 
 export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalProps) {
-  const { bookmarks, isLoading, removeBookmark } = useBookmarks();
-  const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const { bookmarks, isLoading, removeBookmark, refreshBookmarks } = useBookmarks();
+  const [isRemoving, setIsRemoving] = React.useState<string | null>(null);
+
+  // เพิ่ม useEffect เพื่อให้ refresh ข้อมูลทุกครั้งที่เปิด Modal
+  useEffect(() => {
+    if (isOpen) {
+      refreshBookmarks();
+    }
+  }, [isOpen, refreshBookmarks]);
 
   const handleRemoveBookmark = async (postId: string) => {
     setIsRemoving(postId);
