@@ -16,7 +16,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  useDisclosure
+  useDisclosure,
+  Pagination
 } from "@heroui/react";
 import { FaRegComment, FaPaperPlane, FaReply, FaUserCircle, FaTrash, FaEllipsisV } from "react-icons/fa";
 import { useComments, Comment } from "@/hooks/useComments";
@@ -28,9 +29,9 @@ import Link from "next/link";
 import { useProfile } from "@/hooks/useProfile";
 
 // คอมโพเนนต์สำหรับคอมเมนต์ที่ตอบกลับ
-const ReplyComment = ({ 
-  comment, 
-  isOwner, 
+const ReplyComment = ({
+  comment,
+  isOwner,
   onDelete,
   session
 }: {
@@ -40,13 +41,13 @@ const ReplyComment = ({
   session: Session | null
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  
+
   // เพิ่ม state เพื่อเก็บข้อมูลผู้ใช้ล่าสุด
   const [updatedUserInfo, setUpdatedUserInfo] = useState({
     name: comment.user_name,
     image: comment.user_image
   });
-  
+
   // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
   useEffect(() => {
     const handleProfileUpdated = (event: Event) => {
@@ -60,10 +61,10 @@ const ReplyComment = ({
         });
       }
     };
-    
+
     // ลงทะเบียนรับฟังเหตุการณ์
     window.addEventListener('profile-updated', handleProfileUpdated);
-    
+
     // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdated);
@@ -91,7 +92,7 @@ const ReplyComment = ({
                   })}
                 </p>
               </div>
-              
+
               {isOwner && (
                 <Popover placement="bottom-end" isOpen={isOpen} onOpenChange={onOpen}>
                   <PopoverTrigger>
@@ -131,11 +132,11 @@ const ReplyComment = ({
 };
 
 // คอมโพเนนต์สำหรับคอมเมนต์หลัก
-const CommentItem = ({ 
-  comment, 
-  replies, 
-  isOwner, 
-  onDelete, 
+const CommentItem = ({
+  comment,
+  replies,
+  isOwner,
+  onDelete,
   onReply,
   checkOwnership,
   session
@@ -150,13 +151,13 @@ const CommentItem = ({
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [showAllReplies, setShowAllReplies] = useState(false);
-  
+
   // เพิ่ม state เพื่อเก็บข้อมูลผู้ใช้ล่าสุด
   const [updatedUserInfo, setUpdatedUserInfo] = useState({
     name: comment.user_name,
     image: comment.user_image
   });
-  
+
   // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
   useEffect(() => {
     const handleProfileUpdated = (event: Event) => {
@@ -170,16 +171,16 @@ const CommentItem = ({
         });
       }
     };
-    
+
     // ลงทะเบียนรับฟังเหตุการณ์
     window.addEventListener('profile-updated', handleProfileUpdated);
-    
+
     // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdated);
     };
   }, [comment.user_bkc_id, session, updatedUserInfo.name]);
-  
+
   // แสดงแค่ 2 replies แรกหากไม่กดดูทั้งหมด
   const visibleReplies = showAllReplies ? replies : replies.slice(0, 2);
   const hasMoreReplies = replies.length > 2 && !showAllReplies;
@@ -214,7 +215,7 @@ const CommentItem = ({
                 >
                   <FaReply size={14} />
                 </Button>
-                
+
                 {isOwner && (
                   <Popover placement="bottom-end" isOpen={isOpen} onOpenChange={onOpen}>
                     <PopoverTrigger>
@@ -249,7 +250,7 @@ const CommentItem = ({
           </div>
         </div>
       </div>
-      
+
       {/* แสดงการตอบกลับ */}
       {visibleReplies.length > 0 && (
         <div className="mt-1">
@@ -262,12 +263,12 @@ const CommentItem = ({
               session={session}
             />
           ))}
-          
+
           {/* ปุ่มดูการตอบกลับทั้งหมด */}
           {hasMoreReplies && (
-            <Button 
-              variant="light" 
-              size="sm" 
+            <Button
+              variant="light"
+              size="sm"
               className="ml-12 mt-1"
               onPress={() => setShowAllReplies(true)}
             >
@@ -287,31 +288,33 @@ interface CommentSectionProps {
 export default function CommentSection({ postId }: CommentSectionProps) {
   const { data: session } = useSession();
   const { profile } = useProfile(); // เพิ่มการใช้ useProfile
-  const { 
-    comments, 
-    isLoading, 
-    addComment, 
-    deleteComment, 
+  const {
+    comments,
+    pagination,
+    isLoading,
+    changePage,
+    addComment,
+    deleteComment,
     isCommentOwner,
-    refreshComments 
+    refreshComments
   } = useComments(postId);
-  
+
   const [commentText, setCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  
+
   // เพิ่ม state เพื่อเก็บข้อมูลโปรไฟล์ล่าสุด
   const [currentUserProfile, setCurrentUserProfile] = useState({
     name: profile?.name || session?.user?.name || "",
     image: profile?.image || session?.user?.image || null
   });
-  
+
   // จัดกลุ่มคอมเมนต์และการตอบกลับ
   const [mainComments, setMainComments] = useState<Comment[]>([]);
-  const [repliesByCommentId, setRepliesByCommentId] = useState<{[key: string]: Comment[]}>({}); 
-  
+  const [repliesByCommentId, setRepliesByCommentId] = useState<{ [key: string]: Comment[] }>({});
+
   // Modal สำหรับยืนยันการลบ
   const {
     isOpen: isDeleteModalOpen,
@@ -342,15 +345,15 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           name: customEvent.detail.name || currentUserProfile.name,
           image: customEvent.detail.image
         });
-        
+
         // รีเฟรชคอมเมนต์เพื่อให้แสดงข้อมูลล่าสุด
         refreshComments();
       }
     };
-    
+
     // ลงทะเบียนรับฟังเหตุการณ์
     window.addEventListener('profile-updated', handleProfileUpdated);
-    
+
     // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdated);
@@ -361,8 +364,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   useEffect(() => {
     if (comments && comments.length > 0) {
       const mainCommentsList: Comment[] = [];
-      const repliesMap: {[key: string]: Comment[]} = {};
-      
+      const repliesMap: { [key: string]: Comment[] } = {};
+
       // จัดกลุ่มคอมเมนต์
       comments.forEach(comment => {
         if (!comment.parent_id) {
@@ -376,19 +379,19 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           repliesMap[comment.parent_id].push(comment);
         }
       });
-      
+
       // เรียงคอมเมนต์ตามเวลาล่าสุด
-      mainCommentsList.sort((a, b) => 
+      mainCommentsList.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-      
+
       // เรียงการตอบกลับตามเวลา (เก่าไปใหม่)
       Object.keys(repliesMap).forEach(parentId => {
-        repliesMap[parentId].sort((a, b) => 
+        repliesMap[parentId].sort((a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       });
-      
+
       setMainComments(mainCommentsList);
       setRepliesByCommentId(repliesMap);
     } else {
@@ -401,12 +404,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const handleReply = (commentId: string) => {
     // ค้นหาคอมเมนต์จากคอมเมนต์หลักเท่านั้น
     const targetComment = mainComments.find(c => c._id === commentId);
-    
+
     if (targetComment) {
       setReplyToId(commentId);
       setReplyTo(targetComment);
       setCommentText(`@${targetComment.user_name} `);
-      
+
       // เลื่อนไปที่ text area
       const textareaElement = document.getElementById('comment-textarea');
       if (textareaElement) {
@@ -433,12 +436,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   // ดำเนินการลบคอมเมนต์
   const confirmDelete = async () => {
     if (!commentToDelete) return;
-    
+
     setIsDeleting(true);
-    
+
     try {
       const result = await deleteComment(commentToDelete);
-      
+
       if (!result.success) {
         setError(result.message || "ไม่สามารถลบความคิดเห็นได้");
       }
@@ -455,23 +458,23 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   // ส่งคอมเมนต์หรือการตอบกลับ
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!session) {
       setError("กรุณาเข้าสู่ระบบก่อนแสดงความคิดเห็น");
       return;
     }
-    
+
     if (!commentText.trim()) {
       setError("กรุณากรอกข้อความ");
       return;
     }
-    
+
     setIsSubmitting(true);
     setError("");
-    
+
     try {
       const result = await addComment(commentText, replyToId || undefined);
-      
+
       if (result.success) {
         setCommentText("");
         setReplyToId(null);
@@ -512,7 +515,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                 </Button>
               </div>
             )}
-            
+
             <div className="flex items-start gap-3">
               <Avatar
                 src={currentUserProfile.image || undefined}
@@ -529,11 +532,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                 isDisabled={isSubmitting}
               />
             </div>
-            
+
             {error && (
               <p className="text-danger text-sm">{error}</p>
             )}
-            
+
             <div className="self-end">
               <Button
                 color="primary"
@@ -600,8 +603,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                 <Button variant="flat" onPress={onClose}>
                   ยกเลิก
                 </Button>
-                <Button 
-                  color="danger" 
+                <Button
+                  color="danger"
                   onPress={confirmDelete}
                   isLoading={isDeleting}
                 >
@@ -612,6 +615,18 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           )}
         </ModalContent>
       </Modal>
+      {!isLoading && pagination.totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            total={pagination.totalPages}
+            initialPage={1}
+            page={pagination.currentPage}
+            onChange={changePage}
+            color="primary"
+            variant="light"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -2,9 +2,9 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Comment from "@/models/comment";
+import User from "@/models/user";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import User from "@/models/user";
 
 // ดึงคอมเมนต์ทั้งหมดของบทความ
 export async function GET(
@@ -12,16 +12,48 @@ export async function GET(
   { params }: { params: { postId: string } }
 ) {
   try {
+    // ดึงค่า pagination จาก query params
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    
+    // คำนวณตำแหน่งเริ่มต้น
+    const skip = (page - 1) * limit;
+    
     await connectDB();
     
-    // เพิ่มเงื่อนไข is_deleted: false เพื่อกรองคอมเมนต์ที่ถูกลบแล้ว
-    const comments = await Comment.find({ 
+    // คำนวณจำนวนคอมเมนต์หลักทั้งหมด (ไม่รวมคอมเมนต์ตอบกลับ)
+    const totalComments = await Comment.countDocuments({ 
       post_id: params.postId,
-      is_deleted: false // เพิ่มเงื่อนไขนี้เพื่อไม่ดึงคอมเมนต์ที่ถูกลบแล้ว
-    }).sort({ createdAt: -1 });
+      is_deleted: false,
+      parent_id: null // นับเฉพาะคอมเมนต์หลัก
+    });
+    
+    // ดึงคอมเมนต์หลักตามหน้าที่ต้องการ
+    const mainComments = await Comment.find({ 
+      post_id: params.postId,
+      is_deleted: false,
+      parent_id: null // เฉพาะคอมเมนต์หลัก
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+    
+    // ดึง ID ของคอมเมนต์หลักทั้งหมดที่ดึงมา
+    const mainCommentIds = mainComments.map(comment => comment._id.toString());
+    
+    // ดึงคอมเมนต์ที่ตอบกลับคอมเมนต์หลักที่ดึงมา
+    const replies = await Comment.find({
+      post_id: params.postId,
+      is_deleted: false,
+      parent_id: { $in: mainCommentIds }
+    }).sort({ createdAt: 1 });
+    
+    // รวมคอมเมนต์ทั้งหมด
+    const allComments = [...mainComments, ...replies];
     
     // ดึงข้อมูลผู้ใช้ล่าสุดสำหรับแต่ละคอมเมนต์
-    const updatedComments = await Promise.all(comments.map(async (comment) => {
+    const updatedComments = await Promise.all(allComments.map(async (comment) => {
       const commentObj = comment.toObject();
       
       try {
@@ -45,9 +77,15 @@ export async function GET(
       return commentObj;
     }));
     
+    // ส่งข้อมูล pagination กลับไปด้วย
     return NextResponse.json({ 
       success: true, 
-      comments: updatedComments
+      comments: updatedComments,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalComments / limit),
+        totalComments: totalComments
+      }
     });
   } catch (error) {
     console.error("Error fetching comments:", error);
