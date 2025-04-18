@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Button, Link } from "@heroui/react";
 import { Loading, NavBar } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
-
 import { useSession } from "next-auth/react";
 import { redirect } from 'next/navigation';
+import { showToast } from "@/lib/toast";
 
 export default function WelcomePage() {
   const { data: session, status } = useSession();
@@ -26,6 +26,9 @@ export default function WelcomePage() {
       }
       // ถ้าผ่านการตรวจสอบแล้ว จึงยกเลิกสถานะ loading
       setLoading(false);
+      
+      // แสดง toast ต้อนรับผู้ใช้
+      showToast(`ยินดีต้อนรับ, คุณ ${session.user.name}`, "success");
     }
   }, [session, status]);
 
@@ -44,7 +47,6 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-[family-name:var(--font-line-seed-sans)]">
-
       <NavBar />
       
       <main className="container mx-auto max-w-4xl px-4 py-8">
@@ -73,6 +75,9 @@ export default function WelcomePage() {
                 variant="flat"
                 className="bg-white/30 text-white hover:bg-white/40"
                 size="sm"
+                onPress={() => {
+                  showToast("เริ่มต้นใช้งานระบบบางกระเจ้า!", "info");
+                }}
               >
                 เริ่มต้นใช้งาน
               </Button>
@@ -91,6 +96,9 @@ export default function WelcomePage() {
                 size="sm"
                 as={Link}
                 href="/blog"
+                onPress={() => {
+                  showToast("กำลังไปยังหน้าบทความ", "info");
+                }}
               >
                 ดูบทความทั้งหมด
               </Button>
@@ -106,6 +114,9 @@ export default function WelcomePage() {
                 variant="flat"
                 size="sm"
                 startContent={<FaUserCircle />}
+                onPress={() => {
+                  showToast("ฟีเจอร์นี้กำลังอยู่ในระหว่างการพัฒนา", "warning");
+                }}
               >
                 ไปที่โปรไฟล์
               </Button>

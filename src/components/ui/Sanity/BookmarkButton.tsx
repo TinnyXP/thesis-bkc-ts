@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button, Tooltip, addToast, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
+import { Button, Tooltip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 import { usePostBookmarkStatus } from "@/hooks/useBookmarks";
 import { useSession } from "next-auth/react";
@@ -39,29 +39,15 @@ export default function BookmarkButton({ post }: BookmarkButtonProps) {
     try {
       const category = post.categories?.[0]?.slug || 'uncategorized';
       
-      const result = await toggleBookmark({
+      await toggleBookmark({
         post_id: post.slug.current,
         post_title: post.title,
         post_slug: post.slug.current,
         post_category: category,
         post_image: post.mainImage?.asset?.url
       });
-
-      if (result.success) {
-        // แสดงข้อความแจ้งเตือน
-        addToast({
-          title: result.action === 'added' ? "เพิ่มบุ๊คมาร์กแล้ว" : "ลบบุ๊คมาร์กแล้ว",
-          color: result.action === 'added' ? "success" : "default",
-          radius: "full",
-          timeout: 3000,
-          hideCloseButton: true,
-          shouldShowTimeoutProgress: true,
-          classNames: {
-            base: "font-[family-name:var(--font-line-seed-sans)]",
-            title: "font-bold",
-          }
-        });
-      }
+      
+      // ลบโค้ด addToast ที่นี่ แล้วไปใช้ showToast ใน hook แทน
     } catch (error) {
       console.error("Error toggling bookmark:", error);
     }

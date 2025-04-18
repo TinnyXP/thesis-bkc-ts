@@ -1,23 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Button, Tooltip, addToast } from "@heroui/react";
+import { Button, Tooltip } from "@heroui/react";
 import { FiCopy, FiShare2 } from 'react-icons/fi';
 import { SiLine } from 'react-icons/si';
 import { FaFacebook, FaXTwitter } from 'react-icons/fa6';
 import { BookmarkButton } from "@/components";
-
-// interface ShareButtonsProps {
-//   url: string;
-//   title: string;
-//   post: any; // ข้อมูลโพสต์สำหรับส่งไปยัง BookmarkButton
-// }
+import { showToast } from "@/lib/toast";
 
 interface ShareButtonsProps {
   url: string;
   title: string;
   post: {
-    _id: string;  // Changed from id to _id
+    _id: string;
     title: string;
     slug: {
       current: string;
@@ -66,6 +61,11 @@ export default function SlugShareButton({ url, title, post }: ShareButtonsProps)
         }
         document.body.removeChild(textArea);
       }
+
+      // ใช้ showToast แทน addToast
+      if (!isMobile()) {
+        showToast("คัดลอกลิงก์ไปยังคลิปบอร์ดเรียบร้อย!", "success");
+      }
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -109,23 +109,7 @@ export default function SlugShareButton({ url, title, post }: ShareButtonsProps)
         
         <Tooltip content="Copy link" className='bg-default-100 dark:bg-default-100' offset={3} placement='bottom'>
           <Button
-            onPress={() => {
-              handleCopy();
-              if (!isMobile()) {
-                addToast({
-                  title: "คัดลอกลิงก์ไปยังคลิปบอร์ดเรียบร้อย !",
-                  color: "default",
-                  radius: "full",
-                  timeout: 3000,
-                  hideCloseButton: true,
-                  shouldShowTimeoutProgress: true,
-                  classNames: {
-                    base: "font-[family-name:var(--font-line-seed-sans)]",
-                    title: "font-bold",
-                  }
-                });
-              }
-            }}
+            onPress={handleCopy}
             size='sm'
             isIconOnly
             radius='full'

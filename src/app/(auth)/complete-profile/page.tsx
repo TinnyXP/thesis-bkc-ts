@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FaCamera, FaUser } from "react-icons/fa";
 import { Loading } from "@/components";
+import { showToast } from "@/lib/toast";
 
 export default function CompleteProfilePage() {
   const { data: session, status, update } = useSession();
@@ -70,6 +71,7 @@ export default function CompleteProfilePage() {
 
     if (!name.trim()) {
       setError("กรุณากรอกชื่อของคุณ");
+      showToast("กรุณากรอกชื่อของคุณ", "error");
       return;
     }
 
@@ -102,6 +104,8 @@ export default function CompleteProfilePage() {
           }
         });
 
+        showToast("สร้างโปรไฟล์สำเร็จ ยินดีต้อนรับ!", "success");
+
         // แทนที่จะใช้ router.replace ซึ่งใช้ client-side navigation
         // ให้ใช้ window.location.href เพื่อทำการ full page reload
         // เพื่อให้ได้ session ล่าสุดจากเซิร์ฟเวอร์
@@ -110,16 +114,19 @@ export default function CompleteProfilePage() {
         }, 500);
       } else {
         setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");
+        showToast(data.message || "ไม่สามารถสร้างโปรไฟล์ได้", "error");
       }
     } catch (error) {
       console.error("Error creating profile:", error);
       setError("เกิดข้อผิดพลาดในการสร้างโปรไฟล์");
+      showToast("เกิดข้อผิดพลาดในการสร้างโปรไฟล์", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = async () => {
+    showToast("กำลังออกจากระบบ...", "info");
     await signOut({ redirect: true, callbackUrl: "/login" });
   };
 

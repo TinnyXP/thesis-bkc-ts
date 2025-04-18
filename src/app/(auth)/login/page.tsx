@@ -10,6 +10,7 @@ import { BsLine } from "react-icons/bs";
 import Image from "next/image";
 import { IoLogIn, IoMail } from "react-icons/io5";
 import { Loading } from "@/components";
+import { showToast } from "@/lib/toast";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
@@ -75,6 +76,17 @@ export default function LoginPage() {
 
     checkSavedLoginState();
 
+    // ตรวจสอบ query param เพื่อแสดง toast เมื่อลบบัญชีเสร็จแล้ว
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('deleted') === 'true') {
+        // แสดง toast แจ้งเตือนการลบบัญชีสำเร็จ
+        showToast("ลบบัญชีเรียบร้อยแล้ว", "success");
+        // อัปเดต URL เพื่อไม่ให้แสดง toast ซ้ำเมื่อรีเฟรช
+        window.history.replaceState({}, document.title, '/login');
+      }
+    }
+
     // Cleanup เมื่อ unmount
     return () => {
       // ยกเลิก timer หรือ subscription ต่างๆ ที่อาจมี
@@ -112,6 +124,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email.length || !/^\S+@\S+\.\S+$/.test(email)) {
       setIsEmailValid(false);
+      showToast("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง", "error");
       return;
     }
 
@@ -132,18 +145,21 @@ export default function LoginPage() {
       if (data.success) {
         // เริ่มนับถอยหลังการขอรหัส OTP ใหม่
         setResendCooldown(60); // 60 วินาที
+        showToast("ส่งรหัส OTP เรียบร้อยแล้ว กรุณาตรวจสอบอีเมลของคุณ", "success");
 
         // เปลี่ยนไปหน้ากรอก OTP
         paginate(1);
       } else {
         setIsEmailValid(false);
         setError(data.message || "ไม่สามารถส่งรหัส OTP ได้");
+        showToast(data.message || "ไม่สามารถส่งรหัส OTP ได้", "error");
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
       setIsEmailValid(false);
       setConnectionError(true);
       setError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ โปรดลองอีกครั้ง");
+      showToast("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ โปรดลองอีกครั้ง", "error");
     } finally {
       setIsLoading(false);
     }
@@ -163,11 +179,13 @@ export default function LoginPage() {
     if (!validateOtp(otp)) {
       setIsOtpValid(false);
       setError("รหัส OTP ต้องเป็นตัวเลข 6 หลักเท่านั้น");
+      showToast("รหัส OTP ต้องเป็นตัวเลข 6 หลักเท่านั้น", "error");
       return;
     }
 
     if (!otp.length || otp.length !== 6) {
       setIsOtpValid(false);
+      showToast("กรุณากรอกรหัส OTP ให้ครบ 6 หลัก", "error");
       return;
     }
 
@@ -187,13 +205,17 @@ export default function LoginPage() {
         // รีเซ็ตค่า OTP เพื่อให้ผู้ใช้กรอกใหม่
         setOtp("");
         setError("รหัส OTP ไม่ถูกต้องหรือหมดอายุ โปรดลองใหม่");
+        showToast("รหัส OTP ไม่ถูกต้องหรือหมดอายุ โปรดลองใหม่", "error");
       } else if (result?.ok) {
+        // เมื่อเข้าสู่ระบบสำเร็จ
+        showToast("เข้าสู่ระบบสำเร็จ", "success");
         // หากเข้าสู่ระบบสำเร็จ ให้เปลี่ยนเส้นทางไปยังหน้า welcome
         router.replace("/welcome");
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
       setIsOtpValid(false);
+      showToast("เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP", "error");
     } finally {
       setIsLoading(false);
     }
@@ -223,15 +245,18 @@ export default function LoginPage() {
       if (data.success) {
         // เริ่มนับถอยหลังใหม่
         setResendCooldown(60); // 60 วินาที
+        showToast("ส่งรหัส OTP ใหม่เรียบร้อยแล้ว", "success");
 
         // รีเซ็ตค่า OTP เดิม
         setOtp("");
       } else {
         // กรณีมีข้อผิดพลาด
+        showToast(data.message || "ไม่สามารถส่งรหัส OTP ใหม่ได้", "error");
         console.error("ไม่สามารถส่งรหัส OTP ใหม่ได้");
       }
     } catch (error) {
       console.error("Error resending OTP:", error);
+      showToast("เกิดข้อผิดพลาดในการส่งรหัส OTP ใหม่", "error");
     } finally {
       setIsLoading(false);
     }

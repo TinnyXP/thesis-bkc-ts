@@ -1,7 +1,8 @@
-// src/hooks/useProfile.ts - ปรับปรุงใหม่
+// src/hooks/useProfile.ts
 import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import useSWR from 'swr';
+import { showToast } from "@/lib/toast";
 
 export interface UserProfile {
   id: string;
@@ -78,7 +79,7 @@ export function useProfile() {
   // รวม loading state จาก cache และ SWR
   const isLoading = isInitialLoading || (isSWRLoading && !cachedProfile);
   
-  // ปรับปรุงฟังก์ชัน refreshProfile ให้ล้าง cache ก่อนดึงข้อมูลใหม่
+  // ปรับปรุงฟังก์ชัน refreshProfile ให้ล้าง cache ก่อนดึงข้อมูลใหม่ และแสดง toast เมื่อเกิดข้อผิดพลาด
   const refreshProfile = useCallback(async (): Promise<void> => {
     try {
       // ล้าง cache ทุกครั้งเมื่อมีการรีเฟรช เพื่อให้แน่ใจว่าได้ข้อมูลล่าสุดเสมอ
@@ -88,9 +89,11 @@ export function useProfile() {
       setCachedProfile(null);
       
       // อัปเดตข้อมูลจากเซิร์ฟเวอร์
-      return await mutate();
+      await mutate();
+      return Promise.resolve();
     } catch (error) {
       console.error('Error refreshing profile:', error);
+      showToast("ไม่สามารถรีเฟรชข้อมูลโปรไฟล์ได้", "error");
       return Promise.reject(error);
     }
   }, [mutate]);

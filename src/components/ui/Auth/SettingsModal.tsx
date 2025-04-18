@@ -23,6 +23,7 @@ import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { FaUser } from "react-icons/fa6";
 import { LanguageSelectorTab } from "@/lib/i18n";
+import { showToast } from "@/lib/toast";
 
 // กำหนด interface สำหรับ userProfile
 interface UserProfile {
@@ -109,6 +110,7 @@ export default function SettingsModal({
   const handleDarkModeChange = (value: boolean) => {
     setIsDarkMode(value);
     setTheme(value ? "dark" : "light");
+    showToast(`เปลี่ยนโหมดเป็น${value ? "กลางคืน" : "กลางวัน"}เรียบร้อยแล้ว`, "info");
   };
 
   // จัดการการเลือกรูปโปรไฟล์
@@ -145,6 +147,7 @@ export default function SettingsModal({
   const handleUpdateProfile = async () => {
     if (!userName.trim()) {
       setProfileUpdateError("กรุณากรอกชื่อ");
+      showToast("กรุณากรอกชื่อ", "error");
       return;
     }
 
@@ -190,6 +193,7 @@ export default function SettingsModal({
         }
 
         // แสดงข้อความสำเร็จ
+        showToast("อัปเดตโปรไฟล์สำเร็จ", "success");
         setProfileUpdateSuccess(true);
 
         // รีเซ็ตสถานะ
@@ -214,10 +218,12 @@ export default function SettingsModal({
         }, 3000);
       } else {
         setProfileUpdateError(data.message || "ไม่สามารถอัปเดตโปรไฟล์ได้");
+        showToast(data.message || "ไม่สามารถอัปเดตโปรไฟล์ได้", "error");
       }
     } catch (error) {
       console.error("Error updating profile:", error);
       setProfileUpdateError("เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์");
+      showToast("เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์", "error");
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -226,6 +232,7 @@ export default function SettingsModal({
   const handleFillLineData = async () => {
     if (!session?.user?.bkcId) {
       setResetError("ไม่พบข้อมูลผู้ใช้");
+      showToast("ไม่พบข้อมูลผู้ใช้", "error");
       return;
     }
 
@@ -263,6 +270,7 @@ export default function SettingsModal({
         }
 
         setResetSuccess(true);
+        showToast("ดึงข้อมูลจาก LINE สำเร็จ กดอัปเดตเพื่อบันทึก", "success");
 
         // แสดงข้อความสำเร็จชั่วคราว
         setTimeout(() => {
@@ -270,10 +278,12 @@ export default function SettingsModal({
         }, 3000);
       } else {
         setResetError(data.message || "ไม่สามารถดึงข้อมูลจาก LINE ได้");
+        showToast(data.message || "ไม่สามารถดึงข้อมูลจาก LINE ได้", "error");
       }
     } catch (error) {
       console.error("Error getting LINE default data:", error);
       setResetError("เกิดข้อผิดพลาดในการดึงข้อมูลจาก LINE");
+      showToast("เกิดข้อผิดพลาดในการดึงข้อมูลจาก LINE", "error");
     } finally {
       setIsResetting(false);
     }
@@ -283,6 +293,7 @@ export default function SettingsModal({
   const handleDeleteAccount = async () => {
     if (!session?.user?.bkcId) {
       setDeleteError("ไม่พบข้อมูลผู้ใช้");
+      showToast("ไม่พบข้อมูลผู้ใช้", "error");
       return;
     }
 
@@ -304,6 +315,7 @@ export default function SettingsModal({
       const data = await response.json();
 
       if (data.success) {
+        showToast("ลบบัญชีเรียบร้อยแล้ว", "success");
         // ปิด modal ยืนยัน
         onDeleteConfirmClose();
         // ปิด modal หลัก
@@ -312,10 +324,12 @@ export default function SettingsModal({
         await signOut({ callbackUrl: '/login?deleted=true' });
       } else {
         setDeleteError(data.message || "ไม่สามารถลบบัญชีได้");
+        showToast(data.message || "ไม่สามารถลบบัญชีได้", "error");
       }
     } catch (error) {
       console.error("Error deleting account:", error);
       setDeleteError("เกิดข้อผิดพลาดในการลบบัญชี โปรดลองอีกครั้ง");
+      showToast("เกิดข้อผิดพลาดในการลบบัญชี โปรดลองอีกครั้ง", "error");
     } finally {
       setIsDeleting(false);
     }

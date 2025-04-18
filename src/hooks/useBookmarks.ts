@@ -1,6 +1,7 @@
-// src/hooks/useBookmarks.ts
+// src/hooks/useBookmarks.ts 
 import useSWR from 'swr';
 import { useCallback } from 'react';
+import { showToast } from "@/lib/toast";
 
 // interface สำหรับ Bookmark
 export interface Bookmark {
@@ -49,12 +50,15 @@ export function useBookmarks() {
       if (result.success) {
         // อัพเดต cache ทันที
         mutate();
+        showToast("เพิ่มบุ๊คมาร์กเรียบร้อยแล้ว", "success");
         return { success: true };
       } else {
+        showToast(result.message || "ไม่สามารถเพิ่มบุ๊คมาร์กได้", "error");
         return { success: false, message: result.message };
       }
     } catch (error) {
       console.error("Error adding bookmark:", error);
+      showToast("เกิดข้อผิดพลาดในการเพิ่มบุ๊คมาร์ก", "error");
       return { 
         success: false, 
         message: "เกิดข้อผิดพลาดในการเพิ่มบุ๊คมาร์ก" 
@@ -74,12 +78,15 @@ export function useBookmarks() {
       if (result.success) {
         // อัพเดต cache ทันที
         mutate();
+        showToast("ลบบุ๊คมาร์กเรียบร้อยแล้ว", "success");
         return { success: true };
       } else {
+        showToast(result.message || "ไม่สามารถลบบุ๊คมาร์กได้", "error");
         return { success: false, message: result.message };
       }
     } catch (error) {
       console.error("Error removing bookmark:", error);
+      showToast("เกิดข้อผิดพลาดในการลบบุ๊คมาร์ก", "error");
       return { 
         success: false, 
         message: "เกิดข้อผิดพลาดในการลบบุ๊คมาร์ก" 
@@ -124,8 +131,10 @@ export function usePostBookmarkStatus(postId: string) {
         if (result.success) {
           // อัพเดต cache ทันที
           mutate({ ...data, isBookmarked: false, bookmarkId: null });
+          showToast("ลบบุ๊คมาร์กเรียบร้อยแล้ว", "success");
           return { success: true, action: 'removed' };
         } else {
+          showToast(result.message || "ไม่สามารถลบบุ๊คมาร์กได้", "error");
           return { success: false, message: result.message };
         }
       } else {
@@ -143,13 +152,16 @@ export function usePostBookmarkStatus(postId: string) {
         if (result.success) {
           // อัพเดต cache ทันที
           mutate({ ...data, isBookmarked: true, bookmarkId: result.bookmark._id });
+          showToast("เพิ่มบุ๊คมาร์กเรียบร้อยแล้ว", "success");
           return { success: true, action: 'added' };
         } else {
+          showToast(result.message || "ไม่สามารถเพิ่มบุ๊คมาร์กได้", "error");
           return { success: false, message: result.message };
         }
       }
     } catch (error) {
       console.error("Error toggling bookmark:", error);
+      showToast("เกิดข้อผิดพลาด", "error");
       return { 
         success: false, 
         message: "เกิดข้อผิดพลาด" 
