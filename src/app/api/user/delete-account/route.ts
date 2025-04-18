@@ -5,11 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import UserModel from "@/models/user";
 import LoginHistory from "@/models/loginHistory";
+import Bookmark from "@/models/bookmark";
+import Comment from "@/models/comment";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
 
 export async function DELETE(request: Request) {
   try {
-    // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
       return NextResponse.json({ 
@@ -63,9 +64,6 @@ export async function DELETE(request: Request) {
       session_provider: session.user.provider
     });
 
-    // ไม่ต้องตรวจสอบ provider เนื่องจากอาจทำให้เกิดปัญหา
-    // เราใช้ bkc_id เป็นตัวระบุหลักอยู่แล้ว ซึ่งควรจะเพียงพอสำหรับความปลอดภัย
-
     // ลบรูปโปรไฟล์จาก Cloudinary (ถ้ามี)
     if (user.profile_image && user.profile_image.includes('cloudinary')) {
       try {
@@ -98,6 +96,24 @@ export async function DELETE(request: Request) {
         console.error("Error deleting profile image from Cloudinary:", error);
         // ไม่หยุดการดำเนินการหากไม่สามารถลบรูปได้
       }
+    }
+
+    // ลบบุ๊คมาร์คของผู้ใช้
+    try {
+      const bookmarkResult = await Bookmark.deleteMany({ user_bkc_id: user.bkc_id });
+      console.log(`Deleted ${bookmarkResult.deletedCount} bookmarks for user ${user.bkc_id}`);
+    } catch (error) {
+      console.error("Error deleting bookmarks:", error);
+      // ไม่หยุดการดำเนินการหากไม่สามารถลบบุ๊คมาร์คได้
+    }
+
+    // ลบความคิดเห็นของผู้ใช้ด้วย hard delete
+    try {
+      const commentResult = await Comment.deleteMany({ user_bkc_id: user.bkc_id });
+      console.log(`Deleted ${commentResult.deletedCount} comments for user ${user.bkc_id}`);
+    } catch (error) {
+      console.error("Error deleting comments:", error);
+      // ไม่หยุดการดำเนินการหากไม่สามารถลบความคิดเห็นได้
     }
 
     // ลบประวัติการเข้าสู่ระบบ

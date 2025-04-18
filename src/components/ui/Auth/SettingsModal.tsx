@@ -186,15 +186,27 @@ export default function SettingsModal({
 
         // รีเฟรชข้อมูลโปรไฟล์
         if (refreshProfile) {
-          refreshProfile();
+          await refreshProfile(); // รอให้รีเฟรชเสร็จก่อน
         }
 
+        // แสดงข้อความสำเร็จ
         setProfileUpdateSuccess(true);
 
         // รีเซ็ตสถานะ
         setProfileImage(null);
         setPreviewUrl(null);
         setRemoveProfileImage(false);
+
+        // บังคับรีเฟรช global state สำหรับคอมเมนต์ด้วย (ใช้ Global Event)
+        // เพิ่ม custom event เพื่อแจ้งเตือนคอมโพเนนต์อื่นให้รีเฟรช
+        const profileUpdatedEvent = new CustomEvent('profile-updated', {
+          detail: {
+            name: data.user.name,
+            image: data.user.image,
+            bkcId: data.user.bkcId
+          }
+        });
+        window.dispatchEvent(profileUpdatedEvent);
 
         // แสดงข้อความสำเร็จชั่วคราว
         setTimeout(() => {

@@ -21,28 +21,61 @@ import {
 import { FaRegComment, FaPaperPlane, FaReply, FaUserCircle, FaTrash, FaEllipsisV } from "react-icons/fa";
 import { useComments, Comment } from "@/hooks/useComments";
 import { useSession } from "next-auth/react";
+import { Session } from "next-auth";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import Link from "next/link";
+import { useProfile } from "@/hooks/useProfile";
 
 // คอมโพเนนต์สำหรับคอมเมนต์ที่ตอบกลับ
 const ReplyComment = ({ 
   comment, 
   isOwner, 
-  onDelete 
+  onDelete,
+  session
 }: {
   comment: Comment,
   isOwner: boolean,
-  onDelete: (id: string) => void
+  onDelete: (id: string) => void,
+  session: Session | null
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  // เพิ่ม state เพื่อเก็บข้อมูลผู้ใช้ล่าสุด
+  const [updatedUserInfo, setUpdatedUserInfo] = useState({
+    name: comment.user_name,
+    image: comment.user_image
+  });
+  
+  // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
+  useEffect(() => {
+    const handleProfileUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      // ตรวจสอบว่าเป็นคอมเมนต์ของผู้ใช้ปัจจุบันหรือไม่
+      if (customEvent.detail && session?.user?.bkcId === comment.user_bkc_id) {
+        // อัปเดตข้อมูลผู้ใช้สำหรับคอมเมนต์นี้
+        setUpdatedUserInfo({
+          name: customEvent.detail.name || updatedUserInfo.name,
+          image: customEvent.detail.image
+        });
+      }
+    };
+    
+    // ลงทะเบียนรับฟังเหตุการณ์
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    
+    // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdated);
+    };
+  }, [comment.user_bkc_id, session, updatedUserInfo.name]);
 
   return (
     <div className="ml-8 mt-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
       <div className="bg-zinc-50 dark:bg-zinc-800 p-3 rounded-lg">
         <div className="flex items-start gap-2">
           <Avatar
-            src={comment.user_image || undefined}
+            src={updatedUserInfo.image || undefined}
             fallback={<FaUserCircle />}
             className="flex-shrink-0 w-7 h-7"
             size="sm"
@@ -50,7 +83,7 @@ const ReplyComment = ({
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-semibold text-sm">{comment.user_name}</h4>
+                <h4 className="font-semibold text-sm">{updatedUserInfo.name}</h4>
                 <p className="text-xs text-zinc-500">
                   {formatDistanceToNow(new Date(comment.createdAt), {
                     addSuffix: true,
@@ -104,17 +137,48 @@ const CommentItem = ({
   isOwner, 
   onDelete, 
   onReply,
-  checkOwnership
+  checkOwnership,
+  session
 }: {
   comment: Comment,
   replies: Comment[],
   isOwner: boolean,
   onDelete: (id: string) => void,
   onReply: (id: string) => void,
-  checkOwnership: (comment: Comment) => boolean
+  checkOwnership: (comment: Comment) => boolean,
+  session: Session | null
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [showAllReplies, setShowAllReplies] = useState(false);
+  
+  // เพิ่ม state เพื่อเก็บข้อมูลผู้ใช้ล่าสุด
+  const [updatedUserInfo, setUpdatedUserInfo] = useState({
+    name: comment.user_name,
+    image: comment.user_image
+  });
+  
+  // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
+  useEffect(() => {
+    const handleProfileUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      // ตรวจสอบว่าเป็นคอมเมนต์ของผู้ใช้ปัจจุบันหรือไม่
+      if (customEvent.detail && session?.user?.bkcId === comment.user_bkc_id) {
+        // อัปเดตข้อมูลผู้ใช้สำหรับคอมเมนต์นี้
+        setUpdatedUserInfo({
+          name: customEvent.detail.name || updatedUserInfo.name,
+          image: customEvent.detail.image
+        });
+      }
+    };
+    
+    // ลงทะเบียนรับฟังเหตุการณ์
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    
+    // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdated);
+    };
+  }, [comment.user_bkc_id, session, updatedUserInfo.name]);
   
   // แสดงแค่ 2 replies แรกหากไม่กดดูทั้งหมด
   const visibleReplies = showAllReplies ? replies : replies.slice(0, 2);
@@ -125,14 +189,14 @@ const CommentItem = ({
       <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
         <div className="flex items-start gap-3">
           <Avatar
-            src={comment.user_image || undefined}
+            src={updatedUserInfo.image || undefined}
             fallback={<FaUserCircle />}
             className="flex-shrink-0"
           />
           <div className="flex-1">
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-semibold">{comment.user_name}</h4>
+                <h4 className="font-semibold">{updatedUserInfo.name}</h4>
                 <p className="text-xs text-zinc-500">
                   {formatDistanceToNow(new Date(comment.createdAt), {
                     addSuffix: true,
@@ -195,6 +259,7 @@ const CommentItem = ({
               comment={reply}
               isOwner={checkOwnership(reply)}
               onDelete={onDelete}
+              session={session}
             />
           ))}
           
@@ -221,12 +286,14 @@ interface CommentSectionProps {
 
 export default function CommentSection({ postId }: CommentSectionProps) {
   const { data: session } = useSession();
+  const { profile } = useProfile(); // เพิ่มการใช้ useProfile
   const { 
     comments, 
     isLoading, 
     addComment, 
     deleteComment, 
-    isCommentOwner 
+    isCommentOwner,
+    refreshComments 
   } = useComments(postId);
   
   const [commentText, setCommentText] = useState("");
@@ -234,6 +301,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  
+  // เพิ่ม state เพื่อเก็บข้อมูลโปรไฟล์ล่าสุด
+  const [currentUserProfile, setCurrentUserProfile] = useState({
+    name: profile?.name || session?.user?.name || "",
+    image: profile?.image || session?.user?.image || null
+  });
   
   // จัดกลุ่มคอมเมนต์และการตอบกลับ
   const [mainComments, setMainComments] = useState<Comment[]>([]);
@@ -248,6 +321,41 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   } = useDisclosure();
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // อัปเดต currentUserProfile เมื่อ profile หรือ session เปลี่ยน
+  useEffect(() => {
+    if (profile || session?.user) {
+      setCurrentUserProfile({
+        name: profile?.name || session?.user?.name || "",
+        image: profile?.image || session?.user?.image || null
+      });
+    }
+  }, [profile, session]);
+
+  // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
+  useEffect(() => {
+    const handleProfileUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        // อัปเดตข้อมูลโปรไฟล์ในหน้านี้ทันที
+        setCurrentUserProfile({
+          name: customEvent.detail.name || currentUserProfile.name,
+          image: customEvent.detail.image
+        });
+        
+        // รีเฟรชคอมเมนต์เพื่อให้แสดงข้อมูลล่าสุด
+        refreshComments();
+      }
+    };
+    
+    // ลงทะเบียนรับฟังเหตุการณ์
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    
+    // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdated);
+    };
+  }, [refreshComments, currentUserProfile.name]);
 
   // แยกคอมเมนต์หลักและการตอบกลับ
   useEffect(() => {
@@ -407,7 +515,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             
             <div className="flex items-start gap-3">
               <Avatar
-                src={session.user.image || undefined}
+                src={currentUserProfile.image || undefined}
                 fallback={<FaUserCircle />}
                 className="flex-shrink-0"
               />
@@ -470,6 +578,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
               onDelete={handleDeleteClick}
               onReply={handleReply}
               checkOwnership={isCommentOwner}
+              session={session}
             />
           ))
         ) : (

@@ -20,9 +20,34 @@ export async function GET(
       is_deleted: false // เพิ่มเงื่อนไขนี้เพื่อไม่ดึงคอมเมนต์ที่ถูกลบแล้ว
     }).sort({ createdAt: -1 });
     
+    // ดึงข้อมูลผู้ใช้ล่าสุดสำหรับแต่ละคอมเมนต์
+    const updatedComments = await Promise.all(comments.map(async (comment) => {
+      const commentObj = comment.toObject();
+      
+      try {
+        // ดึงข้อมูลผู้ใช้ล่าสุดโดยใช้ user_bkc_id
+        const user = await User.findOne({ bkc_id: commentObj.user_bkc_id });
+        
+        // ถ้าพบข้อมูลผู้ใช้ ให้อัปเดตชื่อและรูปภาพ
+        if (user) {
+          return {
+            ...commentObj,
+            user_name: user.name,  // ใช้ชื่อล่าสุด
+            user_image: user.profile_image  // ใช้รูปล่าสุด
+          };
+        }
+      } catch (error) {
+        console.error(`Error fetching user data for comment ${commentObj._id}:`, error);
+        // ถ้าเกิดข้อผิดพลาด ไม่ต้องอัพเดตข้อมูลผู้ใช้
+      }
+      
+      // ถ้าไม่พบข้อมูลผู้ใช้หรือเกิดข้อผิดพลาด คืนค่าคอมเมนต์เดิม
+      return commentObj;
+    }));
+    
     return NextResponse.json({ 
       success: true, 
-      comments
+      comments: updatedComments
     });
   } catch (error) {
     console.error("Error fetching comments:", error);
@@ -34,8 +59,6 @@ export async function GET(
 }
 
 // เพิ่มคอมเมนต์ใหม่
-// แก้ไขในส่วนของ POST request
-
 export async function POST(
   request: Request,
   { params }: { params: { postId: string } }

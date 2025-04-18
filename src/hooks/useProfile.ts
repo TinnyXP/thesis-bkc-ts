@@ -52,9 +52,9 @@ export function useProfile() {
     fetcher,
     {
       revalidateOnFocus: false,
-      revalidateIfStale: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 600000, // 10 นาที
+      revalidateIfStale: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 60000, // 1 นาที (ลดลงจาก 10 นาทีเดิม เพื่อให้อัปเดตบ่อยขึ้น)
       onSuccess: (data) => {
         if (data?.success && data.user) {
           // บันทึกข้อมูลลง cache
@@ -78,8 +78,21 @@ export function useProfile() {
   // รวม loading state จาก cache และ SWR
   const isLoading = isInitialLoading || (isSWRLoading && !cachedProfile);
   
-  const refreshProfile = useCallback((): Promise<void> => {
-    return mutate();
+  // ปรับปรุงฟังก์ชัน refreshProfile ให้ล้าง cache ก่อนดึงข้อมูลใหม่
+  const refreshProfile = useCallback(async (): Promise<void> => {
+    try {
+      // ล้าง cache ทุกครั้งเมื่อมีการรีเฟรช เพื่อให้แน่ใจว่าได้ข้อมูลล่าสุดเสมอ
+      localStorage.removeItem(PROFILE_CACHE_KEY);
+      
+      // ตั้งค่า cachedProfile เป็น null เพื่อบังคับให้โหลดข้อมูลใหม่
+      setCachedProfile(null);
+      
+      // อัปเดตข้อมูลจากเซิร์ฟเวอร์
+      return await mutate();
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+      return Promise.reject(error);
+    }
   }, [mutate]);
 
   return { 

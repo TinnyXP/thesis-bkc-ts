@@ -2,6 +2,7 @@
 import useSWR from 'swr';
 import { useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { useProfile } from '@/hooks/useProfile';
 
 // interface สำหรับ Comment
 export interface Comment {
@@ -21,6 +22,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function useComments(postId: string) {
   const { data: session } = useSession();
+  const { profile } = useProfile(); // เพิ่มการใช้ useProfile
   const { data, error, isLoading, mutate } = useSWR(
     `/api/comments/post/${postId}`, // แก้เส้นทาง API ตรงนี้
     fetcher, 
@@ -43,8 +45,8 @@ export function useComments(postId: string) {
         _id: `temp-${Date.now()}`,
         post_id: postId,
         user_bkc_id: session.user.bkcId,
-        user_name: session.user.name || 'กำลังโหลด...',
-        user_image: session.user.image || null,
+        user_name: profile?.name || session.user.name || 'กำลังโหลด...',
+        user_image: profile?.image || session.user.image || null,
         content,
         parent_id: parentId || null,
         createdAt: new Date().toISOString(),
@@ -93,7 +95,7 @@ export function useComments(postId: string) {
         message: "เกิดข้อผิดพลาดในการเพิ่มคอมเมนต์" 
       };
     }
-  }, [postId, data, mutate, session]);
+  }, [postId, data, mutate, session, profile]); // เพิ่ม profile ใน dependency
 
   // เพิ่มฟังก์ชันลบคอมเมนต์
   const deleteComment = useCallback(async (commentId: string) => {

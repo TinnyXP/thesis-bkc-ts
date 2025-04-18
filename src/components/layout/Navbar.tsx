@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -197,7 +197,6 @@ export default function NavBar() {
 // ในส่วน ProfileAvatar component ของ Navbar.tsx
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
   const { data: session } = useSession();
-  // แก้ไขเป็น useProfile แทน profile ที่อาจกำหนดไว้ผิดที่
   const { profile, isLoading, refreshProfile } = useProfile();
 
   const {
@@ -212,9 +211,53 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
     onOpenChange: onBookmarksOpenChange
   } = useDisclosure();
 
-  // ใช้ session เป็น fallback เมื่อไม่มีข้อมูลจาก profile API
-  const avatarImage = profile?.image || session?.user?.image;
-  const userName = profile?.name || session?.user?.name;
+  // เพิ่ม state เพื่อเก็บข้อมูลโปรไฟล์ล่าสุด
+  const [localProfile, setLocalProfile] = useState({
+    name: profile?.name || session?.user?.name || "Guest",
+    image: profile?.image || session?.user?.image
+  });
+
+  // อัปเดต localProfile เมื่อ profile หรือ session เปลี่ยน
+  useEffect(() => {
+    if (profile || session?.user) {
+      setLocalProfile({
+        name: profile?.name || session?.user?.name || "Guest",
+        image: profile?.image || session?.user?.image
+      });
+    }
+  }, [profile, session]);
+
+  // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
+  useEffect(() => {
+    const handleProfileUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        // อัปเดตข้อมูลโปรไฟล์ในหน้านี้ทันที
+        setLocalProfile({
+          name: customEvent.detail.name || localProfile.name,
+          image: customEvent.detail.image
+        });
+        
+        // รีเฟรชข้อมูลโปรไฟล์จาก API
+        refreshProfile();
+      }
+    };
+    
+    // ลงทะเบียนรับฟังเหตุการณ์
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    
+    // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdated);
+    };
+  }, [refreshProfile, localProfile.name]);
+
+  // รีเฟรชข้อมูลเมื่อเปิด modal
+  useEffect(() => {
+    if (isSettingsOpen || isBookmarksOpen) {
+      refreshProfile();
+    }
+  }, [isSettingsOpen, isBookmarksOpen, refreshProfile]);
 
   return (
     <div>
@@ -230,7 +273,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
                 icon: "text-zinc-400 dark:text-zinc-400",
               }}
               size={size}
-              src={avatarImage || undefined}
+              src={localProfile.image || undefined}
               icon={<AvatarIcon />}
               showFallback
             />
@@ -245,7 +288,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
               <p className="font-regular text-default-500">
                 ลงชื่อด้วย
               </p>
-              <p className="font-semibold">{userName || "Guest"}</p>
+              <p className="font-semibold">{localProfile.name}</p>
             </DropdownItem>
           </DropdownSection>
           <DropdownItem
@@ -286,4 +329,4 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
       />
     </div>
   );
-}
+};
