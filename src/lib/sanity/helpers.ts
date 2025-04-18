@@ -1,5 +1,6 @@
 // src/lib/sanity/helpers.ts
 import { Post, Category } from './schema';
+// import { PortableTextBlock } from '@portabletext/types';
 
 /**
  * แปลงวันที่เป็นรูปแบบไทย
@@ -50,13 +51,72 @@ export const createPostMetadata = (post: Post, baseUrl: string) => {
     ? `${post.mainImage.asset.url}?w=1200&h=630&fit=crop&auto=format`
     : null;
   
+  // สร้าง excerpt สำหรับ meta description
+  let excerpt = post.excerpt || '';
+  
+  // ถ้าไม่มี excerpt ให้ใช้ส่วนต้นของ body
+  if (!excerpt && post.body) {
+    // สกัดเนื้อความจาก body (body เป็น array ของ PortableTextBlock)
+    excerpt = '';
+    
+    if (Array.isArray(post.body)) {
+      for (const block of post.body) {
+        // ตรวจสอบว่าเป็น block ข้อความและมี children ที่เป็น array
+        if (block._type === 'block' && Array.isArray(block.children)) {
+          for (const child of block.children) {
+            // ตรวจสอบว่าเป็น span ที่มีข้อความ
+            if (child._type === 'span' && typeof child.text === 'string') {
+              excerpt += child.text + ' ';
+              if (excerpt.length > 150) break;
+            }
+          }
+          if (excerpt.length > 150) break;
+        }
+      }
+    }
+    
+    // ตัดให้ความยาวเหมาะสมและเพิ่ม ... ท้ายข้อความ
+    if (excerpt.length > 160) {
+      excerpt = excerpt.substring(0, 157) + '...';
+    }
+  }
+  
+  // เพิ่ม schema.org ในรูปแบบ JSON-LD สำหรับ Article
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    'headline': post.title,
+    'image': imageUrl ? [imageUrl] : [],
+    'datePublished': post.publishedAt,
+    // ไม่มี updatedAt ใน Post type ใช้ publishedAt แทน
+    'dateModified': post.publishedAt,
+    'author': post.author ? {
+      '@type': 'Person',
+      'name': post.author.name
+    } : undefined,
+    'publisher': {
+      '@type': 'Organization',
+      'name': 'บางกระเจ้า',
+      'logo': {
+        '@type': 'ImageObject',
+        'url': `${baseUrl}/Bkj_logo.svg`
+      }
+    },
+    'description': excerpt || `บทความเรื่อง ${post.title}`,
+    'mainEntityOfPage': {
+      '@type': 'WebPage',
+      '@id': url
+    }
+  };
+  
   return {
     title: post.title,
-    description: post.excerpt || `บทความเรื่อง ${post.title}`,
+    description: excerpt || `บทความเรื่อง ${post.title}`,
     url,
     imageUrl,
     publishedAt: post.publishedAt,
-    author: post.author?.name
+    author: post.author?.name,
+    jsonLd: JSON.stringify(jsonLd)
   };
 };
 

@@ -21,3 +21,9 @@ export { default as SettingsModal } from './ui/Auth/SettingsModal';
 
 // Comments
 export { default as CommentSection } from './ui/Comments/CommentSection';
+
+// Mainpage Components
+export { default as BlogPreview } from './home/BlogPreview';
+export { default as CTASection } from './home/CTASection';
+export { default as FeatureSection } from './home/FeatureSection';
+export { default as HeroSection } from './home/HeroSection';

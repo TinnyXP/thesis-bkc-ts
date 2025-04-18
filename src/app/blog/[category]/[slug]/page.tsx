@@ -1,20 +1,19 @@
+// src/app/blog/[category]/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
 import { CommentSection, ImageModal, SlugBreadcrumb, SlugShareButton } from "@/components";
-import { getPostBySlug, urlFor, formatThaiDate } from "@/lib/sanity";
-
+import { getPostBySlug, urlFor, formatThaiDate, createPostMetadata } from "@/lib/sanity";
 import { Image, Link } from "@heroui/react";
 import { PortableText } from "next-sanity";
 import { Metadata } from "next";
 import { headers } from 'next/headers';
-
 import { PortableTextReactComponents } from "@portabletext/react";
 import { FaQuoteLeft } from "react-icons/fa6";
+import Script from "next/script";
 
 // กำหนด metadata แบบ dynamic จากข้อมูลบทความ
 export async function generateMetadata(
   { params }: { params: { category: string; slug: string } }
-  // ลบพารามิเตอร์ parent ออกเนื่องจากไม่ได้ใช้งาน
 ): Promise<Metadata> {
   // ดึงข้อมูลบทความ
   const post = await getPostBySlug(params.slug);
@@ -30,26 +29,49 @@ export async function generateMetadata(
   const headersList = headers();
   const domain = headersList.get('host') || '';
   const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-  const categorySlug = post.categories?.[0]?.slug || 'uncategorized';
-  const ogUrl = `${protocol}://${domain}/blog/${categorySlug}/${post.slug.current}`;
+  const baseUrl = `${protocol}://${domain}`;
+  // const categorySlug = post.categories?.[0]?.slug || 'uncategorized';
+  // const ogUrl = `${baseUrl}/blog/${categorySlug}/${post.slug.current}`;
 
-  // กำหนด URL รูปภาพสำหรับ Open Graph
-  const ogImageUrl = post.mainImage?.asset?.url
-    ? `${post.mainImage.asset.url}?w=1200&h=630&fit=crop&auto=format`
-    : null;
+  // // กำหนด URL รูปภาพสำหรับ Open Graph
+  // const ogImageUrl = post.mainImage?.asset?.url
+  //   ? `${post.mainImage.asset.url}?w=1200&h=630&fit=crop&auto=format`
+  //   : null;
 
+  // สร้าง metadata สำหรับบทความ
+  // สร้าง metadata สำหรับบทความ
+  const postMetadata = createPostMetadata(post, baseUrl);
+
+  // ถ้า postMetadata เป็น null ให้กำหนดค่าเริ่มต้น
+  if (!postMetadata) {
+    return {
+      title: "ไม่พบบทความ",
+      description: "ไม่พบบทความที่คุณกำลังมองหา",
+    };
+  }
+
+  // ส่งคืนค่า metadata จาก postMetadata ที่ไม่เป็น null แล้ว
   return {
-    title: post.title,
-    description: post.excerpt || `บทความเรื่อง ${post.title}`,
+    title: postMetadata.title,
+    description: postMetadata.description,
     openGraph: {
-      title: post.title,
-      description: post.excerpt || `บทความเรื่อง ${post.title}`,
-      url: ogUrl,
-      images: ogImageUrl ? [{ url: ogImageUrl }] : undefined,
+      title: postMetadata.title,
+      description: postMetadata.description,
+      url: postMetadata.url,
+      images: postMetadata.imageUrl ? [{ url: postMetadata.imageUrl }] : undefined,
       type: 'article',
       publishedTime: post.publishedAt,
       authors: post.author?.name ? [post.author.name] : undefined,
     },
+    alternates: {
+      canonical: postMetadata.url,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: postMetadata.title,
+      description: postMetadata.description,
+      images: postMetadata.imageUrl ? [postMetadata.imageUrl] : [],
+    }
   };
 }
 
@@ -148,16 +170,29 @@ export default async function PostPage({
     const headersList = headers();
     const domain = headersList.get('host') || '';
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    const baseUrl = `${protocol}://${domain}`;
     const categorySlug = post.categories?.[0]?.slug || 'uncategorized';
-    const fullUrl = `${protocol}://${domain}/blog/${categorySlug}/${post.slug.current}`;
+    const fullUrl = `${baseUrl}/blog/${categorySlug}/${post.slug.current}`;
 
     const mainImageUrl = post.mainImage?.asset?.url
       ? `${post.mainImage.asset.url}?w=1600&auto=format`
       : null;
     const originalMainImageUrl = post.mainImage?.asset?.url || null;
 
+    // สร้าง metadata สำหรับบทความ (มี JSON-LD)
+    const postMetadata = createPostMetadata(post, baseUrl);
+
     return (
       <div>
+        {/* เพิ่ม JSON-LD schema สำหรับ SEO */}
+        {postMetadata?.jsonLd && (
+          <Script
+            id={`post-jsonld-${post._id}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: postMetadata.jsonLd }}
+          />
+        )}
+
         <section className="container mx-auto max-w-5xl flex-grow px-4 my-5 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
           {/* Breadcrumb */}
           <SlugBreadcrumb
@@ -235,10 +270,9 @@ export default async function PostPage({
               <p className="text-zinc-500">ไม่มีเนื้อหา</p>
             )}
           </article>
-
-          {/* เพิ่ม CommentSection ตรงนี้ */}
         </section>
 
+        {/* ส่วนความคิดเห็น */}
         <section className="container mx-auto max-w-5xl flex-grow px-4 my-5 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
           <CommentSection postId={post.slug.current} />
         </section>

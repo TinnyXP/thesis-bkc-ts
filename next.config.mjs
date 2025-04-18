@@ -3,11 +3,14 @@
 const nextConfig = {
   images: {
     unoptimized: true,
-    domains: ['res.cloudinary.com'], // เพิ่ม domain สำหรับรูปจาก Cloudinary
+    domains: ['res.cloudinary.com', 'cdn.sanity.io'], // เพิ่ม domain สำหรับรูปจาก Cloudinary และ Sanity
+    formats: ['image/avif', 'image/webp'], // เพิ่มรูปแบบไฟล์ที่ใช้ในการ optimize
   },
   experimental: {
     serverComponentsExternalPackages: ['mongoose'], // เพิ่ม mongoose เป็น external package
   },
+  compress: true, // เปิดใช้งานการบีบอัดไฟล์
+  poweredByHeader: false, // ปิด X-Powered-By header เพื่อความปลอดภัย
 };
 
 export default nextConfig;

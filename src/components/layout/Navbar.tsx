@@ -40,12 +40,12 @@ interface ProfileAvatarProps {
 
 export default function NavBar() {
   const { data: session } = useSession();
-
   const { theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
   const { t } = useTranslation();
-  const menuItems = [
+
+  // ใช้ useMemo ครอบ menuItems เพื่อป้องกันการสร้างใหม่ทุกครั้งที่ render
+  const menuItems = React.useMemo(() => [
     {
       label: t('history'),
       href: "/history"
@@ -62,7 +62,36 @@ export default function NavBar() {
       label: t('static'),
       href: "/test/download"
     },
-  ];
+  ], [t]); // ให้ dependency เป็น t เท่านั้น เพื่อให้สร้างใหม่เฉพาะเมื่อภาษาเปลี่ยน
+
+  // เพิ่มข้อมูล schema.org สำหรับ navigation
+  React.useEffect(() => {
+    // สร้างและเพิ่ม script element สำหรับ schema.org สำหรับ navigation
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    
+    const navigationData = {
+      "@context": "https://schema.org",
+      "@type": "SiteNavigationElement",
+      "name": menuItems.map(item => item.label),
+      "url": menuItems.map(item => {
+        if (typeof window !== 'undefined') {
+          return `${window.location.origin}${item.href}`;
+        }
+        return `https://www.bangkrachao.com${item.href}`;
+      })
+    };
+    
+    script.textContent = JSON.stringify(navigationData);
+    document.head.appendChild(script);
+    
+    return () => {
+      // Clean up
+      if (script.parentNode) {
+        document.head.removeChild(script);
+      }
+    };
+  }, [menuItems]); // ตอนนี้ dependency จะดีขึ้นเพราะ menuItems ถูก memoize แล้ว
 
   return (
     <Navbar

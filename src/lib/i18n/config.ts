@@ -1,3 +1,4 @@
+// src/lib/i18n/config.ts
 'use client';
 
 import i18n from 'i18next';
@@ -10,9 +11,9 @@ import zh from '@/lib/i18n/translation/zh';
 
 // Export language config for reuse
 export const languages = [
-  { code: 'th', name: 'ไทย' },      // Thai
-  { code: 'en', name: 'English' },  // English
-  { code: 'zh', name: '中文' }       // Chinese
+  { code: 'th', name: 'ไทย', hreflang: 'th-TH' },  // Thai
+  { code: 'en', name: 'English', hreflang: 'en-US' },  // English
+  { code: 'zh', name: '中文', hreflang: 'zh-CN' }  // Chinese
 ];
 
 /**
