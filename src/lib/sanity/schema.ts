@@ -81,3 +81,76 @@ export interface RevalidateOptions {
     revalidate: number;
   };
 }
+
+// สำหรับพิกัด Geolocation
+export interface GeoPoint {
+  _type: 'geopoint';
+  lat: number;
+  lng: number;
+}
+
+// สำหรับข้อมูลการติดต่อ
+export interface ContactInfo {
+  phone?: string;
+  email?: string;
+  website?: string;
+  facebook?: string;
+  line?: string;
+}
+
+// สำหรับเวลาทำการ
+export interface OperatingHour {
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'holiday';
+  open: string;
+  close: string;
+  isClosed: boolean;
+}
+
+// สำหรับราคาค่าเข้าชม
+export interface PricingItem {
+  type: string;
+  price: number;
+  description?: string;
+}
+
+// สำหรับสถานที่ท่องเที่ยว
+export interface Place {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  description?: string;
+  mainImage?: SanityImage;
+  gallery?: SanityImage[];
+  body?: PortableTextBlock[];
+  placeType?: PlaceType;
+  location?: GeoPoint;
+  address?: string;
+  district?: District;
+  contactInfo?: ContactInfo;
+  operatingHours?: OperatingHour[];
+  pricing?: PricingItem[];
+  facilities?: string[];
+  activities?: string[];
+  bestTimeToVisit?: string;
+  tags?: string[];
+  publishedAt?: string;
+  updatedAt?: string;
+}
+
+// สำหรับประเภทสถานที่
+export interface PlaceType {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  description?: string;
+  icon?: string;
+}
+
+// สำหรับตำบล/พื้นที่
+export interface District {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  description?: string;
+  mainImage?: SanityImage;
+}

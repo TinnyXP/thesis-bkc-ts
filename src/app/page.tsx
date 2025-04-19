@@ -1,7 +1,7 @@
 // src/app/page.tsx
 
 import { Metadata } from "next";
-import { BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar } from "@/components";
+import { BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar, PlacePreview } from "@/components";
 
 // กำหนด Metadata สำหรับ SEO
 export const metadata: Metadata = {
@@ -44,7 +44,8 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <FeatureSection />
-        {/* <BlogCardList /> */}
+        {/* เพิ่ม PlacePreview ก่อน BlogPreview */}
+        <PlacePreview />
         <BlogPreview />
         <CTASection />
       </main>

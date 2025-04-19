@@ -14,7 +14,6 @@ import {
   Button,
   Spinner,
   Divider,
-  SelectedItems,
   Selection
 } from "@heroui/react";
 
@@ -126,7 +125,7 @@ export default function EventsCalendarPage() {
   // Run on component mount and when month/year changes
   useEffect(() => {
     fetchEvents();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, fetchEvents]);
 
   // Format time display
   const formatTime = (dateTimeStr?: string): string => {
