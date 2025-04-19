@@ -42,11 +42,11 @@ export async function middleware(request: NextRequest) {
   
   // 2. ถ้าอยู่ในหน้าล็อกอินแล้ว แต่ล็อกอินแล้ว
   if (isAuthRoute && isLoggedIn) {
-    // ถ้าเป็นผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
+    // ลองใช้เส้นทางแบบตรงไปตรงมา
     if (token.isNewUser) {
       return NextResponse.redirect(new URL('/complete-profile', request.url));
     }
-    // ถ้าเป็นผู้ใช้ปกติ
+    console.log("Redirecting to welcome page"); // เพิ่ม log
     return NextResponse.redirect(new URL('/welcome', request.url));
   }
   

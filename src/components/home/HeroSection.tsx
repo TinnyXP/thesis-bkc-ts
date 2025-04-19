@@ -19,7 +19,7 @@ export default function HeroSection() {
       {/* ภาพพื้นหลัง */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image 
-          src="/images/hero-bg.jpg" 
+          src="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/hero-bg-OvG0QPx1SQz0uMAhbRHIFH8E5tuUzB.jpeg" 
           alt="บางกระเจ้า" 
           fill
           style={{ objectFit: 'cover' }}
@@ -77,7 +77,7 @@ export default function HeroSection() {
               color="default"
               variant="bordered"
               size="lg"
-              className="bg-white/10 backdrop-blur-sm font-semibold border-white"
+              className="bg-white/10 backdrop-blur-sm font-semibold border-white text-white"
             >
               บทความน่าสนใจ
             </Button>

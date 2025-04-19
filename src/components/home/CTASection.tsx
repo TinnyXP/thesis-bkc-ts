@@ -12,7 +12,7 @@ export default function CTASection() {
       {/* ภาพพื้นหลัง */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image 
-          src="/images/cta-bg.jpg" 
+          src="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/cta-bg-LP0CwgmwosqimskP5G8UVPhGPqeMUR.jpg" 
           alt="บางกระเจ้า" 
           fill
           style={{ objectFit: 'cover' }}
