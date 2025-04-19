@@ -15,6 +15,7 @@
     "@xstate/react": "^5.0.3",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.0",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.6.2",
     "i18next": "^24.2.3",
     "js-cookie": "^3.0.5",
