@@ -70,7 +70,6 @@ export default function HistoryPage() {
         title={t('history')}
         subtitle="ประวัติศาสตร์"
         description="เรียนรู้ประวัติศาสตร์อันน่าสนใจของบางกระเจ้า พื้นที่สีเขียวสำคัญใกล้กรุงเทพฯ ที่มีเรื่องราวน่าสนใจนับร้อยปี"
-        // imageSrc="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/history-header-9PndTKbjhPq6RyZLTbH6FtDVpFgfUf.jpg"
         buttons={{
           primary: {
             text: "ตำบลในบางกระเจ้า",

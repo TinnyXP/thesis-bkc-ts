@@ -37,7 +37,7 @@ export default function PageHeader({
   children
 }: PageHeaderProps) {
   return (
-    <section className="relative min-h-[40vh] md:min-h-[50vh] flex items-center overflow-hidden">
+    <section className="relative min-h-[40vh] md:min-h-[50vh] flex items-center overflow-hidden py-10">
       {/* ภาพพื้นหลัง */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image

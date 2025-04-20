@@ -26,7 +26,6 @@ export default async function PlacePage() {
         title="สถานที่ท่องเที่ยวในบางกระเจ้า"
         subtitle="แหล่งท่องเที่ยว"
         description="ค้นพบสถานที่ท่องเที่ยวที่น่าสนใจในบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ เพียงไม่กี่นาทีจากใจกลางเมือง"
-        imageSrc="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/place-header-dzRfJK2l3HxYXapfbL5pBsUqwR4Qe8.jpg"
         buttons={{
           primary: {
             text: "ดูประเภทสถานที่",
