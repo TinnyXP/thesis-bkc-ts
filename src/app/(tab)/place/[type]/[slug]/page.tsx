@@ -12,7 +12,6 @@ import { headers } from 'next/headers';
 import { PortableTextReactComponents } from "@portabletext/react";
 import { FaQuoteLeft, FaMapMarkerAlt, FaClock, FaPhone, FaGlobe, FaFacebook, FaLine, FaCalendarAlt, FaTag, FaDollarSign } from "react-icons/fa";
 import Script from "next/script";
-import { NavBar, Footer } from "@/components";
 
 // กำหนด metadata แบบ dynamic จากข้อมูลสถานที่ท่องเที่ยว
 export async function generateMetadata(
@@ -134,7 +133,6 @@ const PlaceNotFound = () => (
         </Link>
       </div>
     </div>
-    <Footer />
   </div>
 );
 
@@ -192,7 +190,6 @@ export default async function PlacePage({
 
     return (
       <div className="min-h-screen">
-        <NavBar />
 
         {/* เพิ่ม JSON-LD schema สำหรับ SEO */}
         {placeMetadata?.jsonLd && (
