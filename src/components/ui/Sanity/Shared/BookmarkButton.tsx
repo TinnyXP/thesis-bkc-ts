@@ -1,4 +1,3 @@
-// src/components/ui/Sanity/Blog/BookmarkButton.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -7,6 +6,7 @@ import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 import { usePostBookmarkStatus } from "@/hooks/useBookmarks";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { showToast } from "@/lib/toast";
 
 // กำหนด interface สำหรับทั้ง post และ contentItem
 interface ContentWithCategories {
@@ -47,10 +47,12 @@ interface ContentWithPlaceType {
   };
 }
 
+type ContentItem = ContentWithCategories | ContentWithPlaceType;
+
 // กำหนด prop types ให้ชัดเจน
 interface BookmarkButtonProps {
   post?: ContentWithCategories;
-  contentItem?: ContentWithCategories | ContentWithPlaceType;
+  contentItem?: ContentItem;
   contentType?: 'blog' | 'place';
 }
 
@@ -58,18 +60,18 @@ export default function BookmarkButton({ post, contentItem, contentType = 'blog'
   const { data: session } = useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // ใช้ post หรือ contentItem ตามที่ได้รับ
-  const item = contentItem || post;
+  // เราต้องกำหนดค่า item ก่อนที่จะเรียกใช้ Hook เพื่อไม่ให้ผิดกฎของ React Hooks
+  const item: ContentItem | undefined = contentItem || post;
+  const contentId = item?.slug.current || "";
+  
+  // เรียกใช้ Hook แบบไม่มีเงื่อนไข ทุกครั้งที่ render
+  const { isBookmarked, isLoading, toggleBookmark } = usePostBookmarkStatus(contentId);
+
+  // ถ้าไม่มี item ให้ return null
   if (!item) {
     console.error("BookmarkButton: ไม่พบข้อมูล post หรือ contentItem");
     return null;
   }
-  
-  // ใช้ slug ของ item เป็น id สำหรับ bookmark
-  const contentId = item.slug.current;
-  
-  // ตรวจสอบสถานะ bookmark ของบทความหรือสถานที่นี้
-  const { isBookmarked, isLoading, toggleBookmark } = usePostBookmarkStatus(contentId);
 
   // ผู้ใช้ต้องเข้าสู่ระบบก่อน ถึงจะสามารถบุ๊คมาร์กได้
   const handleClick = async () => {
@@ -78,19 +80,27 @@ export default function BookmarkButton({ post, contentItem, contentType = 'blog'
       return;
     }
 
+    // ตรวจสอบว่ามี bkcId หรือไม่
+    if (!session.user.bkcId) {
+      showToast("ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินใหม่", "error");
+      return;
+    }
+
     try {
       // กำหนดค่า category หรือ placeType ตาม contentType
-      let contentCategory: string = 'uncategorized';
+      let contentCategory = 'uncategorized';
       
       if (contentType === 'blog') {
         // ตรวจสอบว่ามี categories หรือไม่
-        if ('categories' in item && item.categories && item.categories.length > 0) {
-          contentCategory = item.categories[0].slug || 'uncategorized';
+        const blogItem = item as ContentWithCategories;
+        if (blogItem.categories && blogItem.categories.length > 0) {
+          contentCategory = blogItem.categories[0].slug || 'uncategorized';
         }
       } else { // place
         // ตรวจสอบว่ามี placeType หรือไม่
-        if ('placeType' in item && item.placeType && item.placeType.slug) {
-          contentCategory = item.placeType.slug.current || 'uncategorized';
+        const placeItem = item as ContentWithPlaceType;
+        if (placeItem.placeType && placeItem.placeType.slug) {
+          contentCategory = placeItem.placeType.slug.current || 'uncategorized';
         }
       }
       

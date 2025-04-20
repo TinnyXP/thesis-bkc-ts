@@ -254,7 +254,8 @@ export default async function PostPage({
             <SlugShareButton
               url={fullUrl}
               title={post.title}
-              post={post} // ส่งข้อมูลโพสต์ทั้งหมด
+              contentItem={post}
+              contentType="blog"
             />
           </div>
 

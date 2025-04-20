@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,8 +50,8 @@ export default function EventsCalendarPage() {
   const currentYear = dayjs().year();
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
-  // Fetch events function
-  const fetchEvents = async () => {
+  // Fetch events function using useCallback
+  const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -80,10 +80,10 @@ export default function EventsCalendarPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedMonth, selectedYear]);
 
-  // Change month handler
-  const handleMonthChange = (direction: "prev" | "next") => {
+  // Change month handler using useCallback
+  const handleMonthChange = useCallback((direction: "prev" | "next") => {
     let newMonth = selectedMonth;
     let newYear = selectedYear;
 
@@ -105,27 +105,27 @@ export default function EventsCalendarPage() {
 
     setSelectedMonth(newMonth);
     setSelectedYear(newYear);
-  };
+  }, [selectedMonth, selectedYear]);
 
-  // เปลี่ยนฟังก์ชันการจัดการ Select
-  const handleMonthSelectionChange = (key: Selection) => {
+  // เปลี่ยนฟังก์ชันการจัดการ Select ให้ใช้ useCallback
+  const handleMonthSelectionChange = useCallback((key: Selection) => {
     const selectedKey = key as Set<string>;
     if (selectedKey.size > 0) {
       setSelectedMonth(Number(Array.from(selectedKey)[0]));
     }
-  };
+  }, []);
 
-  const handleYearSelectionChange = (key: Selection) => {
+  const handleYearSelectionChange = useCallback((key: Selection) => {
     const selectedKey = key as Set<string>;
     if (selectedKey.size > 0) {
       setSelectedYear(Number(Array.from(selectedKey)[0]));
     }
-  };
+  }, []);
 
   // Run on component mount and when month/year changes
   useEffect(() => {
     fetchEvents();
-  }, [selectedMonth, selectedYear, fetchEvents]);
+  }, [fetchEvents]);
 
   // Format time display
   const formatTime = (dateTimeStr?: string): string => {

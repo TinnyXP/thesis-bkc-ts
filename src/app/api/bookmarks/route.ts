@@ -47,6 +47,14 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
+    // ตรวจสอบว่ามี bkcId หรือไม่
+    if (!session.user.bkcId) {
+      return NextResponse.json({
+        success: false,
+        message: "ไม่พบข้อมูลผู้ใช้ (Missing bkcId)"
+      }, { status: 400 });
+    }
+
     await connectDB();
     
     const { 
@@ -55,7 +63,7 @@ export async function POST(request: Request) {
       post_slug, 
       post_category, 
       post_image,
-      content_type = 'blog' // ค่าเริ่มต้นเป็น 'blog' เพื่อรองรับการใช้งานเดิม
+      content_type = 'blog'
     } = await request.json();
     
     if (!post_id || !post_title || !post_slug) {
@@ -78,7 +86,10 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
     
-    // สร้างบุ๊คมาร์กใหม่โดยใช้ bkcId แทน id
+    // เพิ่ม console.log เพื่อดู bkcId ที่กำลังใช้
+    console.log("Creating bookmark with bkcId:", session.user.bkcId);
+    
+    // สร้างบุ๊คมาร์กใหม่
     const newBookmark = await Bookmark.create({
       user_bkc_id: session.user.bkcId,
       post_id,
@@ -97,7 +108,8 @@ export async function POST(request: Request) {
     console.error("Error adding bookmark:", error);
     return NextResponse.json({ 
       success: false, 
-      message: "เกิดข้อผิดพลาดในการเพิ่มบุ๊คมาร์ก"
+      message: "เกิดข้อผิดพลาดในการเพิ่มบุ๊คมาร์ก",
+      error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }
