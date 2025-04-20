@@ -13,7 +13,7 @@ import {
   Image,
   Spinner,
 } from "@heroui/react";
-import { FaBookmark, FaTrash } from "react-icons/fa";
+import { FaBookmark, FaTrash, FaNewspaper, FaMapMarkerAlt } from "react-icons/fa";
 import { useBookmarks, Bookmark } from "@/hooks/useBookmarks";
 import Link from "next/link";
 
@@ -39,9 +39,27 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
     setIsRemoving(null);
   };
 
+  // สร้างลิงก์ไปยังเนื้อหาตาม content_type
+  const getContentLink = (bookmark: Bookmark) => {
+    if (bookmark.content_type === 'place') {
+      return `/place/${bookmark.post_category}/${bookmark.post_slug}`;
+    }
+    return `/blog/${bookmark.post_category}/${bookmark.post_slug}`;
+  };
+
+  // สร้างข้อความลิงก์ตาม content_type
+  const getContentLinkText = (bookmark: Bookmark) => {
+    return bookmark.content_type === 'place' ? 'ดูสถานที่' : 'อ่านบทความ';
+  };
+
+  // สร้างไอคอนตาม content_type
+  const getContentIcon = (bookmark: Bookmark) => {
+    return bookmark.content_type === 'place' ? <FaMapMarkerAlt className="text-primary-color" /> : <FaNewspaper className="text-zinc-400" />;
+  };
+
   return (
-    <Modal 
-      isOpen={isOpen} 
+    <Modal
+      isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="md"
       backdrop='blur'
@@ -69,7 +87,7 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
               ) : bookmarks.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-zinc-500">คุณยังไม่มีบุ๊คมาร์ก</p>
-                  <p className="text-sm text-zinc-400 mt-2">บุ๊คมาร์กบทความที่คุณสนใจเพื่อให้สามารถกลับมาอ่านได้ภายหลัง</p>
+                  <p className="text-sm text-zinc-400 mt-2">บุ๊คมาร์กบทความหรือสถานที่ที่คุณสนใจเพื่อให้สามารถกลับมาดูได้ภายหลัง</p>
                 </div>
               ) : (
                 <Listbox
@@ -89,7 +107,7 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
                           />
                         ) : (
                           <div className="w-12 h-12 bg-zinc-200 rounded-md flex items-center justify-center">
-                            <FaBookmark className="text-zinc-400" />
+                            {getContentIcon(bookmark)}
                           </div>
                         )
                       }
@@ -106,13 +124,16 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
                         </Button>
                       }
                       description={
-                        <Link 
-                          href={`/blog/${bookmark.post_category}/${bookmark.post_slug}`}
-                          className="text-sm text-primary-color hover:underline"
-                          onClick={onClose}
-                        >
-                          อ่านบทความ
-                        </Link>
+                        <div className="flex items-center gap-1">
+                          {bookmark.content_type === 'place' ? <FaMapMarkerAlt size={12} /> : <FaNewspaper size={12} />}
+                          <Link
+                            href={getContentLink(bookmark)}
+                            className="text-sm text-primary-color hover:underline"
+                            onClick={onClose}
+                          >
+                            {getContentLinkText(bookmark)}
+                          </Link>
+                        </div>
                       }
                     >
                       {bookmark.post_title}

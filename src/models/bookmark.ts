@@ -29,6 +29,13 @@ const bookmarkSchema = new Schema(
       type: String,
       default: null,
     },
+    // เพิ่ม field content_type เพื่อระบุว่าเป็น bookmark ของอะไร
+    content_type: {
+      type: String,
+      enum: ['blog', 'place'],
+      default: 'blog',
+      required: true,
+    },
   },
   { timestamps: true }
 );

@@ -1,9 +1,11 @@
+// src/components/ui/Sanity/Blog/SlugBreadcrumb.tsx
 'use client';
 
 import React from 'react';
 import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
 import { FaHouse } from 'react-icons/fa6';
 
+// ปรับปรุง interface ให้รองรับทั้ง Blog และ Place
 interface SlugBreadcrumbProps {
   postTitle: string;
   postSlug: string;
@@ -11,15 +13,17 @@ interface SlugBreadcrumbProps {
     title: string;
     slug: string;
   };
+  basePath?: string; // เพิ่ม basePath เพื่อรองรับทั้ง "blog" และ "place"
 }
 
 /**
- * คอมโพเนนต์ Breadcrumb สำหรับหน้ารายละเอียดบทความ
+ * คอมโพเนนต์ Breadcrumb ที่ใช้ได้ทั้งกับบทความและสถานที่ท่องเที่ยว
  */
 export default function SlugBreadcrumb({
   postTitle,
   postSlug,
-  category
+  category,
+  basePath = "blog" // ค่าเริ่มต้นเป็น "blog" เพื่อให้ทำงานได้เหมือนเดิม
 }: SlugBreadcrumbProps) {
   // ใช้ค่าเริ่มต้นถ้าไม่มีข้อมูลหมวดหมู่
   const categorySlug = category?.slug || 'uncategorized';
@@ -39,7 +43,7 @@ export default function SlugBreadcrumb({
         </BreadcrumbItem>
 
         {/* ลิงก์ไปหน้าหมวดหมู่ */}
-        <BreadcrumbItem href={`/blog/${categorySlug}`} className="flex-shrink min-w-0">
+        <BreadcrumbItem href={`/${basePath}/${categorySlug}`} className="flex-shrink min-w-0">
           <div className="max-w-[100px] md:max-w-[200px]">
             <p className="truncate" title={categoryTitle}>
               {categoryTitle}
@@ -49,7 +53,7 @@ export default function SlugBreadcrumb({
 
         {/* ลิงก์ไปหน้าบทความปัจจุบัน */}
         <BreadcrumbItem
-          href={`/blog/${categorySlug}/${postSlug}`}
+          href={`/${basePath}/${categorySlug}/${postSlug}`}
           isCurrent
           className="flex-1 min-w-0"
         >

@@ -3,7 +3,7 @@ import useSWR from 'swr';
 import { useCallback } from 'react';
 import { showToast } from "@/lib/toast";
 
-// interface สำหรับ Bookmark
+// ปรับปรุง interface เพื่อรองรับ content_type
 export interface Bookmark {
   _id: string;
   user_bkc_id: string;
@@ -12,6 +12,7 @@ export interface Bookmark {
   post_slug: string;
   post_category: string;
   post_image: string | null;
+  content_type: 'blog' | 'place'; // เพิ่ม content_type
   createdAt: string;
   updatedAt: string;
 }
@@ -35,6 +36,7 @@ export function useBookmarks() {
     post_slug: string;
     post_category: string;
     post_image?: string | undefined;
+    content_type?: 'blog' | 'place';
   }) => {
     try {
       const response = await fetch('/api/bookmarks', {
@@ -118,6 +120,7 @@ export function usePostBookmarkStatus(postId: string) {
     post_slug: string;
     post_category: string;
     post_image?: string | undefined;
+    content_type?: 'blog' | 'place';
   }) => {
     try {
       if (data?.isBookmarked) {

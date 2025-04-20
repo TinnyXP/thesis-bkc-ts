@@ -5,23 +5,24 @@ export { default as Loading } from './layout/Loading';
 export { default as ScrollToTop } from './layout/ScrollToTop';
 export { default as ToggleTheme } from './layout/ToggleTheme';
 
+// Sanity Components
+export { default as ImageModal } from './ui/Sanity/Shared/ImageModal';
+export { default as SlugBreadcrumb } from './ui/Sanity/Shared/SlugBreadcrumb';
+export { default as SlugShareButton } from './ui/Sanity/Shared/SlugShareButton';
+export { default as BookmarkButton } from './ui/Sanity/Shared/BookmarkButton';
+
+
 // Blog Sanity Components
 export { default as BlogCard } from './ui/Sanity/Blog/BlogCard';
 export { default as BlogCardList } from './ui/Sanity/Blog/BlogCardList';
 export { default as CategoryCard } from './ui/Sanity/Blog/CategoryCard';
 export { default as CategoryCardList } from './ui/Sanity/Blog/CategoryCardList';
-export { default as ImageModal } from './ui/Sanity/Blog/ImageModal';
-export { default as SlugBreadcrumb } from './ui/Sanity/Blog/SlugBreadcrumb';
-export { default as SlugShareButton } from './ui/Sanity/Blog/SlugShareButton';
-export { default as BookmarkButton } from './ui/Sanity/Blog/BookmarkButton';
 
 // Tourism Sanity Components
 export { default as PlaceCard } from './ui/Sanity/Place/PlaceCard';
 export { default as PlaceCardList } from './ui/Sanity/Place/PlaceCardList';
 export { default as PlaceTypeCardList } from './ui/Sanity/Place/PlaceTypeCardList';
 export { default as PlaceDistrictCardList } from './ui/Sanity/Place/PlaceDistrictCardList';
-export { default as PlaceBreadcrumb } from './ui/Sanity/Place/PlaceBreadcrumb';
-export { default as PlaceShareButton } from './ui/Sanity/Place/PlaceShareButton';
 
 // Auth Components
 export { default as BookmarkModal } from './ui/Auth/BookmarkModal';

@@ -1,7 +1,7 @@
 // src/app/place/[type]/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
-import { ImageModal, PlaceBreadcrumb, PlaceShareButton } from "@/components";
+import { ImageModal, SlugBreadcrumb, SlugShareButton } from "@/components";
 import { getPlaceBySlug } from "@/lib/sanity/placeQueries";
 import { urlFor } from "@/lib/sanity/image";
 import { createPlaceMetadata } from "@/lib/sanity/placeMetadata";
@@ -194,7 +194,7 @@ export default async function PlacePage({
     return (
       <div className="min-h-screen">
         <NavBar />
-        
+
         {/* เพิ่ม JSON-LD schema สำหรับ SEO */}
         {placeMetadata?.jsonLd && (
           <Script
@@ -206,10 +206,14 @@ export default async function PlacePage({
 
         <section className="container mx-auto max-w-5xl flex-grow px-4 my-5 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
           {/* Breadcrumb */}
-          <PlaceBreadcrumb
-            placeTitle={place.title}
-            placeSlug={place.slug.current}
-            placeType={place.placeType}
+          <SlugBreadcrumb
+            postTitle={place.title}
+            postSlug={place.slug.current}
+            category={{
+              title: place.placeType?.title || 'ไม่ระบุประเภท',
+              slug: place.placeType?.slug.current || 'uncategorized'
+            }}
+            basePath="place"
           />
 
           {/* รูปภาพหลัก */}
@@ -256,10 +260,11 @@ export default async function PlacePage({
               </div>
             </div>
             {/* ปุ่มแชร์ */}
-            <PlaceShareButton
+            <SlugShareButton
               url={fullUrl}
               title={place.title}
-              place={place}
+              contentItem={place}
+              contentType="place"
             />
           </div>
 
@@ -475,7 +480,7 @@ export default async function PlacePage({
                           'wheelchair': 'ทางลาด/ทางสำหรับรถเข็น',
                           'airconditioner': 'เครื่องปรับอากาศ'
                         };
-                        
+
                         return (
                           <Chip key={index} color="success" variant="flat">
                             {facilityText[facility] || facility}
@@ -489,7 +494,7 @@ export default async function PlacePage({
             </div>
           </div>
         </section>
-        
+
         <Footer />
       </div>
     );

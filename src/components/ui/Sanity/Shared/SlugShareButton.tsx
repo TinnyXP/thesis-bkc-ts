@@ -1,3 +1,4 @@
+// src/components/ui/Sanity/Blog/SlugShareButton.tsx
 'use client';
 
 import React from 'react';
@@ -5,32 +6,53 @@ import { Button, Tooltip } from "@heroui/react";
 import { FiCopy, FiShare2 } from 'react-icons/fi';
 import { SiLine } from 'react-icons/si';
 import { FaFacebook, FaXTwitter } from 'react-icons/fa6';
-import { Place } from '@/lib/sanity/schema';
+import { BookmarkButton } from "@/components";
 import { showToast } from "@/lib/toast";
 
-interface PlaceShareButtonProps {
+// ปรับปรุง interface ให้รองรับทั้ง Blog และ Place
+interface ShareButtonsProps {
   url: string;
   title: string;
-  place: Place;
+  // เปลี่ยนจาก post เป็น contentItem ที่รองรับโครงสร้างทั่วไป
+  contentItem: {
+    _id: string;
+    title: string;
+    slug: {
+      current: string;
+    };
+    // ปรับปรุงให้รองรับทั้ง categories (สำหรับ blog) และ placeType (สำหรับ place)
+    categories?: Array<{
+      slug: string;
+      title?: string;
+    }>;
+    placeType?: {
+      slug: {
+        current: string;
+      };
+      title?: string;
+    };
+    mainImage?: {
+      asset?: {
+        url?: string;
+        _ref?: string;
+      };
+    };
+  };
+  contentType?: 'blog' | 'place'; // เพิ่ม contentType เพื่อรองรับทั้ง blog และ place
 }
 
-// ตอนแรกมันเป็นงี้
-// export default function PlaceShareButton({ url, title, place }: PlaceShareButtonProps) {
-// แต่ตอนนี้นายให้แก้งี้
-// export default function PlaceShareButton({ url, title }: Omit<PlaceShareButtonProps, 'place'>) {
-
-export default function PlaceShareButton({ url, title }: PlaceShareButtonProps) {
+export default function SlugShareButton({ url, title, contentItem, contentType = 'blog' }: ShareButtonsProps) {
   const currentUrl = typeof window !== 'undefined'
     ? window.location.href  // ใช้ URL ปัจจุบันจาก client side
     : url;
 
-  const isMobile = (): boolean => {
+  const isMobile = () => {
     if (typeof window === "undefined") return false;
     const userAgent = window.navigator.userAgent.toLowerCase();
     return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
   };
 
-  const handleCopy = async (): Promise<void> => {
+  const handleCopy = async () => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(currentUrl);
@@ -60,12 +82,12 @@ export default function PlaceShareButton({ url, title }: PlaceShareButtonProps) 
     }
   };
 
-  const handleShare = (platform: 'facebook' | 'twitter' | 'line'): void => {
+  const handleShare = (platform: string) => {
     // ใช้ window.location.href เพื่อให้ได้ URL เต็มรูปแบบ
     const currentUrl = window.location.href;
     const encodedUrl = encodeURIComponent(currentUrl);
     const encodedTitle = encodeURIComponent(title);
-    let shareUrl: string = '';
+    let shareUrl = '';
 
     switch (platform) {
       case 'facebook':
@@ -82,7 +104,7 @@ export default function PlaceShareButton({ url, title }: PlaceShareButtonProps) 
 
     if (shareUrl) {
       // เพิ่มขนาด popup ให้ใหญ่ขึ้น
-      window.open(shareUrl, '_blank', 'width=500,height=500');
+      window.open(shareUrl, '_blank', 'width=500,height=00');
     }
   };
 
@@ -93,6 +115,9 @@ export default function PlaceShareButton({ url, title }: PlaceShareButtonProps) 
         Share:
       </p>
       <div className="flex items-center gap-1">
+        {/* เพิ่ม BookmarkButton ที่สามารถใช้ได้ทั้งกับ blog และ place */}
+        <BookmarkButton contentItem={contentItem} contentType={contentType} />
+        
         <Tooltip content="Copy link" className='bg-default-100 dark:bg-default-100' offset={3} placement='bottom'>
           <Button
             onPress={handleCopy}
@@ -111,7 +136,7 @@ export default function PlaceShareButton({ url, title }: PlaceShareButtonProps) 
             onClick={() => handleShare('facebook')}
             className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-500/90 
                     flex items-center justify-center transition-all duration-200 
-                    shadow hover:shadow-lg border-2 border-blue-400 dark:border-blue-600"
+                    shadow hover:shadow-lgcl border-2 border-blue-400 dark:border-blue-600"
           >
             <FaFacebook size={16} className="text-white" />
           </button>

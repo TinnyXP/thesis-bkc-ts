@@ -54,7 +54,8 @@ export async function POST(request: Request) {
       post_title, 
       post_slug, 
       post_category, 
-      post_image 
+      post_image,
+      content_type = 'blog' // ค่าเริ่มต้นเป็น 'blog' เพื่อรองรับการใช้งานเดิม
     } = await request.json();
     
     if (!post_id || !post_title || !post_slug) {
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     if (existingBookmark) {
       return NextResponse.json({ 
         success: false, 
-        message: "คุณได้บุ๊คมาร์กบทความนี้ไว้แล้ว" 
+        message: `คุณได้บุ๊คมาร์ก${content_type === 'blog' ? 'บทความ' : 'สถานที่'}นี้ไว้แล้ว` 
       }, { status: 400 });
     }
     
@@ -84,7 +85,8 @@ export async function POST(request: Request) {
       post_title,
       post_slug,
       post_category,
-      post_image
+      post_image,
+      content_type
     });
     
     return NextResponse.json({ 
