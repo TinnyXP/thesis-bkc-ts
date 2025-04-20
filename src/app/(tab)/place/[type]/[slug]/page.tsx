@@ -123,7 +123,6 @@ const portableTextComponents: Partial<PortableTextReactComponents> = {
 // Component แสดงข้อความเมื่อไม่พบสถานที่ท่องเที่ยว
 const PlaceNotFound = () => (
   <div className="min-h-screen">
-    <NavBar />
     <div className="container mx-auto max-w-5xl flex-grow px-4 my-10 flex flex-col items-center justify-center gap-6 min-h-[50vh] font-[family-name:var(--font-bai-jamjuree)]">
       <div className="text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">ไม่พบสถานที่ท่องเที่ยว</h1>
@@ -495,7 +494,6 @@ export default async function PlacePage({
           </div>
         </section>
 
-        <Footer />
       </div>
     );
   } catch (error) {
