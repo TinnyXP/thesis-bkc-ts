@@ -52,15 +52,15 @@ export default function NavBar() {
     },
     {
       label: t('place'),
-      href: "/test/download"
+      href: "/place"
     },
     {
       label: t('news'),
-      href: "/test/download"
+      href: "/blog"
     },
     {
       label: t('static'),
-      href: "/test/download"
+      href: "/download"
     },
   ], [t]); // ให้ dependency เป็น t เท่านั้น เพื่อให้สร้างใหม่เฉพาะเมื่อภาษาเปลี่ยน
 

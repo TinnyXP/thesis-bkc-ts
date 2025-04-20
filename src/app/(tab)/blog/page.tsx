@@ -1,8 +1,11 @@
+// src/app/(tab)/blog/page.tsx
 import React from "react";
-import { BlogCardList } from "@/components";
+import { BlogCardList, PageHeader, SectionHeading } from "@/components";
 import { Metadata } from "next";
 import { getAllCategories } from "@/lib/sanity";
 import Link from "next/link";
+import { Card, CardBody, Divider } from "@heroui/react";
+import { FaNewspaper, FaTags, FaBookOpen, FaThList } from "react-icons/fa";
 
 // Metadata สำหรับหน้ารวมบทความ
 export const metadata: Metadata = {
@@ -19,38 +22,103 @@ export default async function BlogPage() {
   const categories = await getAllCategories();
 
   return (
-    <div>
-      <div className="container mx-auto max-w-5xl px-4 py-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-6">บทความทั้งหมด</h1>
-        
-        {/* แสดงหมวดหมู่ */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">หมวดหมู่</h2>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <Link 
-                key={category._id} 
-                href={`/blog/${category.slug}`}
-                className="px-4 py-2 bg-primary-color hover:bg-primary-color/80 text-white rounded-full transition-colors"
+    <>
+      <PageHeader 
+        title="บทความเกี่ยวกับบางกระเจ้า"
+        subtitle="ข่าวสาร"
+        description="รวมบทความและข่าวสารน่าสนใจเกี่ยวกับบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ"
+        buttons={{
+          primary: {
+            text: "ดูบทความล่าสุด",
+            href: "#latest-articles",
+            icon: <FaNewspaper />
+          },
+          secondary: {
+            text: "ดูหมวดหมู่ทั้งหมด",
+            href: "#categories",
+            icon: <FaTags />
+          }
+        }}
+      />
+
+      <div className="container max-w-6xl mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto">
+          {/* แสดงหมวดหมู่ในรูปแบบการ์ด */}
+          <section id="categories" className="mb-12 pt-4 scroll-mt-24">
+            <SectionHeading
+              title="หมวดหมู่บทความ"
+              subtitle="บทความ"
+              icon={<FaTags className="text-primary-color" />}
+              description="เลือกดูบทความตามหมวดหมู่ที่คุณสนใจ"
+            />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((category) => (
+                <Card
+                  key={category._id}
+                  isPressable
+                  isHoverable
+                  as={Link}
+                  href={`/blog/${category.slug}`}
+                  className="border-none shadow-md"
+                >
+                  <CardBody className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                        <FaBookOpen className="text-primary-color text-lg" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">{category.title}</h3>
+                        {category.description && (
+                          <p className="text-default-500 text-sm line-clamp-2">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+              
+              <Card
+                isPressable
+                isHoverable
+                as={Link}
+                href="/blog/uncategorized"
+                className="border-none shadow-md"
               >
-                {category.title}
-              </Link>
-            ))}
-            <Link 
-              href="/blog/uncategorized"
-              className="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white rounded-full transition-colors"
-            >
-              ไม่มีหมวดหมู่
-            </Link>
-          </div>
-        </div>
-        
-        {/* แสดงบทความล่าสุด */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">บทความล่าสุด</h2>
-          <BlogCardList />
+                <CardBody className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
+                      <FaThList className="text-zinc-500 dark:text-zinc-400 text-lg" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">ไม่มีหมวดหมู่</h3>
+                      <p className="text-default-500 text-sm">
+                        บทความที่ยังไม่ได้จัดหมวดหมู่
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+          </section>
+          
+          <Divider className="my-8" />
+          
+          {/* แสดงบทความล่าสุด */}
+          <section id="latest-articles" className="mb-8 scroll-mt-24">
+            <SectionHeading
+              title="บทความล่าสุด"
+              subtitle="อัปเดตล่าสุด"
+              icon={<FaNewspaper className="text-primary-color" />}
+              description="บทความและข่าวสารล่าสุดเกี่ยวกับบางกระเจ้า"
+            />
+            
+            <BlogCardList />
+          </section>
         </div>
       </div>
-    </div>
+    </>
   );
 }

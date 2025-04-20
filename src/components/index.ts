@@ -2,15 +2,16 @@
 export { default as NavBar } from './layout/Navbar';
 export { default as Footer } from './layout/Footer';
 export { default as Loading } from './layout/Loading';
+export { default as PageHeader } from './layout/PageHeader'
 export { default as ScrollToTop } from './layout/ScrollToTop';
 export { default as ToggleTheme } from './layout/ToggleTheme';
+export { default as SectionHeading } from './layout/SectionHeading';
 
 // Sanity Components
 export { default as ImageModal } from './ui/Sanity/Shared/ImageModal';
 export { default as SlugBreadcrumb } from './ui/Sanity/Shared/SlugBreadcrumb';
 export { default as SlugShareButton } from './ui/Sanity/Shared/SlugShareButton';
 export { default as BookmarkButton } from './ui/Sanity/Shared/BookmarkButton';
-
 
 // Blog Sanity Components
 export { default as BlogCard } from './ui/Sanity/Blog/BlogCard';

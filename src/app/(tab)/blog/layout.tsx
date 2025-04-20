@@ -1,5 +1,4 @@
 import React from "react";
-import { Footer, NavBar } from "@/components";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,9 +19,7 @@ export default function BlogLayout({
 }) {
   return (
     <div className="font-[family-name:var(--font-line-seed-sans)]">
-      <NavBar />
       <main>{children}</main>
-      <Footer />
     </div>
   );
 }

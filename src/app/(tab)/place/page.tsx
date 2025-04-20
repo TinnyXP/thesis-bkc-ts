@@ -1,10 +1,12 @@
-// src/app/place/page.tsx
+// src/app/(tab)/place/page.tsx
 import React from "react";
 import { Metadata } from "next";
-import { Footer, NavBar } from "@/components";
+import { PageHeader, SectionHeading } from "@/components";
 import { getAllPlaceTypes, getAllDistricts } from "@/lib/sanity/placeQueries";
 import { PlaceCardList } from "@/components";
 import Link from "next/link";
+import { Card, CardBody, Divider } from "@heroui/react";
+import { FaMapMarkedAlt, FaCompass, FaMap, FaBuilding, FaCamera } from "react-icons/fa";
 
 // Metadata สำหรับหน้ารวมสถานที่ท่องเที่ยว
 export const metadata: Metadata = {
@@ -19,50 +21,127 @@ export default async function PlacePage() {
   const districts = await getAllDistricts();
 
   return (
-    <div>
-      <NavBar />
-      <div className="container mx-auto max-w-5xl px-4 py-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-6">สถานที่ท่องเที่ยวในบางกระเจ้า</h1>
-        
-        {/* แสดงประเภทสถานที่ */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">ประเภทสถานที่</h2>
-          <div className="flex flex-wrap gap-2">
-            {placeTypes.map((type) => (
-              <Link 
-                key={type._id} 
-                href={`/place/type/${type.slug.current}`}
-                className="px-4 py-2 bg-primary-color hover:bg-primary-color/80 text-white rounded-full transition-colors"
-              >
-                {type.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-        
-        {/* แสดงตำบล/พื้นที่ */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">พื้นที่</h2>
-          <div className="flex flex-wrap gap-2">
-            {districts.map((district) => (
-              <Link 
-                key={district._id} 
-                href={`/place/district/${district.slug.current}`}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
-              >
-                {district.title}
-              </Link>
-            ))}
-          </div>
-        </div>
-        
-        {/* แสดงสถานที่ล่าสุด */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">สถานที่ท่องเที่ยวล่าสุด</h2>
-          <PlaceCardList />
+    <>
+      <PageHeader 
+        title="สถานที่ท่องเที่ยวในบางกระเจ้า"
+        subtitle="แหล่งท่องเที่ยว"
+        description="ค้นพบสถานที่ท่องเที่ยวที่น่าสนใจในบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ เพียงไม่กี่นาทีจากใจกลางเมือง"
+        imageSrc="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/place-header-dzRfJK2l3HxYXapfbL5pBsUqwR4Qe8.jpg"
+        buttons={{
+          primary: {
+            text: "ดูประเภทสถานที่",
+            href: "#place-types",
+            icon: <FaCompass />
+          },
+          secondary: {
+            text: "ดูตำบล/พื้นที่",
+            href: "#districts",
+            icon: <FaMap />
+          }
+        }}
+      />
+
+      <div className="container max-w-6xl mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto">
+          {/* แสดงประเภทสถานที่ในรูปแบบการ์ด */}
+          <section id="place-types" className="mb-12 pt-4 scroll-mt-24">
+            <SectionHeading
+              title="ประเภทสถานที่"
+              subtitle="หมวดหมู่"
+              icon={<FaCompass className="text-primary-color" />}
+              description="เลือกดูสถานที่ท่องเที่ยวตามประเภทที่คุณสนใจ"
+            />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {placeTypes.map((type) => (
+                <Card
+                  key={type._id}
+                  isPressable
+                  isHoverable
+                  as={Link}
+                  href={`/place/type/${type.slug.current}`}
+                  className="border-none shadow-md"
+                >
+                  <CardBody className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                        {type.icon ? (
+                          <span className="text-primary-color text-lg">{type.icon}</span>
+                        ) : (
+                          <FaCamera className="text-primary-color text-lg" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">{type.title}</h3>
+                        {type.description && (
+                          <p className="text-default-500 text-sm line-clamp-1">
+                            {type.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          </section>
+          
+          <Divider className="my-12" />
+          
+          {/* แสดงตำบล/พื้นที่ในรูปแบบการ์ด */}
+          <section id="districts" className="mb-12 scroll-mt-24">
+            <SectionHeading
+              title="พื้นที่ในบางกระเจ้า"
+              subtitle="ตำบล"
+              icon={<FaMap className="text-blue-600" />}
+              description="ค้นพบสถานที่ท่องเที่ยวในแต่ละตำบลของบางกระเจ้า"
+            />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {districts.map((district) => (
+                <Card
+                  key={district._id}
+                  isPressable
+                  isHoverable
+                  as={Link}
+                  href={`/place/district/${district.slug.current}`}
+                  className="border-none shadow-md"
+                >
+                  <CardBody className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                        <FaBuilding className="text-blue-600 text-lg" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">{district.title}</h3>
+                        {district.description && (
+                          <p className="text-default-500 text-sm line-clamp-1">
+                            {district.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          </section>
+          
+          <Divider className="my-12" />
+          
+          {/* แสดงสถานที่ล่าสุด */}
+          <section className="mb-8">
+            <SectionHeading
+              title="สถานที่ท่องเที่ยวล่าสุด"
+              subtitle="มาใหม่"
+              icon={<FaMapMarkedAlt className="text-primary-color" />}
+              description="สถานที่ท่องเที่ยวที่เพิ่มเข้ามาล่าสุดในบางกระเจ้า"
+            />
+            
+            <PlaceCardList />
+          </section>
         </div>
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
