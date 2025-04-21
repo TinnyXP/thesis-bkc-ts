@@ -179,9 +179,9 @@ export default function EventsCalendarPage() {
                   onSelectionChange={handleMonthSelectionChange}
                 >
                   {Array.from({ length: 12 }, (_, i) => (
-                    <SelectItem key={i.toString()}>
-                      {dayjs().month(i).format("MMMM")}
-                    </SelectItem>
+                    <SelectItem key={i.toString()} textValue={dayjs().month(i).format("MMMM")}>
+                    {dayjs().month(i).format("MMMM")}
+                  </SelectItem>
                   ))}
                 </Select>
 
@@ -192,9 +192,9 @@ export default function EventsCalendarPage() {
                   onSelectionChange={handleYearSelectionChange}
                 >
                   {yearOptions.map((year) => (
-                    <SelectItem key={year.toString()}>
-                      {year}
-                    </SelectItem>
+                    <SelectItem key={year.toString()} textValue={year.toString()}>
+                    {year}
+                  </SelectItem>
                   ))}
                 </Select>
               </div>
