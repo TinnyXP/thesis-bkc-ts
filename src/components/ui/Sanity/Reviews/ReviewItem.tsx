@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Avatar, Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
-import { FaStar, FaUserCircle, FaEllipsisV, FaTrash } from "react-icons/fa";
+import { Avatar, Button } from "@heroui/react";
+import { FaStar, FaUserCircle, FaTrash } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import { Review } from "@/hooks/useReviews";
@@ -15,7 +15,6 @@ interface ReviewItemProps {
 }
 
 export default function ReviewItem({ review, isOwner, onDelete }: ReviewItemProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
 
   // แปลงเวลา
   const formattedDate = formatDistanceToNow(new Date(review.createdAt), {
@@ -24,7 +23,7 @@ export default function ReviewItem({ review, isOwner, onDelete }: ReviewItemProp
   });
 
   return (
-    <div className="border-b border-zinc-200 dark:border-zinc-700 py-4 last:border-b-0">
+    <div className="border-b border-zinc-200 dark:border-zinc-700 last:border-b-0 relative group overflow-hidden">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
           <Avatar
@@ -44,11 +43,10 @@ export default function ReviewItem({ review, isOwner, onDelete }: ReviewItemProp
               {[1, 2, 3, 4, 5].map((star) => (
                 <FaStar
                   key={star}
-                  className={`${
-                    star <= review.rating
+                  className={`${star <= review.rating
                       ? "text-yellow-500"
                       : "text-zinc-300 dark:text-zinc-600"
-                  }`}
+                    }`}
                   size={16}
                 />
               ))}
@@ -61,32 +59,18 @@ export default function ReviewItem({ review, isOwner, onDelete }: ReviewItemProp
 
         {/* ปุ่มเมนูตัวเลือก (แสดงเฉพาะเจ้าของรีวิว) */}
         {isOwner && (
-          <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-            <PopoverTrigger>
-              <Button
-                size="sm"
-                variant="light"
-                isIconOnly
-              >
-                <FaEllipsisV size={14} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <Button
-                size="sm"
-                color="danger"
-                variant="light"
-                startContent={<FaTrash size={14} />}
-                onPress={() => {
-                  setIsOpen(false);
-                  onDelete(review._id);
-                }}
-                className="w-full justify-start"
-              >
-                ลบรีวิว
-              </Button>
-            </PopoverContent>
-          </Popover>
+          <Button
+            size="sm"
+            isIconOnly
+            color="danger"
+            variant="light"
+            startContent={<FaTrash size={14} />}
+            onPress={() => {
+              onDelete(review._id);
+            }}
+            className="md:opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out"
+          >
+          </Button>
         )}
       </div>
     </div>

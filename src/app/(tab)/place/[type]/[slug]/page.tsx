@@ -270,17 +270,19 @@ export default async function PlacePage({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* เนื้อหาสถานที่ท่องเที่ยว - 2/3 ของหน้าจอ */}
             <div className="md:col-span-2">
-              <article className="mt-2 mb-10 prose prose-2xl dark:prose-invert prose-zinc">
+              <article className="prose prose-2xl dark:prose-invert prose-zinc">
                 {place.description && (
-                  <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg mb-6">
-                    <p className="text-lg italic">{place.description}</p>
+                  <div className="bg-zinc-100 dark:bg-zinc-900 px-4 py-1 rounded-lg mb-6">
+                    <p className="text-lg italic text-zinc-900 dark:text-zinc-50">{place.description}</p>
                   </div>
                 )}
 
                 {Array.isArray(place.body) ? (
                   <PortableText value={place.body} components={portableTextComponents} />
                 ) : (
-                  <p className="text-zinc-500">ไม่มีเนื้อหา</p>
+                  <div className="flex justify-center w-full">
+                    <p className="text-zinc-500 text-lg">ไม่มีเนื้อหา</p>
+                  </div>    
                 )}
               </article>
 
@@ -332,7 +334,7 @@ export default async function PlacePage({
             <div className="space-y-6">
               {/* ข้อมูลการติดต่อ */}
               {place.contactInfo && (
-                <Card className="shadow-sm">
+                <Card className="bg-white shadow-md dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
                     <h3 className="text-xl font-bold mb-4">ข้อมูลการติดต่อ</h3>
                     <div className="space-y-3">
@@ -381,7 +383,7 @@ export default async function PlacePage({
 
               {/* ที่อยู่ */}
               {place.address && (
-                <Card className="shadow-sm">
+                <Card className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
                     <h3 className="text-xl font-bold mb-4">ที่อยู่</h3>
                     <p className="flex items-start gap-2">
@@ -394,7 +396,7 @@ export default async function PlacePage({
 
               {/* เวลาทำการ */}
               {place.operatingHours && place.operatingHours.length > 0 && (
-                <Card className="shadow-sm">
+                <Card className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <FaClock className="text-primary-color" />
@@ -416,7 +418,7 @@ export default async function PlacePage({
 
               {/* ราคาค่าเข้าชม */}
               {place.pricing && place.pricing.length > 0 && (
-                <Card className="shadow-sm">
+                <Card className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <FaDollarSign className="text-primary-color" />
@@ -447,7 +449,7 @@ export default async function PlacePage({
 
               {/* ช่วงเวลาที่เหมาะแก่การเยี่ยมชม */}
               {place.bestTimeToVisit && (
-                <Card className="shadow-sm">
+                <Card className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                       <FaCalendarAlt className="text-primary-color" />
@@ -460,7 +462,7 @@ export default async function PlacePage({
 
               {/* สิ่งอำนวยความสะดวก */}
               {place.facilities && place.facilities.length > 0 && (
-                <Card className="shadow-sm">
+                <Card className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
                     <h3 className="text-xl font-bold mb-4">สิ่งอำนวยความสะดวก</h3>
                     <div className="flex flex-wrap gap-2">
@@ -491,7 +493,7 @@ export default async function PlacePage({
           </div>
 
           {/* ส่วนรีวิว */}
-          <section className="container mx-auto max-w-5xl flex-grow px-4 my-10 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
+          <section className="container mx-auto max-w-5xl flex-grow my-10 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
             <ReviewSection placeId={place.slug.current} />
           </section>
           

@@ -88,7 +88,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
               onPress={() => window.location.href = `/place/${placeTypeSlug}/${place.slug.current}`}
               className="border-none bg-background/60 dark:bg-default-100/50"
             >
-              <CardBody className="overflow-visible p-1.5">
+              <CardBody className="overflow-visible px-1.5 pt-1.5 pb-0">
                 <div className="relative">
                   {place.mainImage?.asset?.url ? (
                     <Image
@@ -136,7 +136,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                   <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold">{place.title}</p>
 
                   {place.description && (
-                    <p className="text-xs text-default-500 mt-2 max-w-[320px] overflow-hidden text-ellipsis line-clamp-1">
+                    <p className="text-xs text-default-500 mt-1 max-w-[320px] text-ellipsis line-clamp-1">
                       {place.description}
                     </p>
                   )}

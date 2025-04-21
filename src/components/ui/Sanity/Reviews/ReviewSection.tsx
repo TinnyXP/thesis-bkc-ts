@@ -111,7 +111,7 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
 
           {/* โปรโมชั่นสำหรับผู้ที่ยังไม่ได้ล็อกอิน */}
           {!session && (
-            <Card className="bg-primary-50 dark:bg-primary-900/20 shadow-sm mt-4">
+            <Card className="bg-transparent border-2 border-primary-color shadow-sm mt-4">
               <CardBody>
                 <h3 className="text-lg font-semibold text-primary-color mb-2">
                   เข้าสู่ระบบเพื่อรีวิว
@@ -123,7 +123,7 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
                   as={Link}
                   href="/login"
                   color="primary"
-                  variant="flat"
+                  variant="shadow"
                   fullWidth
                   startContent={<FaSignInAlt />}
                 >
@@ -153,7 +153,8 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
                 onChange={(e) => {
                   changeSort(e.target.value as "newest" | "highest" | "lowest");
                 }}
-                variant="bordered"
+                variant="underlined"
+                color="primary"
                 className="w-40"
               >
                 <SelectItem key="newest">ล่าสุด</SelectItem>
@@ -164,7 +165,7 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
           </div>
 
           {/* รายการรีวิว */}
-          <Card className="shadow-sm">
+          <Card className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
             <CardBody>
               {isLoading ? (
                 // แสดง Skeleton ระหว่างโหลดข้อมูล
@@ -215,7 +216,7 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
                   {session && !hasReviewed() && (
                     <Button
                       color="primary"
-                      variant="flat"
+                      variant="ghost"
                       size="sm"
                       onPress={handleReviewButtonClick}
                     >

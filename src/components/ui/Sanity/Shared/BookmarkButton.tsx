@@ -128,13 +128,14 @@ export default function BookmarkButton({ post, contentItem, contentType = 'blog'
         <Button
           isIconOnly
           size="sm"
-          color={isBookmarked ? "warning" : "default"}
+          radius="full"
+          color={isBookmarked ? "primary" : "default"}
           variant={isBookmarked ? "solid" : "flat"}
           className="border-1.5 border-default-200"
           isLoading={isLoading}
           onPress={handleClick}
         >
-          {isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
+          {isBookmarked ? <FaBookmark className="text-background" /> : <FaRegBookmark />}
         </Button>
       </Tooltip>
       

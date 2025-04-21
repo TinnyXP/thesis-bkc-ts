@@ -74,7 +74,7 @@ export default function BlogCard({ posts }: CardClientProps) {
               onPress={() => window.location.href = `/blog/${categorySlug}/${post.slug.current}`}
               className="border-none bg-background/60 dark:bg-default-100/50"
             >
-              <CardBody className="overflow-visible p-1.5">
+              <CardBody className="overflow-visible px-1.5 pt-1.5 pb-0">
                 <div className="relative">
                   {post.mainImage?.asset?.url ? (
                     <Image

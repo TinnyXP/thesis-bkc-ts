@@ -3,6 +3,7 @@
 import React from "react";
 import { Button, Card, CardBody, Progress } from "@heroui/react";
 import { FaStar, FaPen } from "react-icons/fa";
+import { useSession } from "next-auth/react";
 
 export interface RatingStats {
   rating: number;
@@ -26,8 +27,11 @@ export default function SummaryRatingCard({
   hasReviewed = false,
   className,
 }: SummaryRatingCardProps) {
+
+  const { data: session } = useSession();
+  
   return (
-    <Card className={`shadow-sm ${className}`}>
+    <Card className={`bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900 ${className}`}>
       <CardBody>
         <div className="flex flex-col gap-4">
           {/* แสดงคะแนนเฉลี่ย */}
@@ -65,10 +69,10 @@ export default function SummaryRatingCard({
             <Button
               fullWidth
               color="primary"
-              variant={hasReviewed ? "flat" : "solid"}
+              variant="solid"
               startContent={<FaPen />}
               onPress={onWriteReview}
-              isDisabled={hasReviewed}
+              isDisabled={hasReviewed || !session}
             >
               {hasReviewed ? "คุณได้รีวิวแล้ว" : "เขียนรีวิว"}
             </Button>
