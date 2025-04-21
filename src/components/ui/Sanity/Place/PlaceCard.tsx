@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardBody, CardFooter, Chip, Image, Pagination } from "@heroui/react";
 import { Place } from '@/lib/sanity/schema';
-import Link from "next/link";
 import { FaMapMarkerAlt, FaClipboardList } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
