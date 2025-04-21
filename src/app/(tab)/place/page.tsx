@@ -40,8 +40,8 @@ export default async function PlacePage() {
         }}
       />
 
-      <div className="container max-w-6xl mx-auto px-4 py-12">
-        <div className="max-w-5xl mx-auto">
+      <div className="container max-w-5xl mx-auto px-4 py-12 sm:px-6">
+        <div>
           {/* แสดงประเภทสถานที่ในรูปแบบการ์ด */}
           <section id="place-types" className="mb-12 pt-4 scroll-mt-24">
             <SectionHeading

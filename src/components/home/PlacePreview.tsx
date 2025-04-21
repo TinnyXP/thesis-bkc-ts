@@ -10,7 +10,7 @@ import { PlaceCardList } from "@/components";
 export default function PlacePreview() {
   return (
     <section className="py-16 bg-white dark:bg-black">
-      <div className="container mx-auto px-4 sm:px-6">
+      <div className="container max-w-5xl mx-auto px-4 py-12 sm:px-6">
         <motion.div 
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}

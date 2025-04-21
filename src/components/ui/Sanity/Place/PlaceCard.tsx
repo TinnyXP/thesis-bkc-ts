@@ -41,7 +41,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
     // เรียกใช้งานครั้งแรกและเมื่อมีการ resize
     updateCardsPerPage();
     window.addEventListener("resize", updateCardsPerPage);
-    
+
     // Cleanup
     return () => window.removeEventListener("resize", updateCardsPerPage);
   }, []);
@@ -85,9 +85,9 @@ export default function PlaceCard({ places }: PlaceCardProps) {
               key={place._id}
               isPressable
               isBlurred
-              as={Link}
-              href={`/place/${placeTypeSlug}/${place.slug.current}`}
-              className="border-none bg-background/60 dark:bg-default-100/50 hover:shadow-md transition-shadow duration-300"
+              isHoverable
+              onPress={() => window.location.href = `/place/${placeTypeSlug}/${place.slug.current}`}
+              className="border-none bg-background/60 dark:bg-default-100/50"
             >
               <CardBody className="overflow-visible p-1.5">
                 <div className="relative">
@@ -101,8 +101,8 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full aspect-video bg-zinc-200 rounded-xl flex items-center justify-center">
-                      <p className="text-zinc-500 text-sm">ไม่มีรูปภาพ</p>
+                    <div className="w-full aspect-video bg-zinc-500/10 rounded-xl flex items-center justify-center">
+                      <p className="text-foreground text-sm">ไม่มีรูปภาพ</p>
                     </div>
                   )}
                   <div className="absolute bottom-1 left-1 flex gap-2 z-10">
@@ -115,19 +115,33 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                       {placeTypeTitle}
                     </Chip>
                   </div>
+                  <div className="absolute bottom-1 right-1 flex gap-2 z-10">
+                    <Chip size="sm" color="primary" variant="solid"
+                      classNames={{
+                        base: "bg-zinc-600/75 dark:bg-zinc-800/75 backdrop-blur-sm",
+                        content: "text-white",
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        <FaMapMarkerAlt size={12} />
+                        <span className="text-xs">
+                          {districtTitle}
+                        </span>
+                      </div>
+                    </Chip>
+                  </div>
                 </div>
               </CardBody>
-              <CardFooter className="flex-col items-start">
-                <h3 className="w-full max-w-[320px] truncate text-base font-bold">{place.title}</h3>
-                
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-default-500">
-                  <div className="flex items-center gap-1">
-                    <FaMapMarkerAlt size={12} />
-                    <span className="text-xs">
-                      {districtTitle}
-                    </span>
-                  </div>
-                  
+              <CardFooter className="flex justify-between items-center">
+                <div className="flex flex-col text-left">
+                  <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold">{place.title}</p>
+
+                  {place.description && (
+                    <p className="text-xs text-default-500 mt-2 max-w-[320px] overflow-hidden text-ellipsis line-clamp-1">
+                      {place.description}
+                    </p>
+                  )}
+
                   {place.publishedAt && (
                     <div className="flex items-center gap-1">
                       <FaClipboardList size={12} />
@@ -137,26 +151,20 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                     </div>
                   )}
                 </div>
-                
-                {place.description && (
-                  <p className="text-sm text-default-500 mt-2 line-clamp-2">
-                    {place.description}
-                  </p>
-                )}
               </CardFooter>
             </Card>
           );
         })}
       </div>
-      
+
       {totalPages > 1 && (
-        <Pagination 
-          variant="light" 
-          initialPage={1} 
-          total={totalPages} 
-          page={currentPage} 
-          onChange={setCurrentPage} 
-          classNames={{ item: "box-border" }} 
+        <Pagination
+          variant="light"
+          initialPage={1}
+          total={totalPages}
+          page={currentPage}
+          onChange={setCurrentPage}
+          classNames={{ item: "box-border" }}
         />
       )}
     </div>

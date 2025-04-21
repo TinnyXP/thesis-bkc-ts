@@ -70,8 +70,9 @@ export default function BlogCard({ posts }: CardClientProps) {
               key={post._id}
               isPressable
               isBlurred
+              isHoverable
               onPress={() => window.location.href = `/blog/${categorySlug}/${post.slug.current}`}
-              className="border-none bg-background/60 dark:bg-default-100/50 hover:shadow-md transition-shadow duration-300"
+              className="border-none bg-background/60 dark:bg-default-100/50"
             >
               <CardBody className="overflow-visible p-1.5">
                 <div className="relative">
@@ -85,8 +86,8 @@ export default function BlogCard({ posts }: CardClientProps) {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full aspect-video bg-zinc-200 rounded-xl flex items-center justify-center">
-                      <p className="text-zinc-500 text-sm">ไม่มีรูปภาพ</p>
+                    <div className="w-full h-[180px] aspect-video bg-zinc-500/10 rounded-xl flex items-center justify-center">
+                      <p className="text-foreground text-sm">ไม่มีรูปภาพ</p>
                     </div>
                   )}
                   <div className="absolute bottom-1 left-1 flex gap-2 z-10">
@@ -103,7 +104,7 @@ export default function BlogCard({ posts }: CardClientProps) {
               </CardBody>
               <CardFooter className="flex justify-between items-center">
                 <div className="flex flex-col text-left">
-                  <p className="w-full max-w-[320px] truncate text-sm uppercase font-bold">{post.title}</p>
+                  <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold line-clamp-1">{post.title}</p>
                   <div className="flex items-center gap-2">
                     <small className="text-default-500">
                       {formatThaiDate(post.publishedAt)}

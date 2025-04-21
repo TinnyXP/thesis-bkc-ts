@@ -9,8 +9,8 @@ import { BlogCardList } from "@/components";
 
 export default function BlogPreview() {
   return (
-    <section className="py-16 bg-zinc-50 dark:bg-zinc-900">
-      <div className="container mx-auto px-4 sm:px-6">
+    <section className="py-16 bg-zinc-50 dark:bg-zinc-950">
+      <div className="container max-w-5xl mx-auto px-4 py-12 sm:px-6">
         <motion.div 
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}

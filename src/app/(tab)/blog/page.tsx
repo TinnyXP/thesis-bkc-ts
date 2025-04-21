@@ -41,7 +41,7 @@ export default async function BlogPage() {
         }}
       />
 
-      <div className="container max-w-6xl mx-auto px-4 py-12">
+      <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
           {/* แสดงหมวดหมู่ในรูปแบบการ์ด */}
           <section id="categories" className="mb-12 pt-4 scroll-mt-24">
