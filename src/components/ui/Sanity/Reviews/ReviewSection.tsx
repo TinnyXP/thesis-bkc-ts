@@ -43,7 +43,7 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
   } = useReviews(placeId);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  // const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   // จัดการเมื่อกดปุ่มรีวิว
@@ -75,11 +75,10 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
 
   // จัดการการลบรีวิว
   const handleDeleteReview = async (reviewId: string) => {
-    setIsDeletingId(reviewId);
     try {
       await deleteReview(reviewId);
-    } finally {
-      setIsDeletingId(null);
+    } catch (error) {
+      console.error("Error deleting review:", error);
     }
   };
 
@@ -157,9 +156,9 @@ export default function ReviewSection({ placeId }: ReviewSectionProps) {
                 variant="bordered"
                 className="w-40"
               >
-                <SelectItem key="newest" value="newest">ล่าสุด</SelectItem>
-                <SelectItem key="highest" value="highest">คะแนนสูงสุด</SelectItem>
-                <SelectItem key="lowest" value="lowest">คะแนนต่ำสุด</SelectItem>
+                <SelectItem key="newest">ล่าสุด</SelectItem>
+                <SelectItem key="highest">คะแนนสูงสุด</SelectItem>
+                <SelectItem key="lowest">คะแนนต่ำสุด</SelectItem>
               </Select>
             )}
           </div>

@@ -11,6 +11,7 @@ interface ReviewItemProps {
   review: Review;
   isOwner: boolean;
   onDelete: (id: string) => void;
+  isDeleting?: boolean; // เพิ่ม prop นี้
 }
 
 export default function ReviewItem({ review, isOwner, onDelete }: ReviewItemProps) {

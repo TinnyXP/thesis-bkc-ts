@@ -50,6 +50,11 @@ const reviewSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    expireAt: {
+      type: Date,
+      default: null,
+      index: { expires: 0 } // 0 หมายถึงลบเมื่อถึงเวลาที่กำหนด
+    }
   },
   { timestamps: true }
 );

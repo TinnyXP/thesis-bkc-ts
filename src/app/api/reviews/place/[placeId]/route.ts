@@ -50,7 +50,7 @@ export async function GET(
     ]);
 
     let averageRating = 0;
-    let ratingStats = [0, 0, 0, 0, 0]; // สำหรับเก็บจำนวนรีวิวแต่ละดาว (index 0 = 1 ดาว)
+    const ratingStats = [0, 0, 0, 0, 0]; // สำหรับเก็บจำนวนรีวิวแต่ละดาว (index 0 = 1 ดาว)
 
     if (ratingAgg.length > 0) {
       averageRating = parseFloat(ratingAgg[0].averageRating.toFixed(1));
@@ -66,7 +66,7 @@ export async function GET(
     }
 
     // กำหนดเงื่อนไขการเรียงลำดับ
-    let sortOption = { createdAt: -1 }; // เริ่มต้นเรียงตามวันที่ล่าสุด
+    let sortOption: Record<string, 1 | -1> = { createdAt: -1 }; // เริ่มต้นเรียงตามวันที่ล่าสุด
     
     if (sort === 'highest') {
       sortOption = { rating: -1, createdAt: -1 }; // เรียงตามคะแนนสูงสุด

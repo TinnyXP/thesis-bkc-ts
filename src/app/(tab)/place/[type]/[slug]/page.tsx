@@ -1,7 +1,7 @@
 // src/app/place/[type]/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
-import { ImageModal, SlugBreadcrumb, SlugShareButton } from "@/components";
+import { ImageModal, SlugBreadcrumb, SlugShareButton, ReviewSection } from "@/components";
 import { getPlaceBySlug } from "@/lib/sanity/placeQueries";
 import { urlFor } from "@/lib/sanity/image";
 import { createPlaceMetadata } from "@/lib/sanity/placeMetadata";
@@ -489,6 +489,12 @@ export default async function PlacePage({
               )}
             </div>
           </div>
+
+          {/* ส่วนรีวิว */}
+          <section className="container mx-auto max-w-5xl flex-grow px-4 my-10 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
+            <ReviewSection placeId={place.slug.current} />
+          </section>
+          
         </section>
 
       </div>

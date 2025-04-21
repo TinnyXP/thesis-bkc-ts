@@ -39,10 +39,16 @@ export async function DELETE(
       }, { status: 403 });
     }
     
-    // ทำ soft delete โดยอัปเดตค่า is_deleted เป็น true
+    // ทำ soft delete และกำหนดวันที่จะลบถาวรใน 7 วัน
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 7); // เพิ่ม 7 วัน
+    
     const updatedReview = await Review.findByIdAndUpdate(
       params.reviewId,
-      { is_deleted: true },
+      { 
+        is_deleted: true,
+        expireAt: expiryDate
+      },
       { new: true }
     );
     

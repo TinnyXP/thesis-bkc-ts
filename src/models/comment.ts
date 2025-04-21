@@ -7,16 +7,13 @@ const commentSchema = new Schema(
       type: String,
       required: true,
     },
-    // เปลี่ยนจาก ObjectId เป็น String และรองรับระบบเก่า (แต่ไม่บังคับ)
     user_id: {
       type: String,
       required: false,
     },
-    // เพิ่ม user_bkc_id เป็นตัวอ้างอิงหลักแทน
     user_bkc_id: {
       type: String,
       required: true,
-      // ลบ index: true ตรงนี้ออก เพราะเราจะใช้ schema.index() ข้างล่าง
     },
     user_name: {
       type: String,
@@ -37,6 +34,11 @@ const commentSchema = new Schema(
     parent_id: {
       type: String,
       default: null,
+    },
+    expireAt: {
+      type: Date,
+      default: null,
+      index: { expires: 0 } // 0 หมายถึงลบเมื่อถึงเวลาที่กำหนด
     }
   },
   { timestamps: true }

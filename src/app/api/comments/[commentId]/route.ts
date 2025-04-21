@@ -39,10 +39,20 @@ export async function DELETE(
       }, { status: 403 });
     }
     
-    // ลบแบบ hard delete - ลบออกจากฐานข้อมูลเลย
-    const deletedComment = await Comment.findByIdAndDelete(params.commentId);
+    // ทำ soft delete และกำหนดวันที่จะลบถาวรใน 7 วัน
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 7); // เพิ่ม 7 วัน
     
-    if (!deletedComment) {
+    const updatedComment = await Comment.findByIdAndUpdate(
+      params.commentId,
+      {
+        is_deleted: true,
+        expireAt: expiryDate
+      },
+      { new: true }
+    );
+    
+    if (!updatedComment) {
       return NextResponse.json({ 
         success: false, 
         message: "ไม่สามารถลบความคิดเห็นได้" 
