@@ -11,11 +11,11 @@ import {
   Listbox,
   ListboxItem,
   Image,
-  Spinner,
 } from "@heroui/react";
 import { FaBookmark, FaTrash, FaNewspaper, FaMapMarkerAlt } from "react-icons/fa";
 import { useBookmarks, Bookmark } from "@/hooks/useBookmarks";
 import Link from "next/link";
+import Loading from "@/components/layout/Loading";
 
 export interface BookmarkModalProps {
   isOpen: boolean;
@@ -82,7 +82,7 @@ export default function BookmarkModal({ isOpen, onOpenChange }: BookmarkModalPro
             <ModalBody>
               {isLoading ? (
                 <div className="flex justify-center py-8">
-                  <Spinner color="primary" />
+                  <Loading />
                 </div>
               ) : bookmarks.length === 0 ? (
                 <div className="text-center py-8">

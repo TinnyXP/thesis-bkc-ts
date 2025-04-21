@@ -12,10 +12,10 @@ import {
   SelectItem,
   Chip,
   Button,
-  Spinner,
   Divider,
   Selection
 } from "@heroui/react";
+import { Loading } from "@/components";
 
 // Thai locale setup
 dayjs.locale("th");
@@ -222,7 +222,7 @@ export default function EventsCalendarPage() {
             exit={{ opacity: 0 }}
             className="flex justify-center my-16"
           >
-            <Spinner size="lg" color="primary" label="กำลังโหลดข้อมูล..." />
+            <Loading />
           </motion.div>
         ) : error ? (
           <motion.div

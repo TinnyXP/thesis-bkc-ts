@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { PlaceCard } from "@/components";
+import { Loading, PlaceCard } from "@/components";
 import { usePlaces } from "@/hooks/usePlaces";
-import { Spinner } from "@heroui/react";
 
 /**
  * คอมโพเนนต์แสดงรายการสถานที่ท่องเที่ยวล่าสุด
@@ -15,10 +14,7 @@ export default function PlaceCardList() {
   if (isLoading) {
     return (
       <div className="text-center py-10">
-        <Spinner color="primary" size="lg" />
-        <p className="text-zinc-600 dark:text-zinc-400 mt-4">
-          กำลังโหลดสถานที่ท่องเที่ยว...
-        </p>
+        <Loading />
       </div>
     );
   }

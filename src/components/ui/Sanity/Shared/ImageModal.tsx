@@ -415,7 +415,7 @@ export default function ImageModal({
                         className="bg-primary-color/90 hover:bg-primary-color backdrop-blur-sm text-white shadow-lg hover:shadow-xl transition-all"
                         aria-label="ดาวน์โหลดรูปภาพ"
                       >
-                        {isDownloading ? <Spinner size="sm" color="white" /> : <IoCloudDownload size={20} />}
+                        {isDownloading ? <Spinner size="sm" color="white" variant='gradient' /> : <IoCloudDownload size={20} />}
                       </Button>
                     </Tooltip>
                   </div>

@@ -293,7 +293,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
       <Dropdown>
         <DropdownTrigger>
           {isLoading ? (
-            <Spinner size={size} />
+            <Spinner size={size} variant="gradient" color="primary" />
           ) : (
             <Avatar
               as="button"

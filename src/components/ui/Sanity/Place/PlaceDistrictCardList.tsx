@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { PlaceCard } from "@/components";
+import { Loading, PlaceCard } from "@/components";
 import { usePlacesByDistrict } from "@/hooks/usePlacesByDistrict";
-import { Spinner, Link, Button } from "@heroui/react";
+import { Link, Button } from "@heroui/react";
 import { FaArrowLeft } from "react-icons/fa6";
 
 interface PlaceDistrictCardListProps {
@@ -21,10 +21,7 @@ export default function PlaceDistrictCardList(props: PlaceDistrictCardListProps)
   if (isLoading) {
     return (
       <div className="text-center py-10">
-        <Spinner color="primary" size="lg" />
-        <p className="text-zinc-600 dark:text-zinc-400 mt-4">
-          กำลังโหลดสถานที่ท่องเที่ยว...
-        </p>
+        <Loading />
       </div>
     );
   }

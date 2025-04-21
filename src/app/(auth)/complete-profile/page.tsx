@@ -230,7 +230,7 @@ export default function CompleteProfilePage() {
                 className="w-full font-semibold"
                 isLoading={isLoading}
                 isDisabled={isLoading}
-                startContent={isLoading ? <Spinner size="sm" /> : <PiPencilSimpleLineFill size={20} />}
+                startContent={isLoading ? <Spinner size="sm" color="white" variant="gradient" /> : <PiPencilSimpleLineFill size={20} />}
               >
                 {isLoading ? "กำลังสร้างโปรไฟล์..." : "สร้างโปรไฟล์"}
               </Button>

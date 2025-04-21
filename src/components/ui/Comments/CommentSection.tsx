@@ -7,7 +7,6 @@ import {
   Avatar,
   Textarea,
   Divider,
-  Spinner,
   Popover,
   PopoverTrigger,
   PopoverContent,
@@ -27,6 +26,7 @@ import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import Link from "next/link";
 import { useProfile } from "@/hooks/useProfile";
+import Loading from "@/components/layout/Loading";
 
 // คอมโพเนนต์สำหรับคอมเมนต์ที่ตอบกลับ
 const ReplyComment = ({
@@ -569,7 +569,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
       <div className="space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-4">
-            <Spinner color="primary" label="กำลังโหลดความคิดเห็น..." />
+            <Loading />
           </div>
         ) : mainComments.length > 0 ? (
           mainComments.map((comment: Comment) => (

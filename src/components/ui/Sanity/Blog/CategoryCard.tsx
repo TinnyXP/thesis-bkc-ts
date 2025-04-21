@@ -54,12 +54,12 @@ export default function CategoryCard({ posts, category }: CategoryCardClientProp
   const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
 
   return (
-    <div className="flex flex-col items-center gap-5">      
+    <div className="flex flex-col items-center gap-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {currentPosts.map((post) => (
-          <Card 
+          <Card
             key={post._id}
-            isPressable 
+            isPressable
             isBlurred
             onPress={() => window.location.href = `/blog/${category}/${post.slug.current}`}
             className="border-none bg-background/60 dark:bg-default-100/50"
@@ -74,8 +74,8 @@ export default function CategoryCard({ posts, category }: CategoryCardClientProp
                   height={180}
                 />
               ) : (
-                <div className="w-[330px] h-[180px] bg-zinc-200 rounded-xl flex items-center justify-center">
-                  <p className="text-zinc-500 text-sm">No image available</p>
+                <div className="w-full h-[180px] aspect-video bg-zinc-500/10 rounded-xl flex items-center justify-center">
+                  <p className="text-foreground text-sm">ไม่มีรูปภาพ</p>
                 </div>
               )}
             </CardBody>
@@ -92,15 +92,15 @@ export default function CategoryCard({ posts, category }: CategoryCardClientProp
           </Card>
         ))}
       </div>
-      
+
       {totalPages > 1 && (
-        <Pagination 
-          variant="light" 
-          initialPage={1} 
-          total={totalPages} 
-          page={currentPage} 
-          onChange={setCurrentPage} 
-          classNames={{ item: "box-border" }} 
+        <Pagination
+          variant="light"
+          initialPage={1}
+          total={totalPages}
+          page={currentPage}
+          onChange={setCurrentPage}
+          classNames={{ item: "box-border" }}
         />
       )}
     </div>

@@ -100,7 +100,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full aspect-video bg-zinc-500/10 rounded-xl flex items-center justify-center">
+                    <div className="w-full h-[180px] aspect-video bg-zinc-500/10 rounded-xl flex items-center justify-center">
                       <p className="text-foreground text-sm">ไม่มีรูปภาพ</p>
                     </div>
                   )}

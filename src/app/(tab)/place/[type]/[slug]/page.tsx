@@ -222,8 +222,8 @@ export default async function PlacePage({
                 className="rounded-lg shadow-lg w-full my-1"
               />
             ) : (
-              <div className="aspect-video bg-zinc-200 rounded-lg shadow-lg flex items-center justify-center">
-                <p className="text-zinc-500">ไม่มีรูปภาพ</p>
+              <div className="aspect-video bg-zinc-500/20 rounded-xl shadow-lg flex items-center justify-center">
+                <p className="text-foreground">ไม่มีรูปภาพ</p>
               </div>
             )}
           </div>
