@@ -23,7 +23,7 @@ export default function ReviewItem({ review, isOwner, onDelete }: ReviewItemProp
   });
 
   return (
-    <div className="border-b border-zinc-200 dark:border-zinc-700 last:border-b-0 relative group overflow-hidden">
+    <div className="border-b-2 border-zinc-200 dark:border-zinc-900 last:border-b-0 pb-3 pt-3 first:pt-0 last:pb-0 relative group overflow-hidden">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
           <Avatar
