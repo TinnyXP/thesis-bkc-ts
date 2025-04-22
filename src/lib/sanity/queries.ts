@@ -8,7 +8,7 @@ import { Post, Category } from './schema';
  */
 export const POSTS_QUERY = `*[
   _type == "post" && defined(slug.current)
-] | order(publishedAt desc)[0...12] {
+] | order(publishedAt desc) {
   _id,
   title,
   slug,
@@ -103,11 +103,14 @@ export const ALL_CATEGORIES_QUERY = `*[_type == "category"] {
  * @param options ตัวเลือกสำหรับการ revalidate
  * @returns Promise<Post[]>
  */
-export async function getLatestPosts(limit: number = 12, options = defaultRevalidateOptions): Promise<Post[]> {
+export async function getLatestPosts(limit?: number, options = defaultRevalidateOptions): Promise<Post[]> {
   try {
+    // ถ้าไม่มีการระบุ limit ให้ดึงทั้งหมด
+    const limitClause = limit ? `[0...${limit}]` : '';
+    
     const query = `*[
       _type == "post" && defined(slug.current)
-    ] | order(publishedAt desc)[0...${limit}] {
+    ] | order(publishedAt desc)${limitClause} {
       _id,
       title,
       slug,

@@ -8,7 +8,7 @@ import { Place, PlaceType, District } from './schema';
  */
 export const PLACES_QUERY = `*[
   _type == "place" && defined(slug.current)
-] | order(publishedAt desc)[0...12] {
+] | order(publishedAt desc) {
   _id,
   title,
   slug,
@@ -169,11 +169,14 @@ export const ALL_DISTRICTS_QUERY = `*[_type == "district"] {
  * @param options ตัวเลือกสำหรับการ revalidate
  * @returns Promise<Place[]>
  */
-export async function getLatestPlaces(limit: number = 12, options = defaultRevalidateOptions): Promise<Place[]> {
+export async function getLatestPlaces(limit?: number, options = defaultRevalidateOptions): Promise<Place[]> {
   try {
+    // ถ้าไม่มีการระบุ limit ให้ดึงทั้งหมด
+    const limitClause = limit ? `[0...${limit}]` : '';
+    
     const query = `*[
       _type == "place" && defined(slug.current)
-    ] | order(publishedAt desc)[0...${limit}] {
+    ] | order(publishedAt desc)${limitClause} {
       _id,
       title,
       slug,

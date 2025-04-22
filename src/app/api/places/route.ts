@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic'; // ไม่ใช้ static generation 
 
 export async function GET() {
   try {
-    const places = await getLatestPlaces(12);
+    // ไม่ระบุ limit เพื่อให้ดึงข้อมูลทั้งหมด
+    const places = await getLatestPlaces();
     
     return NextResponse.json({ 
       success: true, 
