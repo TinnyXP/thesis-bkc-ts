@@ -4,7 +4,7 @@
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SearchInput } from '@/components';
-import { SearchFilter, FilterOption } from '@/components/ui/Sanity/Search/SearchFilter';
+import SearchFilter, { FilterOption } from '@/components/ui/Sanity/Search/SearchFilter';
 
 interface SearchBarProps {
   placeholder?: string;

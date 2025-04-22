@@ -1,7 +1,7 @@
-// src/components/ui/Search/SearchFilter.tsx
+// src/components/ui/Sanity/Search/SearchFilter.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Key } from 'react';
 import { 
   Dropdown, 
   DropdownTrigger, 
@@ -9,7 +9,9 @@ import {
   DropdownItem, 
   Button, 
   Chip,
-  VisuallyHidden
+  VisuallyHidden,
+  Selection,
+  Divider
 } from "@heroui/react";
 import { FaFilter, FaTimes } from 'react-icons/fa';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -83,6 +85,67 @@ export default function SearchFilter({ filters, className = '' }: SearchFilterPr
   
   // นับจำนวน filter ที่เลือก
   const activeFilterCount = Object.keys(activeFilters).length;
+  
+  // ใช้ useMemo เพื่อสร้างรายการ DropdownItem ที่ถูกต้องตาม type
+  const dropdownItems = useMemo(() => {
+    const items: JSX.Element[] = [];
+    
+    // สร้าง Items สำหรับแต่ละ filter
+    filters.forEach((filter) => {
+      items.push(
+        <DropdownItem key={filter.key} textValue={filter.label}>
+          <div className="px-2 py-1">
+            <VisuallyHidden id={`filter-${filter.key}-label`}>
+              {filter.label}
+            </VisuallyHidden>
+            <p className="text-small font-semibold text-default-500 mb-1.5">{filter.label}</p>
+            <div className="flex flex-wrap gap-1">
+              {/* ตัวเลือก "ทั้งหมด" */}
+              <Chip 
+                size="sm"
+                variant={!activeFilters[filter.key] ? "solid" : "bordered"}
+                color={!activeFilters[filter.key] ? "primary" : "default"}
+                className="cursor-pointer transition-all"
+                onClick={() => handleFilterChange(filter.key, null)}
+              >
+                ทั้งหมด
+              </Chip>
+              
+              {filter.options.map((option) => (
+                <Chip 
+                  key={option.value}
+                  size="sm"
+                  variant={activeFilters[filter.key] === option.value ? "solid" : "bordered"}
+                  color={activeFilters[filter.key] === option.value ? "primary" : "default"}
+                  className="cursor-pointer transition-all"
+                  onClick={() => handleFilterChange(filter.key, option.value)}
+                >
+                  {option.label}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        </DropdownItem>
+      );
+    });
+    
+    // เพิ่ม Divider และปุ่มล้างตัวกรองทั้งหมดถ้ามีตัวกรองที่เลือกอยู่
+    if (activeFilterCount > 0) {
+      items.push(<Divider key="divider" className="my-1.5" />);
+      items.push(
+        <DropdownItem 
+          key="clear" 
+          className="text-danger"
+          startContent={<FaTimes className="h-3.5 w-3.5" />}
+          onPress={clearAllFilters}
+        >
+          ล้างตัวกรองทั้งหมด
+        </DropdownItem>
+      );
+    }
+    
+    return items;
+  }, [filters, activeFilters, activeFilterCount, clearAllFilters]);
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -94,11 +157,11 @@ export default function SearchFilter({ filters, className = '' }: SearchFilterPr
             className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-default-200 transition-all"
             startContent={<FaFilter className="h-3.5 w-3.5" />}
             endContent={
-              activeFilterCount > 0 && (
+              activeFilterCount > 0 ? (
                 <Chip size="sm" variant="flat" color="primary">
                   {activeFilterCount}
                 </Chip>
-              )
+              ) : null
             }
           >
             ตัวกรอง
@@ -108,60 +171,7 @@ export default function SearchFilter({ filters, className = '' }: SearchFilterPr
           aria-label="ตัวกรองการค้นหา"
           className="min-w-[240px]"
         >
-          {filters.map((filter) => (
-            <DropdownItem 
-              key={filter.key} 
-              className="p-0 focus:outline-none" 
-              textValue={filter.label}
-            >
-              <div className="px-2 py-1">
-                <VisuallyHidden id={`filter-${filter.key}-label`}>
-                  {filter.label}
-                </VisuallyHidden>
-                <p className="text-small font-semibold text-default-500 mb-1.5">{filter.label}</p>
-                <div className="flex flex-wrap gap-1">
-                  {/* ตัวเลือก "ทั้งหมด" */}
-                  <Chip 
-                    size="sm"
-                    variant={!activeFilters[filter.key] ? "solid" : "bordered"}
-                    color={!activeFilters[filter.key] ? "primary" : "default"}
-                    className="cursor-pointer transition-all"
-                    onClick={() => handleFilterChange(filter.key, null)}
-                  >
-                    ทั้งหมด
-                  </Chip>
-                  
-                  {filter.options.map((option) => (
-                    <Chip 
-                      key={option.value}
-                      size="sm"
-                      variant={activeFilters[filter.key] === option.value ? "solid" : "bordered"}
-                      color={activeFilters[filter.key] === option.value ? "primary" : "default"}
-                      className="cursor-pointer transition-all"
-                      onClick={() => handleFilterChange(filter.key, option.value)}
-                    >
-                      {option.label}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            </DropdownItem>
-          ))}
-          
-          {activeFilterCount > 0 && (
-            <>
-              <DropdownItem key="divider" className="h-px bg-default-200 my-1.5" aria-hidden="true" />
-              <DropdownItem 
-                key="clear" 
-                className="text-danger"
-                textValue="ล้างตัวกรองทั้งหมด"
-                onClick={clearAllFilters}
-                startContent={<FaTimes className="h-3.5 w-3.5" />}
-              >
-                ล้างตัวกรองทั้งหมด
-              </DropdownItem>
-            </>
-          )}
+          {dropdownItems}
         </DropdownMenu>
       </Dropdown>
       
