@@ -1,7 +1,7 @@
 // src/app/page.tsx
 
 import { Metadata } from "next";
-import { BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar, PlacePreview } from "@/components";
+import { AccordionMain, BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar, PlacePreview } from "@/components";
 
 // กำหนด Metadata สำหรับ SEO
 export const metadata: Metadata = {
@@ -47,6 +47,8 @@ export default function HomePage() {
         {/* เพิ่ม PlacePreview ก่อน BlogPreview */}
         <PlacePreview />
         <BlogPreview />
+        <AccordionMain />
+        {/* CTASection ควรอยู่ด้านล่างสุดของหน้า */}
         <CTASection />
       </main>
       

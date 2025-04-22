@@ -73,7 +73,7 @@ export default function FeatureSection() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl font-bold mb-4">ค้นพบบางกระเจ้า</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">ค้นพบบางกระเจ้า</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
             บางกระเจ้าเป็นพื้นที่สีเขียวที่ใหญ่ที่สุดใกล้กรุงเทพมหานคร ดั่งปอดของเมืองหลวงที่มอบอากาศบริสุทธิ์และธรรมชาติอันงดงาม
           </p>

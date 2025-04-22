@@ -18,7 +18,7 @@ export default function PlacePreview() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl font-bold mb-4">สถานที่ท่องเที่ยวน่าสนใจ</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">สถานที่ท่องเที่ยวน่าสนใจ</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
             ค้นพบสถานที่ท่องเที่ยวที่น่าสนใจในบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ
           </p>

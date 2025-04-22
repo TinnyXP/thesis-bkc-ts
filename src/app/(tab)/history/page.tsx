@@ -3,7 +3,7 @@
 
 import React from "react";
 import { PageHeader, SectionHeading } from "@/components";
-import { Tabs, Tab, Card, CardBody, Link, Button } from "@heroui/react";
+import { Link, Button, Accordion, AccordionItem } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { FaLeaf, FaTree, FaMapMarkerAlt, FaHistory, FaBookOpen, FaInfoCircle, FaSearch } from "react-icons/fa";
@@ -66,7 +66,7 @@ export default function HistoryPage() {
 
   return (
     <>
-      <PageHeader 
+      <PageHeader
         title={t('history')}
         subtitle="ประวัติศาสตร์"
         description="เรียนรู้ประวัติศาสตร์อันน่าสนใจของบางกระเจ้า พื้นที่สีเขียวสำคัญใกล้กรุงเทพฯ ที่มีเรื่องราวน่าสนใจนับร้อยปี"
@@ -130,27 +130,21 @@ export default function HistoryPage() {
 
           {/* Tabs ตำบลต่างๆ */}
           <motion.div
-            className="bg-white dark:bg-zinc-900 rounded-xl shadow-md p-4"
             variants={fadeIn}
           >
-            <Tabs
+            <Accordion
               aria-label="ตำบลในบางกะเจ้า"
-              selectedKey={selected}
               onSelectionChange={(key) => setSelected(String(key))}
-              color="primary"
-              variant="underlined"
-              classNames={{
-                tab: "data-[selected=true]:text-primary-color data-[selected=true]:font-semibold",
-                tabList: "gap-2 md:gap-4 w-full relative rounded-lg p-2 border-b border-default-200 overflow-x-auto flex-nowrap",
-                cursor: "bg-primary-color"
-              }}
+              variant="bordered"
             >
               {Object.entries(districtData).map(([key, { title, content, icon }]) => (
-                <Tab
+                <AccordionItem
                   key={key}
                   title={
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      {icon}
+                    <div className="flex items-center gap-2 whitespace-nowrap text-lg md:text-xl font-semibold text-zinc-800 dark:text-zinc-200">
+                      <span className={selected === key ? "text-primary-color" : "text-zinc-500 dark:text-zinc-400"}>
+                        {icon}
+                      </span>
                       <span>{title}</span>
                     </div>
                   }
@@ -159,17 +153,17 @@ export default function HistoryPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="py-4"
+                    className="pb-4"
                   >
-                    <Card className="border-none shadow-md bg-gradient-to-br from-white to-zinc-50 dark:from-zinc-800 dark:to-zinc-900">
-                      <CardBody className="leading-7 whitespace-pre-line p-6 text-default-700 dark:text-default-300">
+                    <div className="bg-white shadow-sm dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900 rounded-lg overflow-hidden">
+                      <div className="leading-7 whitespace-pre-line p-6 text-zinc-800 dark:text-zinc-200">
                         {content}
-                      </CardBody>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
-                </Tab>
+                </AccordionItem>
               ))}
-            </Tabs>
+            </Accordion>
           </motion.div>
 
           <motion.div
@@ -183,7 +177,7 @@ export default function HistoryPage() {
               <div className="bg-primary-color rounded-full h-12 w-12 flex items-center justify-center flex-shrink-0">
                 <FaMapMarkerAlt className="text-white text-lg" />
               </div>
-              
+
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-primary-color mb-2">
                   {t('exploreMore')}
@@ -192,7 +186,7 @@ export default function HistoryPage() {
                   {t('exploreDescription')}
                 </p>
               </div>
-              
+
               <Button
                 as={Link}
                 href="/place"
