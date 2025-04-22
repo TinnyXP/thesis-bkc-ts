@@ -33,7 +33,7 @@ export default function AccordionMain() {
     <section
       className="py-10 bg-zinc-50 dark:bg-zinc-950"
     >
-      <div className="container max-w-5xl mx-auto px-4 py-12 sm:px-6">
+      <div className="container max-w-7xl mx-auto px-4 py-12 sm:px-6">
         <div className="flex flex-wrap items-center justify-between px-2 mb-5">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <FaQuestionCircle size={35} className="text-primary-color" />

@@ -9,39 +9,38 @@ import { motion } from "framer-motion";
 import { FaLeaf, FaTree, FaMapMarkerAlt, FaHistory, FaBookOpen, FaInfoCircle, FaSearch } from "react-icons/fa";
 
 export default function HistoryPage() {
-  const [selected, setSelected] = React.useState("bangkachao");
   const { t } = useTranslation();
 
   const districtData = {
     bangkachao: {
       title: t('bkcTitle'),
       content: t('bkcHis'),
-      icon: <FaLeaf className="text-primary-color" />
+      icon: <FaLeaf />
     },
     songkanong: {
       title: t('sknTitle'),
       content: t('sknHis'),
-      icon: <FaTree className="text-green-600" />
+      icon: <FaTree />
     },
     bangkasop: {
       title: t('bksTitle'),
       content: t('bksHis'),
-      icon: <FaMapMarkerAlt className="text-blue-600" />
+      icon: <FaMapMarkerAlt />
     },
     bangnamphueng: {
       title: t('bnpTitle'),
       content: t('bnpHis'),
-      icon: <FaLeaf className="text-primary-color" />
+      icon: <FaLeaf />
     },
     bangkobua: {
       title: t('bkbTitle'),
       content: t('bkbHis'),
-      icon: <FaTree className="text-green-600" />
+      icon: <FaTree />
     },
     bangyor: {
       title: t('byTitle'),
       content: t('byHis'),
-      icon: <FaMapMarkerAlt className="text-blue-600" />
+      icon: <FaMapMarkerAlt />
     }
   };
 
@@ -129,12 +128,9 @@ export default function HistoryPage() {
           </div>
 
           {/* Tabs ตำบลต่างๆ */}
-          <motion.div
-            variants={fadeIn}
-          >
+          <motion.div variants={fadeIn}>
             <Accordion
               aria-label="ตำบลในบางกะเจ้า"
-              onSelectionChange={(key) => setSelected(String(key))}
               variant="bordered"
             >
               {Object.entries(districtData).map(([key, { title, content, icon }]) => (
@@ -142,7 +138,7 @@ export default function HistoryPage() {
                   key={key}
                   title={
                     <div className="flex items-center gap-2 whitespace-nowrap text-lg md:text-xl font-semibold text-zinc-800 dark:text-zinc-200">
-                      <span className={selected === key ? "text-primary-color" : "text-zinc-500 dark:text-zinc-400"}>
+                      <span className="text-primary-color">
                         {icon}
                       </span>
                       <span>{title}</span>
