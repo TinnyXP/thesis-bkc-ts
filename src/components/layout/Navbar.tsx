@@ -43,6 +43,12 @@ export default function NavBar() {
   const { theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const { t } = useTranslation();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Add client-side only rendering to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // ใช้ useMemo ครอบ menuItems เพื่อป้องกันการสร้างใหม่ทุกครั้งที่ render
   const menuItems = React.useMemo(() => [
@@ -66,6 +72,8 @@ export default function NavBar() {
 
   // เพิ่มข้อมูล schema.org สำหรับ navigation
   React.useEffect(() => {
+    if (!isMounted) return;
+    
     // สร้างและเพิ่ม script element สำหรับ schema.org สำหรับ navigation
     const script = document.createElement('script');
     script.type = 'application/ld+json';
@@ -91,7 +99,25 @@ export default function NavBar() {
         document.head.removeChild(script);
       }
     };
-  }, [menuItems]); // ตอนนี้ dependency จะดีขึ้นเพราะ menuItems ถูก memoize แล้ว
+  }, [menuItems, isMounted]); // ตอนนี้ dependency จะดีขึ้นเพราะ menuItems ถูก memoize แล้ว
+
+  // Avoid hydration mismatch by only rendering menu items on the client
+  const renderMenuItems = () => {
+    if (!isMounted) {
+      // Return empty placeholders with the same structure during SSR
+      return menuItems.map((_, index) => (
+        <NavbarItem key={`placeholder-${index}`}>
+          <span className="invisible">placeholder</span>
+        </NavbarItem>
+      ));
+    }
+
+    return menuItems.map((item, index) => (
+      <NavbarItem key={`${item}-${index}`}>
+        <Link color="foreground" className="text-default-500 font-[family-name:var(--font-line-seed-sans)]" href={item.href} size="md">{item.label}</Link>
+      </NavbarItem>
+    ));
+  };
 
   return (
     <Navbar
@@ -118,11 +144,7 @@ export default function NavBar() {
 
       {/* Center Content */}
       <NavbarContent className="hidden md:flex gap-5" justify="center">
-        {menuItems.map((item, index) => (
-          <NavbarItem key={`${item}-${index}`}>
-            <Link color="foreground" className="text-default-500 font-[family-name:var(--font-line-seed-sans)]" href={item.href} size="md">{item.label}</Link>
-          </NavbarItem>
-        ))}
+        {renderMenuItems()}
       </NavbarContent>
 
       {/* Right Content */}
@@ -141,7 +163,7 @@ export default function NavBar() {
               href="/login"
               size="md"
             >
-              {t('login')}
+              {isMounted ? t('login') : ''}
             </Button>
           )}
         </NavbarItem>
@@ -170,7 +192,7 @@ export default function NavBar() {
               href="/login"
               size="md"
             >
-              {t('login')}
+              {isMounted ? t('login') : ''}
             </Button>
           )}
         </NavbarItem>
@@ -182,7 +204,7 @@ export default function NavBar() {
         <div className="grid grid-flow-col justify-stretch">
           {/* เมนูด้านซ้าย */}
           <div className="flex flex-col">
-            {menuItems.map((item, index) => (
+            {isMounted && menuItems.map((item, index) => (
               <NavbarMenuItem key={`${item}-${index}`}>
                 <Link
                   color="foreground"
@@ -227,6 +249,11 @@ export default function NavBar() {
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
   const { data: session } = useSession();
   const { profile, isLoading, refreshProfile } = useProfile();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const {
     isOpen: isSettingsOpen,
@@ -258,6 +285,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
 
   // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
   useEffect(() => {
+    if (!isMounted) return;
+    
     const handleProfileUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail) {
@@ -279,14 +308,28 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdated);
     };
-  }, [refreshProfile, localProfile.name]);
+  }, [refreshProfile, localProfile.name, isMounted]);
 
   // รีเฟรชข้อมูลเมื่อเปิด modal
   useEffect(() => {
-    if (isSettingsOpen || isBookmarksOpen) {
+    if ((isSettingsOpen || isBookmarksOpen) && isMounted) {
       refreshProfile();
     }
-  }, [isSettingsOpen, isBookmarksOpen, refreshProfile]);
+  }, [isSettingsOpen, isBookmarksOpen, refreshProfile, isMounted]);
+
+  if (!isMounted) {
+    return (
+      <Avatar
+        classNames={{
+          base: "transition-transform bg-transparent border-1.5 border-default-200 dark:border-default-200",
+          icon: "text-zinc-400 dark:text-zinc-400",
+        }}
+        size={size}
+        icon={<AvatarIcon />}
+        showFallback
+      />
+    );
+  }
 
   return (
     <div>
@@ -345,17 +388,21 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
         </DropdownMenu>
       </Dropdown>
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onOpenChange={onSettingsOpenChange}
-        userProfile={profile}
-        refreshProfile={refreshProfile}
-      />
+      {isMounted && (
+        <div>
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onOpenChange={onSettingsOpenChange}
+            userProfile={profile}
+            refreshProfile={refreshProfile}
+          />
 
-      <BookmarkModal
-        isOpen={isBookmarksOpen}
-        onOpenChange={onBookmarksOpenChange}
-      />
+          <BookmarkModal
+            isOpen={isBookmarksOpen}
+            onOpenChange={onBookmarksOpenChange}
+          />
+        </div>
+      )}
     </div>
   );
 };
