@@ -85,7 +85,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
               isPressable
               isBlurred
               isHoverable
-              onPress={() => window.location.href = `/place/${placeTypeSlug}/${place.slug.current}`}
+              onPress={() => window.location.href = `/place/type/${placeTypeSlug}/${place.slug.current}`}
               className="border-none bg-background/60 dark:bg-default-100/50"
             >
               <CardBody className="overflow-visible px-1.5 pt-1.5 pb-0">
