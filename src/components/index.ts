@@ -16,7 +16,6 @@ export { default as BookmarkButton } from './ui/Sanity/Shared/BookmarkButton';
 // Blog Sanity Components
 export { default as BlogCard } from './ui/Sanity/Blog/BlogCard';
 export { default as BlogCardList } from './ui/Sanity/Blog/BlogCardList';
-export { default as CategoryCard } from './ui/Sanity/Blog/CategoryCard';
 export { default as CategoryCardList } from './ui/Sanity/Blog/CategoryCardList';
 
 // Tourism Sanity Components

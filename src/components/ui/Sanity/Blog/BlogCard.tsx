@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardFooter, Chip, Image, Pagination } from "@heroui/react";
 import { Post, formatThaiDate } from "@/lib/sanity";
 
-interface CardClientProps {
+interface PostCardProps {
   posts: Post[];
+  category?: string; // optional parameter to specify category
 }
 
 /**
- * คอมโพเนนต์แสดงการ์ดบทความพร้อมการแบ่งหน้า (client-side)
+ * คอมโพเนนต์แสดงการ์ดบทความที่ใช้ได้ทั้งสำหรับหน้ารวมบทความและหน้าหมวดหมู่
  */
-export default function BlogCard({ posts }: CardClientProps) {
+export default function PostCard({ posts, category }: PostCardProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [cardsPerPage, setCardsPerPage] = useState(6);
   const [currentPosts, setCurrentPosts] = useState<Post[]>([]);
@@ -52,7 +53,9 @@ export default function BlogCard({ posts }: CardClientProps) {
       <div className="text-center py-10">
         <h2 className="text-2xl font-bold mb-4">ไม่พบบทความ</h2>
         <p className="text-zinc-600 dark:text-zinc-400">
-          ขออภัย ยังไม่มีบทความในหมวดหมู่นี้
+          {category 
+            ? `ขออภัย ยังไม่มีบทความในหมวดหมู่ ${category}` 
+            : "ขออภัย ยังไม่มีบทความในขณะนี้"}
         </p>
       </div>
     );
