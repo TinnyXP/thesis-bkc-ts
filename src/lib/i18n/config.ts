@@ -1,4 +1,5 @@
-// src/lib/i18n/config.ts
+// ปรับปรุงไฟล์ src/lib/i18n/config.ts
+
 'use client';
 
 import i18n from 'i18next';
@@ -16,6 +17,22 @@ export const languages = [
   { code: 'zh', name: '中文', hreflang: 'zh-CN' }  // Chinese
 ];
 
+// เพิ่มฟังก์ชันสำหรับโหลดภาษาจาก localStorage
+const getSavedLanguage = (): string => {
+  if (typeof window !== 'undefined') {
+    try {
+      const savedLang = localStorage.getItem('userLanguage');
+      // ตรวจสอบว่าภาษาที่บันทึกอยู่ในรายการภาษาที่รองรับหรือไม่
+      if (savedLang && languages.some(lang => lang.code === savedLang)) {
+        return savedLang;
+      }
+    } catch (e) {
+      console.error('Failed to get language from localStorage:', e);
+    }
+  }
+  return 'th'; // ค่าเริ่มต้น
+};
+
 /**
  * Initialize i18next
  * - Sets default language to Thai
@@ -27,7 +44,7 @@ i18n
   .init({
     debug: process.env.NODE_ENV === 'development',
     fallbackLng: 'th', // Thai as fallback language
-    lng: 'th',         // Thai as default language
+    lng: getSavedLanguage(),  // เปลี่ยนจาก 'th' เป็นการเรียกใช้ฟังก์ชัน getSavedLanguage
     supportedLngs: ['th', 'en', 'zh'],
     
     interpolation: {
@@ -48,6 +65,15 @@ i18n
  * @returns Promise from i18n.changeLanguage
  */
 export const changeLanguage = (lng: string) => {
+  // บันทึกภาษาที่เลือกลงใน localStorage
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userLanguage', lng);
+    }
+  } catch (e) {
+    console.error('Failed to save language to localStorage:', e);
+  }
+  
   return i18n.changeLanguage(lng);
 };
 
