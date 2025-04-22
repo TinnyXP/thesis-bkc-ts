@@ -1,7 +1,7 @@
 // src/components/ui/Sanity/CategoryCardList.tsx
 "use client";
 
-import { BlogCard } from "@/components";
+import { CategoryCard } from "@/components";
 import { Link } from "@heroui/react";
 import { usePosts } from "@/hooks/usePosts";
 
@@ -46,5 +46,5 @@ export default function CategoryCardList({ category }: { category: string }) {
     return <EmptyCategory category={category} />;
   }
 
-  return <BlogCard posts={posts} category={category} />;
+  return <CategoryCard posts={posts} category={category} />;
 }
