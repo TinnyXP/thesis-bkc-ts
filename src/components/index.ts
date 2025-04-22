@@ -1,3 +1,4 @@
+// src/components/index.ts
 // Layout
 export { default as NavBar } from './layout/Navbar';
 export { default as Footer } from './layout/Footer';
@@ -23,6 +24,13 @@ export { default as PlaceCard } from './ui/Sanity/Place/PlaceCard';
 export { default as PlaceCardList } from './ui/Sanity/Place/PlaceCardList';
 export { default as PlaceTypeCardList } from './ui/Sanity/Place/PlaceTypeCardList';
 export { default as PlaceDistrictCardList } from './ui/Sanity/Place/PlaceDistrictCardList';
+
+// Sanity Search Components
+export { default as SearchInput } from './ui/Sanity/Search/SearchInput';
+export { default as SearchFilter } from './ui/Sanity/Search/SearchFilter';
+export { default as SearchBar } from './ui/Sanity/Search/SearchBar';
+export { default as SearchResult } from './ui/Sanity/Search/SearchResult';
+export type { FilterOption } from './ui/Sanity/Search/SearchFilter';
 
 // Tourism Sanity Reviews Components
 export { default as ReviewSection } from './ui/Sanity/Reviews/ReviewSection';
