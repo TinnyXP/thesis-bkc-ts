@@ -210,6 +210,7 @@ export default async function PlacePage({
               slug: place.placeType?.slug.current || 'uncategorized'
             }}
             basePath="place"
+            categoryPathPrefix="type"  // เพิ่มตัวแปรนี้เพื่อสร้าง URL เป็น /place/type/{slug}
           />
 
           {/* รูปภาพหลัก */}
@@ -282,7 +283,7 @@ export default async function PlacePage({
                 ) : (
                   <div className="flex justify-center w-full">
                     <p className="text-zinc-500 text-lg">ไม่มีเนื้อหา</p>
-                  </div>    
+                  </div>
                 )}
               </article>
 
@@ -496,7 +497,7 @@ export default async function PlacePage({
           <section className="container mx-auto max-w-5xl flex-grow my-10 flex flex-col gap-5 font-[family-name:var(--font-bai-jamjuree)]">
             <ReviewSection placeId={place.slug.current} />
           </section>
-          
+
         </section>
 
       </div>

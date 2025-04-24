@@ -1,11 +1,11 @@
-// src/components/ui/Sanity/Blog/SlugBreadcrumb.tsx
+// src/components/ui/Sanity/Shared/SlugBreadcrumb.tsx
 'use client';
 
 import React from 'react';
 import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
 import { FaHouse } from 'react-icons/fa6';
 
-// ปรับปรุง interface ให้รองรับทั้ง Blog และ Place
+// ปรับปรุง interface เพื่อรองรับการกำหนดเส้นทางสำหรับหมวดหมู่
 interface SlugBreadcrumbProps {
   postTitle: string;
   postSlug: string;
@@ -13,7 +13,8 @@ interface SlugBreadcrumbProps {
     title: string;
     slug: string;
   };
-  basePath?: string; // เพิ่ม basePath เพื่อรองรับทั้ง "blog" และ "place"
+  basePath?: string; // เช่น "blog" หรือ "place"
+  categoryPathPrefix?: string; // เพิ่มตัวแปรนี้สำหรับ "/type/" ในกรณีของ place
 }
 
 /**
@@ -23,11 +24,15 @@ export default function SlugBreadcrumb({
   postTitle,
   postSlug,
   category,
-  basePath = "blog" // ค่าเริ่มต้นเป็น "blog" เพื่อให้ทำงานได้เหมือนเดิม
+  basePath = "blog",
+  categoryPathPrefix = ""
 }: SlugBreadcrumbProps) {
   // ใช้ค่าเริ่มต้นถ้าไม่มีข้อมูลหมวดหมู่
   const categorySlug = category?.slug || 'uncategorized';
   const categoryTitle = category?.title || 'ไม่มีหมวดหมู่';
+  
+  // สร้าง URL ตามที่กำหนด
+  const categoryUrl = `/${basePath}${categoryPathPrefix ? `/${categoryPathPrefix}` : ''}/${categorySlug}`;
 
   return (
     <div className="w-full overflow-hidden">
@@ -43,7 +48,7 @@ export default function SlugBreadcrumb({
         </BreadcrumbItem>
 
         {/* ลิงก์ไปหน้าหมวดหมู่ */}
-        <BreadcrumbItem href={`/${basePath}/${categorySlug}`} className="flex-shrink min-w-0">
+        <BreadcrumbItem href={categoryUrl} className="flex-shrink min-w-0">
           <div className="max-w-[100px] md:max-w-[200px]">
             <p className="truncate" title={categoryTitle}>
               {categoryTitle}
@@ -53,7 +58,7 @@ export default function SlugBreadcrumb({
 
         {/* ลิงก์ไปหน้าบทความปัจจุบัน */}
         <BreadcrumbItem
-          href={`/${basePath}/${categorySlug}/${postSlug}`}
+          href={`/${basePath}${categoryPathPrefix ? `/${categoryPathPrefix}` : ''}/${categorySlug}/${postSlug}`}
           isCurrent
           className="flex-1 min-w-0"
         >
