@@ -1,7 +1,27 @@
+// src/models/user.ts (ปรับปรุงใหม่)
 import mongoose, { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-const userSchema = new Schema(
+export interface UserDocument extends mongoose.Document {
+  bkc_id: string;
+  provider: 'otp' | 'line';
+  role: 'user' | 'admin' | 'superadmin';  // เพิ่ม role superadmin
+  name: string;
+  email: string;
+  profile_image: string | null;
+  line_id: string | null;
+  line_default_data: {
+    name: string;
+    profile_image: string;
+  } | null;
+  is_active: boolean;
+  profile_completed: boolean;
+  admin_permissions?: string[]; // สิทธิ์พิเศษของแอดมิน
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const userSchema = new Schema<UserDocument>(
   {
     bkc_id: {
       type: String,
@@ -17,7 +37,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      required: false,
+      enum: ['user', 'admin', 'superadmin'],  // เพิ่ม superadmin
       default: "user",
     },
     name: {
@@ -38,7 +58,6 @@ const userSchema = new Schema(
       unique: true,
       sparse: true
     },
-    // เพิ่มฟิลด์นี้เพื่อเก็บข้อมูลดั้งเดิมจาก LINE
     line_default_data: {
       type: {
         name: String,
@@ -53,6 +72,10 @@ const userSchema = new Schema(
     profile_completed: {
       type: Boolean,
       default: false
+    },
+    admin_permissions: {  // เพิ่มฟิลด์สำหรับเก็บสิทธิ์ของแอดมิน
+      type: [String],
+      default: []
     }
   },
   { timestamps: true }
@@ -61,5 +84,8 @@ const userSchema = new Schema(
 // ยังคงเก็บ compound index ไว้
 userSchema.index({ email: 1, provider: 1 }, { unique: true });
 
-const User = mongoose.models.User || mongoose.model("User", userSchema);
+// เพิ่ม index สำหรับค้นหาด้วย role
+userSchema.index({ role: 1 });
+
+const User = mongoose.models.User || mongoose.model<UserDocument>("User", userSchema);
 export default User;
