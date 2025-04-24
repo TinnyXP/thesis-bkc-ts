@@ -37,7 +37,7 @@ export { default as BookmarkModal } from './ui/Auth/BookmarkModal';
 export { default as SettingsModal } from './ui/Auth/SettingsModal';
 
 // Admin Components
-// export { default as AdminSidebar } from './ui/Admin/AdminSidebar';
+export { default as AdminSidebar } from './ui/Admin/AdminSidebar';
 
 // Comments
 export { default as CommentSection } from './ui/Comments/CommentSection';

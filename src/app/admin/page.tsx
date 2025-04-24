@@ -14,7 +14,7 @@ import { FaUserShield, FaClipboardList, FaComments, FaUsers, FaBell } from "reac
 import { BiLineChart } from "react-icons/bi";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Loading } from "@/components";
-import { AdminSidebar } from "@/components/ui/Admin/AdminSidebar";
+import { AdminSidebar } from "@/components";
 import { showToast } from "@/lib/toast";
 
 export default function AdminDashboardPage() {

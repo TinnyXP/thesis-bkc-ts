@@ -34,7 +34,7 @@ interface SidebarItemProps {
   isSuperAdmin: boolean;
 }
 
-export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
+export default function AdminSidebar({ isSuperAdmin }: AdminSidebarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -96,12 +96,7 @@ interface SidebarContentProps {
   onItemClick: () => void;
 }
 
-const SidebarContent: React.FC<SidebarContentProps> = ({ 
-  pathname,
-  isSuperAdmin,
-  isMobile,
-  onItemClick
-}) => {
+function SidebarContent({ pathname, isSuperAdmin, isMobile, onItemClick }: SidebarContentProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -244,16 +239,7 @@ interface SidebarItemWithClickProps extends SidebarItemProps {
   onItemClick: () => void;
 }
 
-const SidebarItem: React.FC<SidebarItemWithClickProps> = ({
-  href,
-  icon,
-  label,
-  isActive,
-  isMobile,
-  adminOnly,
-  isSuperAdmin,
-  onItemClick
-}) => {
+function SidebarItem({ href, icon, label, isActive, isMobile, adminOnly, isSuperAdmin, onItemClick }: SidebarItemWithClickProps) {
   // ถ้าเป็นเมนูสำหรับ admin เท่านั้น และผู้ใช้ไม่ใช่ admin ให้ไม่แสดงเมนูนี้
   if (adminOnly && !isSuperAdmin) {
     return null;

@@ -41,7 +41,7 @@ import {
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUsersManagement, User } from "@/hooks/useUsersManagement";
 import { Loading } from "@/components";
-import { AdminSidebar } from "@/components/ui/Admin/AdminSidebar";
+import { AdminSidebar } from "@/components";
 import { showToast } from "@/lib/toast";
 
 export default function UsersManagementPage() {

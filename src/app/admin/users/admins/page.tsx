@@ -32,7 +32,7 @@ import {
 import { FaUserShield, FaEdit, FaTrash, FaPlus, FaSearch, FaKey, FaUsers, FaArrowLeft } from "react-icons/fa";
 import { useAdmin, AdminUser } from "@/hooks/useAdmin";
 import { Loading } from "@/components";
-import { AdminSidebar } from "@/components/ui/Admin/AdminSidebar";
+import { AdminSidebar } from "@/components";
 import { showToast } from "@/lib/toast";
 
 export default function AdminManagementListPage() {
