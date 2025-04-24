@@ -38,6 +38,7 @@ export { default as SettingsModal } from './ui/Auth/SettingsModal';
 
 // Admin Components
 export { default as AdminSidebar } from './ui/Admin/AdminSidebar';
+export { default as EditUserModal } from './ui/Admin/EditUserModal';
 
 // Comments
 export { default as CommentSection } from './ui/Comments/CommentSection';

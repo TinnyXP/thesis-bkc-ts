@@ -11,6 +11,7 @@ declare module "next-auth" {
       bkcId: string;  // ตรงนี้จะเป็น required
       provider: string;
       isNewUser?: boolean;
+      isActive?: boolean; // เพิ่มสถานะการใช้งาน
     } & DefaultSession["user"];
   }
 
@@ -22,6 +23,7 @@ declare module "next-auth" {
     bkc_id: string;  // ตรงนี้ต้องเป็น required
     line_id?: string;
     isNewUser?: boolean;
+    isActive?: boolean; // เพิ่มสถานะการใช้งาน
   }
 }
 
@@ -34,5 +36,6 @@ declare module "next-auth/jwt" {
     bkcId: string;  // ตรงนี้จะเป็น required
     provider: string;
     isNewUser?: boolean;
+    isActive?: boolean; // เพิ่มสถานะการใช้งาน
   }
 }

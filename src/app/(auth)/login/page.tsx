@@ -76,13 +76,19 @@ export default function LoginPage() {
 
     checkSavedLoginState();
 
-    // ตรวจสอบ query param เพื่อแสดง toast เมื่อลบบัญชีเสร็จแล้ว
+    // ตรวจสอบ query param
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
+
+      // กรณีลบบัญชี
       if (urlParams.get('deleted') === 'true') {
-        // แสดง toast แจ้งเตือนการลบบัญชีสำเร็จ
         showToast("ลบบัญชีเรียบร้อยแล้ว", "success");
-        // อัปเดต URL เพื่อไม่ให้แสดง toast ซ้ำเมื่อรีเฟรช
+        window.history.replaceState({}, document.title, '/login');
+      }
+
+      // กรณีบัญชีถูกระงับ
+      if (urlParams.get('blocked') === 'true') {
+        showToast("บัญชีของคุณถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ", "error");
         window.history.replaceState({}, document.title, '/login');
       }
     }

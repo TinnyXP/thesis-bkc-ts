@@ -33,6 +33,38 @@ export async function middleware(request: NextRequest) {
   // มี token แสดงว่าล็อกอินแล้ว
   const isLoggedIn = !!token;
   
+  // ถ้าล็อกอินแล้ว ให้ตรวจสอบสถานะบัญชี
+  if (isLoggedIn) {
+    try {
+      // ตรวจสอบสถานะบัญชีจาก token
+      if (token.isActive === false) {
+        // ถ้าบัญชีถูกระงับ ให้ redirect ไปหน้า login พร้อมแสดงข้อความแจ้งเตือน
+        const url = new URL('/login', request.url);
+        url.searchParams.set('blocked', 'true');
+        return NextResponse.redirect(url);
+      }
+      
+      // สำหรับเส้นทางที่ต้องเช็คเพิ่มเติม เช่น เส้นทางที่ผู้ดูแลระบบเท่านั้นที่เข้าถึงได้
+      // ถ้าเป็นเส้นทาง admin แต่ไม่ใช่ admin ให้ redirect ไปหน้าหลัก
+      if (pathname.startsWith('/admin')) {
+        try {
+          // เนื่องจาก middleware ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้โดยตรง
+          // เราจำเป็นต้องตรวจสอบจาก token หรือใช้ API สำหรับตรวจสอบสิทธิ์
+          // แต่ในที่นี้เราจะใช้วิธีง่ายๆ คือตรวจสอบจาก token.role (ถ้ามี)
+          if (!token.role || (token.role !== 'admin' && token.role !== 'superadmin')) {
+            return NextResponse.redirect(new URL('/', request.url));
+          }
+        } catch (error) {
+          console.error("Error checking admin status in middleware:", error);
+          // ในกรณีที่เกิดข้อผิดพลาด ให้ redirect ไปหน้าแรก
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+      }
+    } catch (error) {
+      console.error("Error checking account status in middleware:", error);
+    }
+  }
+  
   // 1. ถ้าอยู่ในหน้าที่ต้องล็อกอิน แต่ยังไม่ได้ล็อกอิน (เช่น welcome, complete-profile)
   if (isAuthRequired && !isLoggedIn) {
     const url = new URL('/login', request.url);
@@ -82,5 +114,8 @@ export const config = {
     
     // เส้นทางที่ต้องตรวจสอบสถานะล็อกอินเพิ่มเติม
     '/dashboard/:path*',
+    
+    // เส้นทางของผู้ดูแลระบบ
+    '/admin/:path*',
   ],
 };

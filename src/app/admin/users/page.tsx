@@ -29,34 +29,40 @@ import {
   Divider,
   Spinner
 } from "@heroui/react";
-import { 
-  FaUsers, 
-  FaUserShield, 
-  FaSearch, 
-  FaUserEdit, 
-  FaLock, 
+import {
+  FaUsers,
+  FaUserShield,
+  FaSearch,
+  FaUserEdit,
+  FaLock,
   FaUnlock,
   FaTrash
 } from "react-icons/fa";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useUsersManagement, User } from "@/hooks/useUsersManagement";
-import { Loading } from "@/components";
-import { AdminSidebar } from "@/components";
+import { Loading, AdminSidebar, EditUserModal } from "@/components";
 import { showToast } from "@/lib/toast";
 
 export default function UsersManagementPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { isAdmin, isSuperAdmin, isLoading: isLoadingAdmin } = useAdmin();
-  const { 
-    isLoading: isLoadingUsers, 
+  const {
+    isLoading: isLoadingUsers,
     isProcessing,
     fetchUsers,
     toggleUserStatus,
     deleteUser,
     updateUser
   } = useUsersManagement();
-  
+
+  const {
+    isOpen: isEditModalOpen,
+    onOpen: onEditModalOpen,
+    onClose: onEditModalClose,
+    onOpenChange: onEditModalOpenChange
+  } = useDisclosure();
+
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
@@ -64,17 +70,17 @@ export default function UsersManagementPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const { 
-    isOpen: isBlockModalOpen, 
-    onOpen: onBlockModalOpen, 
+
+  const {
+    isOpen: isBlockModalOpen,
+    onOpen: onBlockModalOpen,
     onClose: onBlockModalClose,
     onOpenChange: onBlockModalOpenChange
   } = useDisclosure();
-  
-  const { 
-    isOpen: isDeleteModalOpen, 
-    onOpen: onDeleteModalOpen, 
+
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
     onClose: onDeleteModalClose,
     onOpenChange: onDeleteModalOpenChange
   } = useDisclosure();
@@ -113,7 +119,7 @@ export default function UsersManagementPage() {
   // ค้นหาข้อมูลผู้ใช้
   useEffect(() => {
     if (users.length > 0) {
-      const results = users.filter(user => 
+      const results = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.bkcId.toLowerCase().includes(searchTerm.toLowerCase())
@@ -133,15 +139,15 @@ export default function UsersManagementPage() {
   // จัดการการบล็อก/ปลดบล็อกผู้ใช้
   const handleToggleUserStatus = async () => {
     if (!selectedUser) return;
-    
+
     const success = await toggleUserStatus(selectedUser.id, selectedUser.isActive);
-    
+
     if (success) {
       // อัพเดตสถานะผู้ใช้ใน local state
-      const updatedUsers = users.map(user => 
+      const updatedUsers = users.map(user =>
         user.id === selectedUser.id ? { ...user, isActive: !user.isActive } : user
       );
-      
+
       setUsers(updatedUsers);
       onBlockModalClose();
     }
@@ -150,9 +156,9 @@ export default function UsersManagementPage() {
   // จัดการการลบผู้ใช้
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
-    
+
     const success = await deleteUser(selectedUser.id);
-    
+
     if (success) {
       // อัพเดตรายการผู้ใช้ใน local state
       const updatedUsers = users.filter(user => user.id !== selectedUser.id);
@@ -197,7 +203,14 @@ export default function UsersManagementPage() {
   return (
     <div className="flex">
       <AdminSidebar isSuperAdmin={isSuperAdmin} />
-      
+
+      <EditUserModal
+        isOpen={isEditModalOpen}
+        onOpenChange={onEditModalOpenChange}
+        user={selectedUser}
+        onUserUpdated={loadUsers}
+      />
+
       <div className="flex-1 p-6">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -208,19 +221,19 @@ export default function UsersManagementPage() {
               </h1>
               <p className="text-default-500">จัดการข้อมูลของผู้ใช้ทั้งหมด</p>
             </div>
-            
+
             <div className="flex flex-wrap gap-2">
-              <Button 
-                color="default" 
+              <Button
+                color="default"
                 onPress={loadUsers}
                 isLoading={isRefreshing}
               >
                 รีเฟรช
               </Button>
-              
+
               {isSuperAdmin && (
-                <Button 
-                  color="primary" 
+                <Button
+                  color="primary"
                   onPress={() => router.push("/admin/users/admins")}
                   startContent={<FaUserShield />}
                 >
@@ -243,7 +256,7 @@ export default function UsersManagementPage() {
                   className="w-full max-w-[300px]"
                 />
               </div>
-              
+
               {isLoadingUsers || isRefreshing ? (
                 <div className="flex justify-center py-10">
                   <Spinner label="กำลังโหลดข้อมูล..." color="primary" />
@@ -287,8 +300,8 @@ export default function UsersManagementPage() {
                             </Chip>
                           </TableCell>
                           <TableCell>
-                            <Chip 
-                              color={user.isActive ? "success" : "danger"} 
+                            <Chip
+                              color={user.isActive ? "success" : "danger"}
                               variant="flat"
                             >
                               {user.isActive ? "ใช้งานอยู่" : "ถูกระงับ"}
@@ -297,19 +310,23 @@ export default function UsersManagementPage() {
                           <TableCell>
                             <div className="flex gap-2">
                               <Tooltip content="แก้ไขข้อมูล">
-                                <Button 
-                                  isIconOnly 
-                                  size="sm" 
-                                  color="primary" 
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  color="primary"
                                   variant="light"
+                                  onPress={() => {
+                                    setSelectedUser(user);
+                                    onEditModalOpen();
+                                  }}
                                 >
                                   <FaUserEdit />
                                 </Button>
                               </Tooltip>
                               <Tooltip content={user.isActive ? "บล็อกผู้ใช้" : "ปลดบล็อก"}>
-                                <Button 
-                                  isIconOnly 
-                                  size="sm" 
+                                <Button
+                                  isIconOnly
+                                  size="sm"
                                   color={user.isActive ? "warning" : "success"}
                                   variant="light"
                                   onPress={() => {
@@ -321,10 +338,10 @@ export default function UsersManagementPage() {
                                 </Button>
                               </Tooltip>
                               <Tooltip content="ลบผู้ใช้">
-                                <Button 
-                                  isIconOnly 
-                                  size="sm" 
-                                  color="danger" 
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  color="danger"
                                   variant="light"
                                   onPress={() => {
                                     setSelectedUser(user);
@@ -361,8 +378,8 @@ export default function UsersManagementPage() {
         </div>
 
         {/* Modal บล็อก/ปลดบล็อกผู้ใช้ */}
-        <Modal 
-          isOpen={isBlockModalOpen} 
+        <Modal
+          isOpen={isBlockModalOpen}
           onOpenChange={onBlockModalOpenChange}
           backdrop="blur"
         >
@@ -394,9 +411,9 @@ export default function UsersManagementPage() {
                       คุณกำลังจะปลดบล็อกผู้ใช้ <strong>{selectedUser?.name}</strong> ผู้ใช้นี้จะสามารถเข้าสู่ระบบได้ตามปกติ
                     </p>
                   )}
-                  
+
                   <Divider className="my-2" />
-                  
+
                   <div className="mt-2">
                     <p className="text-sm text-default-500">
                       <strong>อีเมล:</strong> {selectedUser?.email}
@@ -413,8 +430,8 @@ export default function UsersManagementPage() {
                   <Button color="default" variant="flat" onPress={onClose}>
                     ยกเลิก
                   </Button>
-                  <Button 
-                    color={selectedUser?.isActive ? "warning" : "success"} 
+                  <Button
+                    color={selectedUser?.isActive ? "warning" : "success"}
                     onPress={handleToggleUserStatus}
                     isLoading={isProcessing}
                   >
@@ -427,8 +444,8 @@ export default function UsersManagementPage() {
         </Modal>
 
         {/* Modal ยืนยันการลบผู้ใช้ */}
-        <Modal 
-          isOpen={isDeleteModalOpen} 
+        <Modal
+          isOpen={isDeleteModalOpen}
           onOpenChange={onDeleteModalOpenChange}
           backdrop="blur"
         >
@@ -448,9 +465,9 @@ export default function UsersManagementPage() {
                   <p className="text-danger font-semibold">
                     การกระทำนี้จะลบข้อมูลผู้ใช้อย่างถาวร ไม่สามารถยกเลิกได้
                   </p>
-                  
+
                   <Divider className="my-2" />
-                  
+
                   <div className="mt-2">
                     <p className="text-sm text-default-500">
                       <strong>อีเมล:</strong> {selectedUser?.email}
@@ -467,8 +484,8 @@ export default function UsersManagementPage() {
                   <Button color="default" variant="flat" onPress={onClose}>
                     ยกเลิก
                   </Button>
-                  <Button 
-                    color="danger" 
+                  <Button
+                    color="danger"
                     onPress={handleDeleteUser}
                     isLoading={isProcessing}
                   >

@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -33,6 +33,7 @@ import { FiBookmark, FiLogIn, FiLogOut, FiSettings } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
 import { LanguageSelectorButton, LanguageSelectorTab } from '@/lib/i18n';
 import { signOut, useSession } from 'next-auth/react'
+import { showToast } from "@/lib/toast";
 
 interface ProfileAvatarProps {
   size?: "md" | "sm" | "lg";
@@ -73,11 +74,11 @@ export default function NavBar() {
   // เพิ่มข้อมูล schema.org สำหรับ navigation
   React.useEffect(() => {
     if (!isMounted) return;
-    
+
     // สร้างและเพิ่ม script element สำหรับ schema.org สำหรับ navigation
     const script = document.createElement('script');
     script.type = 'application/ld+json';
-    
+
     const navigationData = {
       "@context": "https://schema.org",
       "@type": "SiteNavigationElement",
@@ -89,10 +90,10 @@ export default function NavBar() {
         return `https://www.bangkrachao.com${item.href}`;
       })
     };
-    
+
     script.textContent = JSON.stringify(navigationData);
     document.head.appendChild(script);
-    
+
     return () => {
       // Clean up
       if (script.parentNode) {
@@ -251,6 +252,25 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
   const { profile, isLoading, refreshProfile } = useProfile();
   const [isMounted, setIsMounted] = useState(false);
 
+  // เพิ่มฟังก์ชันใหม่สำหรับตรวจสอบสถานะบัญชี
+  const checkAccountStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/signout', {
+        method: 'POST'
+      });
+
+      const result = await response.json();
+
+      // ถ้าบัญชีถูกระงับ ให้ signOut และแสดงข้อความแจ้งเตือน
+      if (result.success && result.blocked) {
+        showToast("บัญชีของคุณถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ", "error");
+        await signOut({ callbackUrl: '/login?blocked=true' });
+      }
+    } catch (error) {
+      console.error("Error checking account status:", error);
+    }
+  }, []);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -286,7 +306,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
   // เพิ่ม useEffect เพื่อรับฟังเหตุการณ์เมื่อมีการอัปเดตโปรไฟล์
   useEffect(() => {
     if (!isMounted) return;
-    
+
     const handleProfileUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail) {
@@ -295,15 +315,15 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
           name: customEvent.detail.name || localProfile.name,
           image: customEvent.detail.image
         });
-        
+
         // รีเฟรชข้อมูลโปรไฟล์จาก API
         refreshProfile();
       }
     };
-    
+
     // ลงทะเบียนรับฟังเหตุการณ์
     window.addEventListener('profile-updated', handleProfileUpdated);
-    
+
     // เมื่อถอดคอมโพเนนต์ออก ให้เลิกรับฟังเหตุการณ์
     return () => {
       window.removeEventListener('profile-updated', handleProfileUpdated);
@@ -348,6 +368,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
               src={localProfile.image || undefined}
               icon={<AvatarIcon />}
               showFallback
+              onClick={checkAccountStatus}
             />
           )}
         </DropdownTrigger>

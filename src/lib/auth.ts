@@ -112,6 +112,12 @@ export const authOptions: AuthOptions = {
           // ค้นหาผู้ใช้
           const user = await UserModel.findOne({ email, provider: 'otp' });
 
+          // ตรวจสอบว่าบัญชีถูกระงับหรือไม่
+          if (user && user.is_active === false) {
+            console.log("User account is blocked:", email);
+            return null;
+          }
+
           // ใน authorize callback ของ OTP provider
           if (!user) {
             // สร้าง bkc_id ใหม่
@@ -169,7 +175,6 @@ export const authOptions: AuthOptions = {
         await connectDB();
 
         // จัดการกับการล็อกอินผ่าน LINE
-        // แก้ไขที่ src/lib/auth.ts ในส่วน signIn ของ LINE
         if (account?.provider === "line" && profile) {
           const lineProfile = profile as LineProfile;
           const { name, email, picture } = lineProfile;
@@ -180,6 +185,12 @@ export const authOptions: AuthOptions = {
             provider: 'line',
             line_id
           });
+
+          // ตรวจสอบว่าบัญชีถูกระงับหรือไม่
+          if (existingUser && existingUser.is_active === false) {
+            console.log("User account is blocked:", email);
+            return false;
+          }
 
           if (existingUser) {
             // อัพเดตเฉพาะข้อมูลที่จำเป็น
@@ -220,6 +231,9 @@ export const authOptions: AuthOptions = {
             // เพิ่มบรรทัดนี้ เพื่อให้แน่ใจว่าจะส่ง bkc_id กลับไป
             user.bkc_id = existingUser.bkc_id;
 
+            // เพิ่ม isActive เข้าไปใน user
+            user.isActive = existingUser.is_active;
+
             return true;
           } else {
             // สร้าง bkc_id ใหม่
@@ -238,7 +252,8 @@ export const authOptions: AuthOptions = {
                 name,
                 profile_image: picture
               },
-              profile_completed: false
+              profile_completed: false,
+              is_active: true // ตั้งค่าเริ่มต้นให้บัญชีใหม่เป็น active
             });
 
             // บันทึกประวัติการล็อกอิน
@@ -247,6 +262,9 @@ export const authOptions: AuthOptions = {
             // เพิ่มบรรทัดนี้ เพื่อให้แน่ใจว่าจะส่ง bkc_id กลับไป
             user.bkc_id = bkc_id;
 
+            // เพิ่ม isActive เข้าไปใน user
+            user.isActive = true;
+
             return true;
           }
         }
@@ -254,12 +272,28 @@ export const authOptions: AuthOptions = {
         // เพิ่มเงื่อนไขสำหรับ OTP หลังจากสร้างโปรไฟล์สำเร็จ
         // ถ้าเป็น OTP และเป็นผู้ใช้ที่สร้างโปรไฟล์เสร็จแล้ว (ไม่ใช่ new-user)
         if (account?.provider === "otp" && user.id !== 'new-user') {
+          // ตรวจสอบว่าบัญชีถูกระงับหรือไม่
+          const existingUser = await UserModel.findOne({
+            email: user.email,
+            provider: 'otp'
+          });
+
+          if (existingUser && existingUser.is_active === false) {
+            console.log("User account is blocked:", user.email);
+            return false;
+          }
+
           // บันทึกประวัติการล็อกอิน
           const clientInfo = await saveLoginHistory(user.id, 'success');
 
           // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
           if (user.email) {
             sendLoginNotificationEmail(user.email, user.name || '', clientInfo);
+          }
+
+          // เพิ่ม isActive เข้าไปใน user
+          if (existingUser) {
+            user.isActive = existingUser.is_active;
           }
         }
 
@@ -278,8 +312,9 @@ export const authOptions: AuthOptions = {
           if (session.user.name) token.name = session.user.name;
           if (session.user.image) token.picture = session.user.image;
           if (session.user.hasOwnProperty('isNewUser')) token.isNewUser = session.user.isNewUser;
-          // เพิ่มบรรทัดนี้เพื่อรองรับการอัพเดต bkcId
           if (session.user.bkcId) token.bkcId = session.user.bkcId;
+          // เพิ่มการตรวจสอบและอัพเดตสถานะ isActive
+          if (session.user.hasOwnProperty('isActive')) token.isActive = session.user.isActive;
         }
         return token;
       }
@@ -295,6 +330,9 @@ export const authOptions: AuthOptions = {
         }
 
         token.provider = user.provider || 'unknown';
+
+        // เพิ่มการอ่านและเก็บสถานะ isActive
+        token.isActive = user.isActive !== false; // ถ้าไม่กำหนดจะเป็น true
 
         // สำหรับผู้ใช้ใหม่ที่ล็อกอินด้วย OTP
         if (user.isNewUser) {
@@ -321,6 +359,11 @@ export const authOptions: AuthOptions = {
         // อัพเดตชื่อและรูปโปรไฟล์จาก token ล่าสุด
         if (token.name) session.user.name = token.name;
         if (token.picture) session.user.image = token.picture;
+
+        // เพิ่มสถานะ isActive เข้าไปใน session
+        if (token.hasOwnProperty('isActive')) {
+          session.user.isActive = token.isActive;
+        }
 
         // ตรวจสอบว่ามี isNewUser ในโทเค็นหรือไม่
         if (token.hasOwnProperty('isNewUser')) {
