@@ -315,6 +315,7 @@ export const authOptions: AuthOptions = {
           if (session.user.bkcId) token.bkcId = session.user.bkcId;
           // เพิ่มการตรวจสอบและอัพเดตสถานะ isActive
           if (session.user.hasOwnProperty('isActive')) token.isActive = session.user.isActive;
+          if (token.role) session.user.role = token.role;
         }
         return token;
       }
@@ -333,6 +334,9 @@ export const authOptions: AuthOptions = {
 
         // เพิ่มการอ่านและเก็บสถานะ isActive
         token.isActive = user.isActive !== false; // ถ้าไม่กำหนดจะเป็น true
+
+        // เพิ่มบรรทัดนี้เพื่อเก็บ role ในโทเค็น
+        if (user.role) token.role = user.role;
 
         // สำหรับผู้ใช้ใหม่ที่ล็อกอินด้วย OTP
         if (user.isNewUser) {

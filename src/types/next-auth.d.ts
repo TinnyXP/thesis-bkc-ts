@@ -8,10 +8,11 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      bkcId: string;  // ตรงนี้จะเป็น required
+      bkcId: string;
       provider: string;
       isNewUser?: boolean;
-      isActive?: boolean; // เพิ่มสถานะการใช้งาน
+      isActive?: boolean;
+      role?: 'user' | 'admin' | 'superadmin'; // เพิ่มบรรทัดนี้
     } & DefaultSession["user"];
   }
 
@@ -20,10 +21,11 @@ declare module "next-auth" {
    */
   interface User {
     provider?: string;
-    bkc_id: string;  // ตรงนี้ต้องเป็น required
+    bkc_id: string;
     line_id?: string;
     isNewUser?: boolean;
-    isActive?: boolean; // เพิ่มสถานะการใช้งาน
+    isActive?: boolean;
+    role?: 'user' | 'admin' | 'superadmin'; // เพิ่มบรรทัดนี้
   }
 }
 
@@ -33,9 +35,10 @@ declare module "next-auth/jwt" {
    */
   interface JWT {
     userId: string;
-    bkcId: string;  // ตรงนี้จะเป็น required
+    bkcId: string;
     provider: string;
     isNewUser?: boolean;
-    isActive?: boolean; // เพิ่มสถานะการใช้งาน
+    isActive?: boolean;
+    role?: 'user' | 'admin' | 'superadmin'; // เพิ่มบรรทัดนี้
   }
 }
