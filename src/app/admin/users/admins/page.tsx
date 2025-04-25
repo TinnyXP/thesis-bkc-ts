@@ -52,7 +52,7 @@ export default function AdminManagementListPage() {
     getPermissionText,
     refreshAdmins
   } = useAdmin();
-  
+
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,17 +61,17 @@ export default function AdminManagementListPage() {
   const [newAdminId, setNewAdminId] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(["general"]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const { 
-    isOpen: isAddModalOpen, 
-    onOpen: onAddModalOpen, 
+
+  const {
+    isOpen: isAddModalOpen,
+    onOpen: onAddModalOpen,
     onClose: onAddModalClose,
     onOpenChange: onAddModalOpenChange
   } = useDisclosure();
-  
-  const { 
-    isOpen: isDeleteModalOpen, 
-    onOpen: onDeleteModalOpen, 
+
+  const {
+    isOpen: isDeleteModalOpen,
+    onOpen: onDeleteModalOpen,
     onClose: onDeleteModalClose,
     onOpenChange: onDeleteModalOpenChange
   } = useDisclosure();
@@ -94,7 +94,7 @@ export default function AdminManagementListPage() {
   // ค้นหาข้อมูล admin
   useEffect(() => {
     if (admins && admins.length > 0) {
-      const results = admins.filter(admin => 
+      const results = admins.filter(admin =>
         admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         admin.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -160,27 +160,24 @@ export default function AdminManagementListPage() {
     }
   };
 
-  // จัดการการลบ admin
+  // จัดการการลบสิทธิ์ admin
   const handleRemoveAdmin = async () => {
     if (!selectedAdmin) return;
 
     try {
       const result = await removeAdmin(selectedAdmin.id);
       if (result.success) {
-        // อัพเดตข้อมูล admin ในหน้าจอทันที
-        const updatedAdmins = admins.filter(admin => admin.id !== selectedAdmin.id);
-        setSearchResults(prev => prev.filter(admin => admin.id !== selectedAdmin.id));
-        
-        showToast(`ลบสิทธิ์ admin ของ ${selectedAdmin.name} สำเร็จ`, "success");
+        // ปรับปรุงข้อความให้ชัดเจนว่าเราเพียงแค่ลบสิทธิ์ admin
+        showToast(`ลบสิทธิ์ผู้ดูแลระบบของ ${selectedAdmin.name} สำเร็จ บัญชียังคงอยู่ในฐานะผู้ใช้ทั่วไป`, "success");
         setSelectedAdmin(null);
         onDeleteModalClose();
-        
+
         // รีเฟรชข้อมูล admin ในหน้าจอ
         await refreshAdmins();
       }
     } catch (error) {
       console.error("Error removing admin:", error);
-      showToast("เกิดข้อผิดพลาดในการลบ admin", "error");
+      showToast("เกิดข้อผิดพลาดในการลบสิทธิ์ผู้ดูแลระบบ", "error");
     }
   };
 
@@ -216,7 +213,7 @@ export default function AdminManagementListPage() {
   return (
     <div className="flex">
       <AdminSidebar isSuperAdmin={isSuperAdmin} />
-      
+
       <div className="flex-1 p-6">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -233,24 +230,24 @@ export default function AdminManagementListPage() {
               <p className="text-default-500">เพิ่ม หรือลบผู้ดูแลระบบ</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button 
-                color="default" 
+              <Button
+                color="default"
                 startContent={!isRefreshing && <FaSyncAlt />}
                 onPress={handleRefreshAdmins}
                 isLoading={isRefreshing}
               >
                 {isRefreshing ? "กำลังรีเฟรช..." : "รีเฟรช"}
               </Button>
-              <Button 
-                color="success" 
+              <Button
+                color="success"
                 startContent={<FaKey />}
                 onPress={handleSetupSuperAdmin}
                 isLoading={isProcessing}
               >
                 ตั้งค่า Super Admin
               </Button>
-              <Button 
-                color="primary" 
+              <Button
+                color="primary"
                 startContent={<FaPlus />}
                 onPress={onAddModalOpen}
               >
@@ -272,7 +269,7 @@ export default function AdminManagementListPage() {
                   className="w-full max-w-[300px]"
                 />
               </div>
-              
+
               {isLoadingAdmins || isRefreshing ? (
                 <div className="flex justify-center py-10">
                   <Spinner label="กำลังโหลดข้อมูล..." color="primary" />
@@ -298,8 +295,8 @@ export default function AdminManagementListPage() {
                           <TableCell>{admin.name}</TableCell>
                           <TableCell>{admin.email}</TableCell>
                           <TableCell>
-                            <Chip 
-                              color={admin.role === 'superadmin' ? "danger" : "primary"} 
+                            <Chip
+                              color={admin.role === 'superadmin' ? "danger" : "primary"}
                               variant="flat"
                             >
                               {getRoleText(admin.role)}
@@ -308,8 +305,8 @@ export default function AdminManagementListPage() {
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
                               {admin.permissions?.map(permission => (
-                                <Chip 
-                                  key={permission} 
+                                <Chip
+                                  key={permission}
                                   size="sm"
                                   color="default"
                                   variant="flat"
@@ -322,10 +319,10 @@ export default function AdminManagementListPage() {
                           <TableCell>
                             <div className="flex gap-2">
                               <Tooltip content="แก้ไขสิทธิ์">
-                                <Button 
-                                  isIconOnly 
-                                  size="sm" 
-                                  color="primary" 
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  color="primary"
                                   variant="light"
                                   isDisabled={isMainSuperAdmin(admin)}
                                 >
@@ -333,10 +330,10 @@ export default function AdminManagementListPage() {
                                 </Button>
                               </Tooltip>
                               <Tooltip content="ลบสิทธิ์ผู้ดูแล">
-                                <Button 
-                                  isIconOnly 
-                                  size="sm" 
-                                  color="danger" 
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  color="danger"
                                   variant="light"
                                   isDisabled={isMainSuperAdmin(admin)}
                                   onPress={() => {
@@ -374,8 +371,8 @@ export default function AdminManagementListPage() {
         </div>
 
         {/* Modal เพิ่มผู้ดูแลระบบ */}
-        <Modal 
-          isOpen={isAddModalOpen} 
+        <Modal
+          isOpen={isAddModalOpen}
           onOpenChange={onAddModalOpenChange}
           backdrop="blur"
         >
@@ -396,9 +393,9 @@ export default function AdminManagementListPage() {
                     onValueChange={setNewAdminId}
                     variant="bordered"
                   />
-                  
+
                   <Divider className="my-2" />
-                  
+
                   <div>
                     <p className="text-sm font-semibold mb-2">สิทธิ์การเข้าถึง:</p>
                     <CheckboxGroup
@@ -416,8 +413,8 @@ export default function AdminManagementListPage() {
                   <Button color="default" variant="flat" onPress={onClose}>
                     ยกเลิก
                   </Button>
-                  <Button 
-                    color="primary" 
+                  <Button
+                    color="primary"
                     onPress={handleAddAdmin}
                     isLoading={isProcessing}
                   >
@@ -430,8 +427,8 @@ export default function AdminManagementListPage() {
         </Modal>
 
         {/* Modal ยืนยันการลบผู้ดูแลระบบ */}
-        <Modal 
-          isOpen={isDeleteModalOpen} 
+        <Modal
+          isOpen={isDeleteModalOpen}
           onOpenChange={onDeleteModalOpenChange}
           backdrop="blur"
         >
@@ -449,15 +446,15 @@ export default function AdminManagementListPage() {
                     คุณกำลังจะลบสิทธิ์ผู้ดูแลระบบของ <strong>{selectedAdmin?.name}</strong>
                   </p>
                   <p className="text-danger font-semibold">
-                    การกระทำนี้จะเปลี่ยนสถานะของผู้ใช้นี้เป็นผู้ใช้ทั่วไป และไม่สามารถยกเลิกได้
+                    การกระทำนี้จะเปลี่ยนสถานะของผู้ใช้นี้เป็นผู้ใช้ทั่วไป แต่ไม่ได้ลบบัญชีออกจากระบบ
                   </p>
                 </ModalBody>
                 <ModalFooter>
                   <Button color="default" variant="flat" onPress={onClose}>
                     ยกเลิก
                   </Button>
-                  <Button 
-                    color="danger" 
+                  <Button
+                    color="danger"
                     onPress={handleRemoveAdmin}
                     isLoading={isProcessing}
                   >

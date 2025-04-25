@@ -128,6 +128,7 @@ export const PATCH = withAdminAuth(async (
 /**
  * API สำหรับลบผู้ใช้
  */
+// ฟังก์ชันลบสิทธิ์ admin (แก้ไขจากการลบบัญชี)
 export const DELETE = withAdminAuth(async (
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -145,74 +146,29 @@ export const DELETE = withAdminAuth(async (
       }, { status: 404 });
     }
     
-    // ไม่อนุญาตให้ลบ superadmin หลัก
+    // ไม่อนุญาตให้ลบสิทธิ์ superadmin หลัก
     if (user.role === 'superadmin' && user.email === 'thesis.bangkachao.64@gmail.com') {
       return NextResponse.json({
         success: false,
-        message: "ไม่สามารถลบบัญชี Super Admin หลักได้"
+        message: "ไม่สามารถลบสิทธิ์ Super Admin หลักได้"
       }, { status: 403 });
     }
     
-    // ลบรูปโปรไฟล์จาก Cloudinary (ถ้ามี)
-    if (user.profile_image && user.profile_image.includes('cloudinary')) {
-      try {
-        // ดึง public_id จาก URL
-        const url = new URL(user.profile_image);
-        const pathname = url.pathname;
-        
-        // แยกส่วนที่เป็น path ออกมา
-        const pathParts = pathname.split('/');
-        const uploadIndex = pathParts.indexOf('upload');
-        
-        // ข้ามส่วนของ version เช่น v1234567890 (มักอยู่หลัง upload)
-        let startIndex = uploadIndex + 1;
-        if (startIndex < pathParts.length && pathParts[startIndex].startsWith('v')) {
-          startIndex++;
-        }
-        
-        // สร้าง public_id จากส่วนที่เหลือของ path
-        const publicIdParts = pathParts.slice(startIndex).filter(Boolean);
-        const publicId = publicIdParts.join('/');
-        
-        // นำ extension ของไฟล์ออก ถ้ามี
-        const publicIdWithoutExt = publicId.replace(/\.[^/.]+$/, "");
-        
-        console.log("Attempting to delete image with public_id:", publicIdWithoutExt);
-        
-        await deleteFromCloudinary(publicIdWithoutExt);
-      } catch (error) {
-        console.error("Error deleting profile image from Cloudinary:", error);
-        // ไม่หยุดการดำเนินการหากไม่สามารถลบรูปได้
-      }
-    }
-    
-    // ลบข้อมูลที่เกี่ยวข้องของผู้ใช้
-    
-    // 1. ลบบุ๊คมาร์คทั้งหมด
-    await Bookmark.deleteMany({ user_bkc_id: user.bkc_id });
-    
-    // 2. ลบคอมเมนต์ทั้งหมด (หรือทำ soft delete)
-    await Comment.updateMany(
-      { user_bkc_id: user.bkc_id },
-      { is_deleted: true, expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } // เก็บไว้ 30 วันก่อนลบจริง
-    );
-    
-    // 3. ลบประวัติการเข้าสู่ระบบ
-    await LoginHistory.deleteMany({ user_id: user._id });
-    
-    // 4. ลบผู้ใช้
-    await User.findByIdAndDelete(user._id);
+    // ลบสิทธิ์ admin โดยการเปลี่ยนบทบาทกลับเป็นผู้ใช้ทั่วไป
+    user.role = 'user';
+    user.admin_permissions = []; // ลบสิทธิ์พิเศษทั้งหมด
+    await user.save();
     
     return NextResponse.json({
       success: true,
-      message: "ลบผู้ใช้เรียบร้อยแล้ว"
+      message: "ลบสิทธิ์ผู้ดูแลระบบเรียบร้อยแล้ว"
     });
     
   } catch (error) {
-    console.error("Error deleting user:", error);
+    console.error("Error removing admin permissions:", error);
     return NextResponse.json({ 
       success: false, 
-      message: "เกิดข้อผิดพลาดในการลบผู้ใช้",
+      message: "เกิดข้อผิดพลาดในการลบสิทธิ์ผู้ดูแลระบบ",
       error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }

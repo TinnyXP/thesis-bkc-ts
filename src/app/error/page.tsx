@@ -19,6 +19,10 @@ export default function ErrorPage() {
         setErrorTitle("บัญชีถูกระงับการใช้งาน");
         setErrorMessage("บัญชีของคุณถูกระงับการใช้งานชั่วคราว โปรดติดต่อผู้ดูแลระบบเพื่อขอความช่วยเหลือ");
         break;
+      case "AccountDeleted":
+        setErrorTitle("บัญชีถูกลบแล้ว");
+        setErrorMessage("บัญชีของคุณถูกลบออกจากระบบ ไม่สามารถเข้าใช้งานได้อีก");
+        break;
       case "CredentialsSignin":
         setErrorTitle("ข้อมูลเข้าสู่ระบบไม่ถูกต้อง");
         setErrorMessage("ข้อมูลที่ใช้ในการเข้าสู่ระบบไม่ถูกต้อง โปรดตรวจสอบและลองใหม่อีกครั้ง");
@@ -76,9 +80,9 @@ export default function ErrorPage() {
               >
                 support@bangkrachao.com
               </Link>
-              
+
               <div className="mt-4 flex flex-col sm:flex-row w-full gap-3">
-                <Button 
+                <Button
                   as={Link}
                   href="/"
                   color="default"
@@ -88,7 +92,7 @@ export default function ErrorPage() {
                 >
                   กลับสู่หน้าหลัก
                 </Button>
-                <Button 
+                <Button
                   as={Link}
                   href="/login"
                   color="primary"
@@ -101,7 +105,7 @@ export default function ErrorPage() {
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row w-full gap-3">
-              <Button 
+              <Button
                 as={Link}
                 href="/"
                 color="default"
@@ -111,7 +115,7 @@ export default function ErrorPage() {
               >
                 กลับสู่หน้าหลัก
               </Button>
-              <Button 
+              <Button
                 as={Link}
                 href="/login"
                 color="primary"

@@ -55,16 +55,21 @@ export default function LoginPage() {
     // ตรวจสอบ query param เพื่อแสดง toast แจ้งเตือนต่างๆ
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      
+
       // แสดงข้อความตามสถานะใน URL
       if (urlParams.get('deleted') === 'true') {
         // แสดง toast แจ้งเตือนการลบบัญชีสำเร็จ
         showToast("ลบบัญชีเรียบร้อยแล้ว", "success");
         window.history.replaceState({}, document.title, '/login');
-      } 
+      }
       else if (urlParams.get('status') === 'suspended') {
         // แสดง toast แจ้งเตือนบัญชีถูกระงับ
         showToast("บัญชีของคุณถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ", "error");
+        window.history.replaceState({}, document.title, '/login');
+      }
+      else if (urlParams.get('status') === 'deleted') {
+        // แสดง toast แจ้งเตือนบัญชีถูกลบ
+        showToast("บัญชีของคุณถูกลบออกจากระบบ", "error");
         window.history.replaceState({}, document.title, '/login');
       }
     }

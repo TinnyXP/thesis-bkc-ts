@@ -14,27 +14,40 @@ import { showToast } from "@/lib/toast";
 export default function AccountStatusChecker() {
   const { status } = useSession();
 
+  // แก้ไขให้ระบุสาเหตุที่ชัดเจนเมื่อบัญชีมีปัญหา
   useEffect(() => {
     // ทำงานเฉพาะเมื่อผู้ใช้เข้าสู่ระบบแล้ว
     if (status === "authenticated") {
-      
+
       // ตั้งค่าตัวตรวจสอบสถานะบัญชี
       const cancelChecker = setupAccountStatusChecker(
         1 * 60 * 1000, // ตรวจสอบทุก 1 นาที
         async (status) => {
           // เรียกเมื่อสถานะบัญชีเปลี่ยน
           if (!status.isActive && status.isLoggedIn) {
-            // ถ้าบัญชีถูกระงับ
-            showToast(
-              status.message || "บัญชีของคุณถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ",
-              "error"
-            );
-            
+            // ข้อความที่มีรายละเอียดเพิ่มเติม
+            let message = "บัญชีของคุณไม่สามารถเข้าถึงได้";
+            let redirectUrl = "/login?status=blocked";
+
+            // ตรวจสอบรายละเอียดเพิ่มเติมจากข้อความที่ส่งมา
+            if (status.message) {
+              if (status.message.includes("ถูกระงับ")) {
+                message = "บัญชีของคุณถูกระงับการใช้งานชั่วคราว โปรดติดต่อผู้ดูแลระบบ";
+                redirectUrl = "/login?status=suspended";
+              } else if (status.message.includes("ถูกลบ") || status.message.includes("ไม่พบบัญชี")) {
+                message = "บัญชีของคุณถูกลบออกจากระบบ ไม่สามารถเข้าใช้งานได้อีก";
+                redirectUrl = "/login?status=deleted";
+              }
+            }
+
+            // แสดงข้อความที่เฉพาะเจาะจง
+            showToast(message, "error");
+
             // รอ 3 วินาที ให้ผู้ใช้ได้เห็น toast ก่อน
             await new Promise(resolve => setTimeout(resolve, 3000));
-            
-            // ล็อกเอาท์
-            await signOut({ redirect: true, callbackUrl: "/login?status=suspended" });
+
+            // ล็อกเอาท์พร้อมระบุสถานะที่ชัดเจน
+            await signOut({ redirect: true, callbackUrl: redirectUrl });
           }
         }
       );
