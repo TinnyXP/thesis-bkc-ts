@@ -32,30 +32,35 @@ import {
 import { 
   FaUsers, 
   FaUserShield, 
-  FaSearch, 
-  FaUserEdit, 
+  FaSearch,  
   FaLock, 
   FaUnlock,
-  FaTrash
+  FaTrash,
+  FaSyncAlt
 } from "react-icons/fa";
 import { useAdmin } from "@/hooks/useAdmin";
-import { useUsersManagement, User } from "@/hooks/useUsersManagement";
 import { Loading } from "@/components";
 import { AdminSidebar } from "@/components";
 import { showToast } from "@/lib/toast";
+
+// ประกาศ interface สำหรับข้อมูลผู้ใช้
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  role: 'user' | 'admin' | 'superadmin';
+  provider: 'otp' | 'line';
+  bkcId: string;
+  isActive: boolean;
+  profileCompleted: boolean;
+  createdAt?: string;
+}
 
 export default function UsersManagementPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { isAdmin, isSuperAdmin, isLoading: isLoadingAdmin } = useAdmin();
-  const { 
-    isLoading: isLoadingUsers, 
-    isProcessing,
-    fetchUsers,
-    toggleUserStatus,
-    deleteUser,
-    updateUser
-  } = useUsersManagement();
   
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,7 +68,8 @@ export default function UsersManagementPage() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const { 
     isOpen: isBlockModalOpen, 
@@ -92,23 +98,37 @@ export default function UsersManagementPage() {
   }, [status, isAdmin, isLoadingAdmin, router]);
 
   // โหลดข้อมูลผู้ใช้
-  const loadUsers = useCallback(async () => {
-    setIsRefreshing(true);
+  const fetchUsers = useCallback(async (search?: string): Promise<void> => {
     try {
-      const data = await fetchUsers(searchTerm || undefined);
-      setUsers(data);
-      setSearchResults(data);
+      setIsLoading(true);
+      const url = new URL('/api/admin/users/list', window.location.origin);
+      if (search) {
+        url.searchParams.append('search', search);
+      }
+      
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      
+      if (data.success) {
+        setUsers(data.users);
+        setSearchResults(data.users);
+      } else {
+        showToast(data.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      showToast("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้", "error");
     } finally {
-      setIsRefreshing(false);
+      setIsLoading(false);
     }
-  }, [fetchUsers, searchTerm]);
+  }, []);
 
   // โหลดข้อมูลผู้ใช้เมื่อเข้าสู่หน้านี้
   useEffect(() => {
     if (isAdmin) {
-      loadUsers();
+      fetchUsers();
     }
-  }, [isAdmin, loadUsers]);
+  }, [isAdmin, fetchUsers]);
 
   // ค้นหาข้อมูลผู้ใช้
   useEffect(() => {
@@ -119,6 +139,7 @@ export default function UsersManagementPage() {
         user.bkcId.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setSearchResults(results);
+      setPage(1); // รีเซ็ตหน้าเมื่อมีการค้นหาใหม่
     }
   }, [searchTerm, users]);
 
@@ -134,16 +155,64 @@ export default function UsersManagementPage() {
   const handleToggleUserStatus = async () => {
     if (!selectedUser) return;
     
-    const success = await toggleUserStatus(selectedUser.id, selectedUser.isActive);
-    
-    if (success) {
-      // อัพเดตสถานะผู้ใช้ใน local state
+    try {
+      setIsProcessing(true);
+      
+      // อัพเดตสถานะผู้ใช้ใน local state ทันที (Optimistic Update)
+      const newStatus = !selectedUser.isActive;
       const updatedUsers = users.map(user => 
-        user.id === selectedUser.id ? { ...user, isActive: !user.isActive } : user
+        user.id === selectedUser.id ? { ...user, isActive: newStatus } : user
       );
       
       setUsers(updatedUsers);
-      onBlockModalClose();
+      setSearchResults(prev => 
+        prev.map(user => user.id === selectedUser.id ? { ...user, isActive: newStatus } : user)
+      );
+      
+      // เรียก API
+      const response = await fetch(`/api/admin/users/${selectedUser.id}/toggle-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isActive: newStatus })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        const statusText = newStatus ? "เปิดใช้งาน" : "ระงับการใช้งาน";
+        showToast(`${statusText}ผู้ใช้สำเร็จ (${selectedUser.name})`, "success");
+        onBlockModalClose();
+      } else {
+        // หากไม่สำเร็จ ให้เปลี่ยนกลับไปเป็นค่าเดิม
+        const revertedUsers = users.map(user => 
+          user.id === selectedUser.id ? { ...user, isActive: selectedUser.isActive } : user
+        );
+        
+        setUsers(revertedUsers);
+        setSearchResults(prev => 
+          prev.map(user => user.id === selectedUser.id ? { ...user, isActive: selectedUser.isActive } : user)
+        );
+        
+        showToast(result.message || "ไม่สามารถเปลี่ยนสถานะผู้ใช้ได้", "error");
+      }
+    } catch (error) {
+      console.error("Error toggling user status:", error);
+      
+      // หากเกิดข้อผิดพลาด ให้เปลี่ยนกลับไปเป็นค่าเดิม
+      const revertedUsers = users.map(user => 
+        user.id === selectedUser.id ? { ...user, isActive: selectedUser.isActive } : user
+      );
+      
+      setUsers(revertedUsers);
+      setSearchResults(prev => 
+        prev.map(user => user.id === selectedUser.id ? { ...user, isActive: selectedUser.isActive } : user)
+      );
+      
+      showToast("เกิดข้อผิดพลาดในการเปลี่ยนสถานะผู้ใช้", "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -151,13 +220,61 @@ export default function UsersManagementPage() {
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     
-    const success = await deleteUser(selectedUser.id);
-    
-    if (success) {
-      // อัพเดตรายการผู้ใช้ใน local state
+    try {
+      setIsProcessing(true);
+      
+      // อัพเดตรายการผู้ใช้ใน local state ทันที (Optimistic Update)
       const updatedUsers = users.filter(user => user.id !== selectedUser.id);
       setUsers(updatedUsers);
+      setSearchResults(prev => prev.filter(user => user.id !== selectedUser.id));
+      
+      // ปิด Modal ทันที เพื่อให้ UX ดีขึ้น
       onDeleteModalClose();
+      
+      // เรียก API
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'DELETE'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showToast(`ลบผู้ใช้ ${selectedUser.name} สำเร็จ`, "success");
+      } else {
+        // หากไม่สำเร็จ ให้เพิ่มกลับคืนเข้าไปในรายการ
+        setUsers(prev => [...prev, selectedUser]);
+        setSearchResults(prev => {
+          if (searchTerm && (
+              selectedUser.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              selectedUser.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              selectedUser.bkcId.toLowerCase().includes(searchTerm.toLowerCase())
+          )) {
+            return [...prev, selectedUser];
+          }
+          return prev;
+        });
+        
+        showToast(result.message || "ไม่สามารถลบผู้ใช้ได้", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      
+      // หากเกิดข้อผิดพลาด ให้เพิ่มกลับคืนเข้าไปในรายการ
+      setUsers(prev => [...prev, selectedUser]);
+      setSearchResults(prev => {
+        if (searchTerm && (
+            selectedUser.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            selectedUser.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            selectedUser.bkcId.toLowerCase().includes(searchTerm.toLowerCase())
+        )) {
+          return [...prev, selectedUser];
+        }
+        return prev;
+      });
+      
+      showToast("เกิดข้อผิดพลาดในการลบผู้ใช้", "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -212,10 +329,11 @@ export default function UsersManagementPage() {
             <div className="flex flex-wrap gap-2">
               <Button 
                 color="default" 
-                onPress={loadUsers}
-                isLoading={isRefreshing}
+                onPress={() => fetchUsers()}
+                isLoading={isLoading}
+                startContent={!isLoading && <FaSyncAlt />}
               >
-                รีเฟรช
+                {isLoading ? "กำลังโหลด..." : "รีเฟรช"}
               </Button>
               
               {isSuperAdmin && (
@@ -244,7 +362,7 @@ export default function UsersManagementPage() {
                 />
               </div>
               
-              {isLoadingUsers || isRefreshing ? (
+              {isLoading ? (
                 <div className="flex justify-center py-10">
                   <Spinner label="กำลังโหลดข้อมูล..." color="primary" />
                 </div>
@@ -296,22 +414,13 @@ export default function UsersManagementPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Tooltip content="แก้ไขข้อมูล">
-                                <Button 
-                                  isIconOnly 
-                                  size="sm" 
-                                  color="primary" 
-                                  variant="light"
-                                >
-                                  <FaUserEdit />
-                                </Button>
-                              </Tooltip>
-                              <Tooltip content={user.isActive ? "บล็อกผู้ใช้" : "ปลดบล็อก"}>
+                              <Tooltip content={user.isActive ? "บล็อกผู้ใช้ (แบนชั่วคราว)" : "ปลดบล็อก"}>
                                 <Button 
                                   isIconOnly 
                                   size="sm" 
                                   color={user.isActive ? "warning" : "success"}
                                   variant="light"
+                                  isDisabled={user.role === 'superadmin'}
                                   onPress={() => {
                                     setSelectedUser(user);
                                     onBlockModalOpen();
@@ -320,12 +429,13 @@ export default function UsersManagementPage() {
                                   {user.isActive ? <FaLock /> : <FaUnlock />}
                                 </Button>
                               </Tooltip>
-                              <Tooltip content="ลบผู้ใช้">
+                              <Tooltip content="ลบผู้ใช้ (แบนถาวร)">
                                 <Button 
                                   isIconOnly 
                                   size="sm" 
                                   color="danger" 
                                   variant="light"
+                                  isDisabled={user.role === 'superadmin'}
                                   onPress={() => {
                                     setSelectedUser(user);
                                     onDeleteModalOpen();
@@ -343,7 +453,7 @@ export default function UsersManagementPage() {
 
                   <div className="flex justify-between items-center mt-4">
                     <span className="text-default-400 text-sm">
-                      แสดง {Math.min(displayedUsers.length, rowsPerPage)} จาก {users.length} รายการ
+                      แสดง {Math.min(displayedUsers.length, rowsPerPage)} จาก {searchTerm ? searchResults.length : users.length} รายการ
                     </span>
                     {pages > 1 && (
                       <Pagination
@@ -374,7 +484,7 @@ export default function UsersManagementPage() {
                     {selectedUser?.isActive ? (
                       <>
                         <FaLock className="text-warning" />
-                        <span>บล็อกผู้ใช้</span>
+                        <span>บล็อกผู้ใช้ (แบนชั่วคราว)</span>
                       </>
                     ) : (
                       <>
@@ -438,7 +548,7 @@ export default function UsersManagementPage() {
                 <ModalHeader className="flex flex-col gap-1 text-danger">
                   <div className="flex items-center gap-2">
                     <FaTrash className="text-danger" />
-                    <span>ยืนยันการลบผู้ใช้</span>
+                    <span>ยืนยันการลบผู้ใช้ (แบนถาวร)</span>
                   </div>
                 </ModalHeader>
                 <ModalBody>
@@ -446,7 +556,7 @@ export default function UsersManagementPage() {
                     คุณกำลังจะลบผู้ใช้ <strong>{selectedUser?.name}</strong>
                   </p>
                   <p className="text-danger font-semibold">
-                    การกระทำนี้จะลบข้อมูลผู้ใช้อย่างถาวร ไม่สามารถยกเลิกได้
+                    การกระทำนี้จะลบข้อมูลผู้ใช้อย่างถาวร (แบนถาวร) ไม่สามารถยกเลิกได้
                   </p>
                   
                   <Divider className="my-2" />

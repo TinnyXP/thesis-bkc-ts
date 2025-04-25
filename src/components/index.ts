@@ -2,10 +2,11 @@
 export { default as NavBar } from './layout/Navbar';
 export { default as Footer } from './layout/Footer';
 export { default as Loading } from './layout/Loading';
-export { default as PageHeader } from './layout/PageHeader'
+export { default as PageHeader } from './layout/PageHeader';
 export { default as ScrollToTop } from './layout/ScrollToTop';
 export { default as ToggleTheme } from './layout/ToggleTheme';
 export { default as SectionHeading } from './layout/SectionHeading';
+export { default as AccountStatusChecker } from './layout/AccountStatusChecker';
 
 // Sanity Components
 export { default as ImageModal } from './ui/Sanity/Shared/ImageModal';

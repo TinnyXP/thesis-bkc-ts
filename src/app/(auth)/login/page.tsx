@@ -26,6 +26,55 @@ export default function LoginPage() {
   const [error, setError] = React.useState("");
   const [connectionError, setConnectionError] = React.useState(false);
 
+  // เพิ่ม useEffect สำหรับการรีเซ็ตสถานะเมื่อโหลดหน้า Login ใหม่
+  React.useEffect(() => {
+    // รีเซ็ตค่าเริ่มต้น
+    setPage([0, 0]);
+    setEmail("");
+    setOtp("");
+    setIsEmailValid(true);
+    setIsOtpValid(true);
+    setIsLoading(false);
+    setResendCooldown(0);
+    setError("");
+
+    // ตรวจสอบว่ามีข้อมูลการล็อกอินที่บันทึกไว้หรือไม่
+    const checkSavedLoginState = async () => {
+      // ถ้าอยู่ในโปรเซสล็อกอินอยู่แล้ว ให้เช็คว่ามี session หรือไม่
+      if (status === "authenticated" && session) {
+        if (session.user.isNewUser) {
+          router.replace('/complete-profile');
+        } else {
+          router.replace('/welcome');
+        }
+      }
+    };
+
+    checkSavedLoginState();
+
+    // ตรวจสอบ query param เพื่อแสดง toast แจ้งเตือนต่างๆ
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // แสดงข้อความตามสถานะใน URL
+      if (urlParams.get('deleted') === 'true') {
+        // แสดง toast แจ้งเตือนการลบบัญชีสำเร็จ
+        showToast("ลบบัญชีเรียบร้อยแล้ว", "success");
+        window.history.replaceState({}, document.title, '/login');
+      } 
+      else if (urlParams.get('status') === 'suspended') {
+        // แสดง toast แจ้งเตือนบัญชีถูกระงับ
+        showToast("บัญชีของคุณถูกระงับการใช้งาน โปรดติดต่อผู้ดูแลระบบ", "error");
+        window.history.replaceState({}, document.title, '/login');
+      }
+    }
+
+    // Cleanup เมื่อ unmount
+    return () => {
+      // ยกเลิก timer หรือ subscription ต่างๆ ที่อาจมี
+    };
+  }, [router, session, status]);
+
   // ตรวจสอบสถานะการเข้าสู่ระบบ
   React.useEffect(() => {
     if (session) {

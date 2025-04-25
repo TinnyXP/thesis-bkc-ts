@@ -29,7 +29,7 @@ import {
   Spinner,
   Link
 } from "@heroui/react";
-import { FaUserShield, FaEdit, FaTrash, FaPlus, FaSearch, FaKey, FaUsers, FaArrowLeft } from "react-icons/fa";
+import { FaUserShield, FaEdit, FaTrash, FaPlus, FaSearch, FaKey, FaUsers, FaArrowLeft, FaSyncAlt } from "react-icons/fa";
 import { useAdmin, AdminUser } from "@/hooks/useAdmin";
 import { Loading } from "@/components";
 import { AdminSidebar } from "@/components";
@@ -60,6 +60,7 @@ export default function AdminManagementListPage() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [newAdminId, setNewAdminId] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(["general"]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { 
     isOpen: isAddModalOpen, 
@@ -98,6 +99,7 @@ export default function AdminManagementListPage() {
         admin.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setSearchResults(results);
+      setPage(1); // รีเซ็ตหน้าเมื่อมีการค้นหาใหม่
     }
   }, [searchTerm, admins]);
 
@@ -108,6 +110,19 @@ export default function AdminManagementListPage() {
     const end = start + rowsPerPage;
     return results.slice(start, end);
   }, [page, rowsPerPage, searchTerm, searchResults, admins]);
+
+  // ฟังก์ชันสำหรับรีเฟรชข้อมูล admin
+  const handleRefreshAdmins = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshAdmins();
+      showToast("รีเฟรชข้อมูลเรียบร้อย", "success");
+    } catch (error) {
+      showToast("เกิดข้อผิดพลาดในการรีเฟรชข้อมูล", "error");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // จัดการการตั้งค่า Super Admin เริ่มต้น
   const handleSetupSuperAdmin = async () => {
@@ -152,10 +167,16 @@ export default function AdminManagementListPage() {
     try {
       const result = await removeAdmin(selectedAdmin.id);
       if (result.success) {
+        // อัพเดตข้อมูล admin ในหน้าจอทันที
+        const updatedAdmins = admins.filter(admin => admin.id !== selectedAdmin.id);
+        setSearchResults(prev => prev.filter(admin => admin.id !== selectedAdmin.id));
+        
         showToast(`ลบสิทธิ์ admin ของ ${selectedAdmin.name} สำเร็จ`, "success");
         setSelectedAdmin(null);
         onDeleteModalClose();
-        refreshAdmins();
+        
+        // รีเฟรชข้อมูล admin ในหน้าจอ
+        await refreshAdmins();
       }
     } catch (error) {
       console.error("Error removing admin:", error);
@@ -213,6 +234,14 @@ export default function AdminManagementListPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button 
+                color="default" 
+                startContent={!isRefreshing && <FaSyncAlt />}
+                onPress={handleRefreshAdmins}
+                isLoading={isRefreshing}
+              >
+                {isRefreshing ? "กำลังรีเฟรช..." : "รีเฟรช"}
+              </Button>
+              <Button 
                 color="success" 
                 startContent={<FaKey />}
                 onPress={handleSetupSuperAdmin}
@@ -244,7 +273,7 @@ export default function AdminManagementListPage() {
                 />
               </div>
               
-              {isLoadingAdmins ? (
+              {isLoadingAdmins || isRefreshing ? (
                 <div className="flex justify-center py-10">
                   <Spinner label="กำลังโหลดข้อมูล..." color="primary" />
                 </div>
@@ -327,7 +356,7 @@ export default function AdminManagementListPage() {
 
                   <div className="flex justify-between items-center mt-4">
                     <span className="text-default-400 text-sm">
-                      แสดง {Math.min(displayedAdmins.length, rowsPerPage)} จาก {admins.length} รายการ
+                      แสดง {Math.min(displayedAdmins.length, rowsPerPage)} จาก {searchTerm ? searchResults.length : admins.length} รายการ
                     </span>
                     {pages > 1 && (
                       <Pagination

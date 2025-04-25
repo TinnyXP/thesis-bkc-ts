@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 
 import { Providers } from "@/app/providers";
-import { ScrollToTop } from "@/components";
+import { ScrollToTop, AccountStatusChecker } from "@/components";
 
 import localFont from "next/font/local";
 import { Bai_Jamjuree } from "next/font/google";
@@ -112,6 +112,7 @@ export default function RootLayout({
             </main>
           </div>
           <ScrollToTop/>
+          <AccountStatusChecker />
         </Providers>
       </body>
     </html>

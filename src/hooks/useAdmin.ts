@@ -10,6 +10,7 @@ export interface AdminUser {
   email: string;
   role: 'user' | 'admin' | 'superadmin';
   permissions?: string[];
+  bkcId?: string;
 }
 
 // ฟังก์ชันสำหรับดึงข้อมูลจาก API
@@ -23,7 +24,11 @@ export function useAdmin() {
   const [isProcessing, setIsProcessing] = useState(false);
   
   // ทดสอบว่าผู้ใช้ปัจจุบันเป็น admin หรือไม่
-  const { data: adminData, error: adminError } = useSWR(
+  const { 
+    data: adminData, 
+    error: adminError, 
+    mutate: mutateAdminCheck 
+  } = useSWR(
     session ? '/api/admin/check' : null, 
     fetcher
   );
@@ -32,7 +37,8 @@ export function useAdmin() {
   const { 
     data: adminsData, 
     error: adminsError,
-    mutate: mutateAdmins
+    mutate: mutateAdmins,
+    isValidating: isLoadingAdmins
   } = useSWR(
     adminData?.isAdmin ? '/api/admin/users' : null,
     fetcher
@@ -51,6 +57,9 @@ export function useAdmin() {
       
       if (result.success) {
         showToast(result.message || "ตั้งค่า Super Admin สำเร็จ", "success");
+        // รีเฟรชข้อมูล
+        mutateAdminCheck();
+        mutateAdmins();
         return { success: true, admin: result.admin };
       } else {
         showToast(result.message || "ไม่สามารถตั้งค่า Super Admin ได้", "error");
@@ -67,7 +76,7 @@ export function useAdmin() {
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [mutateAdminCheck, mutateAdmins]);
   
   // เพิ่ม admin ใหม่ (สำหรับ superadmin เท่านั้น)
   const addAdmin = useCallback(async (bkcId: string, permissions?: string[]) => {
@@ -91,7 +100,7 @@ export function useAdmin() {
       
       if (result.success) {
         // รีเฟรชข้อมูล admin ทั้งหมด
-        mutateAdmins();
+        await mutateAdmins();
         showToast(result.message || "เพิ่ม admin สำเร็จ", "success");
         return { success: true, admin: result.admin };
       } else {
@@ -127,6 +136,7 @@ export function useAdmin() {
           (admin: AdminUser) => admin.id !== adminId
         );
         
+        // อัปเดตแบบ optimistic โดยไม่รอ API
         mutateAdmins({
           ...adminsData,
           admins: updatedAdmins
@@ -140,13 +150,13 @@ export function useAdmin() {
       const result = await response.json();
       
       if (result.success) {
-        // รีเฟรชข้อมูล admin ทั้งหมด
-        mutateAdmins();
+        // รีเฟรชข้อมูล admin ทั้งหมดอีกครั้ง
+        await mutateAdmins();
         showToast(result.message || "ลบ admin สำเร็จ", "success");
         return { success: true };
       } else {
         // ยกเลิก optimistic update ถ้าไม่สำเร็จ
-        mutateAdmins();
+        await mutateAdmins();
         showToast(result.message || "ไม่สามารถลบ admin ได้", "error");
         return { success: false, message: result.message };
       }
@@ -154,7 +164,7 @@ export function useAdmin() {
     } catch (error) {
       console.error("Error removing admin:", error);
       // ยกเลิก optimistic update ถ้าเกิดข้อผิดพลาด
-      mutateAdmins();
+      await mutateAdmins();
       showToast("เกิดข้อผิดพลาดในการลบ admin", "error");
       return { 
         success: false, 
@@ -189,13 +199,23 @@ export function useAdmin() {
     }
   }, []);
   
+  // ฟังก์ชัน refresh ข้อมูล admins
+  const refreshAdmins = useCallback(async () => {
+    try {
+      await mutateAdmins();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }, [mutateAdmins]);
+  
   return {
     isAdmin: adminData?.isAdmin || false,
     isSuperAdmin: adminData?.isSuperAdmin || false,
     user: adminData?.user as AdminUser,
     admins: adminsData?.admins as AdminUser[] || [],
     isLoading: !adminError && !adminData,
-    isLoadingAdmins: !adminsError && !adminsData && adminData?.isAdmin,
+    isLoadingAdmins: isLoadingAdmins || (!adminsError && !adminsData && adminData?.isAdmin),
     isProcessing,
     isError: adminError,
     isErrorAdmins: adminsError,
@@ -204,6 +224,6 @@ export function useAdmin() {
     removeAdmin,
     getRoleText,
     getPermissionText,
-    refreshAdmins: mutateAdmins
+    refreshAdmins
   };
 }
