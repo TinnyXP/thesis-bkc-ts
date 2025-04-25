@@ -17,9 +17,10 @@ export default function AccountStatusChecker() {
   useEffect(() => {
     // ทำงานเฉพาะเมื่อผู้ใช้เข้าสู่ระบบแล้ว
     if (status === "authenticated") {
+      
       // ตั้งค่าตัวตรวจสอบสถานะบัญชี
       const cancelChecker = setupAccountStatusChecker(
-        5 * 60 * 1000, // ตรวจสอบทุก 5 นาที
+        1 * 60 * 1000, // ตรวจสอบทุก 1 นาที
         async (status) => {
           // เรียกเมื่อสถานะบัญชีเปลี่ยน
           if (!status.isActive && status.isLoggedIn) {

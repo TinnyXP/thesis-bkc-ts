@@ -168,6 +168,21 @@ export const authOptions: AuthOptions = {
       try {
         await connectDB();
 
+        // ตรวจสอบสถานะบัญชีจากฐานข้อมูลทุกครั้ง
+        if (user.bkc_id) {
+          // ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูล
+          const userRecord = await UserModel.findOne({ bkc_id: user.bkc_id });
+
+          // ถ้าไม่พบผู้ใช้ หรือบัญชีถูกระงับ
+          if (!userRecord || !userRecord.is_active) {
+            console.log(`Account blocked or not found: ${user.email}`);
+            return false; // ไม่อนุญาตให้เข้าสู่ระบบ
+          }
+
+          // ถ้าบัญชีเคยถูกระงับและตอนนี้ปลดแล้ว ให้อัพเดตสถานะ
+          user.isActive = true;
+        }
+
         // จัดการกับการล็อกอินผ่าน LINE
         // แก้ไขที่ src/lib/auth.ts ในส่วน signIn ของ LINE
         if (account?.provider === "line" && profile) {
