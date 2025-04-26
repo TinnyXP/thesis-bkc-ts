@@ -31,13 +31,14 @@ import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
+  Divider
 } from "@heroui/react";
-import { 
-  FaClipboardList, 
-  FaSearch, 
-  FaEye, 
-  FaReply, 
+import {
+  FaClipboardList,
+  FaSearch,
+  FaEye,
+  FaReply,
   FaCalendarAlt,
   FaUserAlt,
   FaExclamationTriangle,
@@ -55,8 +56,14 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { showToast } from "@/lib/toast";
 import { formatRelativeTime, formatDateTime } from "@/lib/dateUtils";
 
+
+// แก้ไขประเภทข้อมูลให้ชัดเจนขึ้น
+type ComplaintStatus = "" | "pending" | "inprogress" | "resolved" | "rejected";
+type ComplaintCategory = "" | "service" | "place" | "safety" | "environment" | "other";
+type StatusColor = "default" | "primary" | "secondary" | "success" | "warning" | "danger";
+
 // กำหนดประเภทเรื่องร้องเรียน
-const complaintCategories: { label: string; value: string }[] = [
+const complaintCategories: { label: string; value: ComplaintCategory }[] = [
   { label: "ทั้งหมด", value: "" },
   { label: "บริการ", value: "service" },
   { label: "สถานที่", value: "place" },
@@ -66,7 +73,7 @@ const complaintCategories: { label: string; value: string }[] = [
 ];
 
 // กำหนดสถานะเรื่องร้องเรียน
-const complaintStatuses: { label: string; value: string }[] = [
+const complaintStatuses: { label: string; value: ComplaintStatus }[] = [
   { label: "ทั้งหมด", value: "" },
   { label: "รอดำเนินการ", value: "pending" },
   { label: "กำลังดำเนินการ", value: "inprogress" },
@@ -78,18 +85,18 @@ export default function AdminComplaintsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { isAdmin, isSuperAdmin, isLoading: isLoadingAdmin } = useAdmin();
-  
+
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<ComplaintCategory>("");
+  const [selectedStatus, setSelectedStatus] = useState<ComplaintStatus>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [responseContent, setResponseContent] = useState<string>("");
-  const [newStatus, setNewStatus] = useState<string>("");
+  const [newStatus, setNewStatus] = useState<ComplaintStatus>("pending");
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isSubmittingResponse, setIsSubmittingResponse] = useState<boolean>(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
-  
-  // โหลดข้อมูลเรื่องร้องเรียน
+
+  // แก้ไขประเภทข้อมูลในส่วนที่โหลดข้อมูลเรื่องร้องเรียน
   const {
     complaints,
     pagination,
@@ -99,7 +106,7 @@ export default function AdminComplaintsPage() {
     changePage,
     refreshComplaints
   } = useComplaints(selectedStatus, selectedCategory);
-  
+
   // Modal แสดงรายละเอียดและตอบกลับ
   const {
     isOpen: isResponseModalOpen,
@@ -107,7 +114,7 @@ export default function AdminComplaintsPage() {
     onClose: onResponseModalClose,
     onOpenChange: onResponseModalOpenChange
   } = useDisclosure();
-  
+
   // ตรวจสอบสิทธิ์การเข้าถึงหน้านี้
   useEffect(() => {
     if (status === "authenticated" && !isLoadingAdmin) {
@@ -119,31 +126,31 @@ export default function AdminComplaintsPage() {
       router.push("/login");
     }
   }, [status, isAdmin, isLoadingAdmin, router]);
-  
+
   // กรองข้อมูลเรื่องร้องเรียนตามการค้นหา
   const filteredComplaints = searchTerm
     ? complaints.filter(complaint =>
-        complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        complaint.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        complaint.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (complaint.tags && complaint.tags.some(tag => 
-          tag.toLowerCase().includes(searchTerm.toLowerCase())
-        ))
-      )
+      complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (complaint.tags && complaint.tags.some(tag =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      ))
+    )
     : complaints;
-  
+
   // เปลี่ยนหมวดหมู่ที่เลือก
   const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    changeCategory(value);
+    setSelectedCategory(value as ComplaintCategory);
+    changeCategory(value as ComplaintCategory);
   };
-  
+
   // เปลี่ยนสถานะที่เลือก
   const handleStatusChange = (value: string) => {
-    setSelectedStatus(value);
-    changeStatus(value);
+    setSelectedStatus(value as ComplaintStatus);
+    changeStatus(value as ComplaintStatus);
   };
-  
+
   // รีเฟรชข้อมูลเรื่องร้องเรียน
   const handleRefreshComplaints = async () => {
     setIsRefreshing(true);
@@ -157,7 +164,7 @@ export default function AdminComplaintsPage() {
       setIsRefreshing(false);
     }
   };
-  
+
   // เปิด Modal ตอบกลับเรื่องร้องเรียน
   const openResponseModal = (complaint: Complaint) => {
     setSelectedComplaint(complaint);
@@ -165,19 +172,19 @@ export default function AdminComplaintsPage() {
     setNewStatus(complaint.status || "pending");
     onResponseModalOpen();
   };
-  
+
   // ส่งการตอบกลับและอัปเดตสถานะ
   const handleSubmitResponse = async () => {
     if (!selectedComplaint) return;
-    
+
     // ตรวจสอบว่ามีการกรอกข้อความตอบกลับหรือไม่
     if (!responseContent.trim()) {
       showToast("กรุณากรอกข้อความตอบกลับ", "error");
       return;
     }
-    
+
     setIsSubmittingResponse(true);
-    
+
     try {
       // ส่งคำตอบกลับไปยัง API
       const response = await fetch(`/api/complaints/${selectedComplaint._id}/responses`, {
@@ -187,12 +194,12 @@ export default function AdminComplaintsPage() {
         },
         body: JSON.stringify({ content: responseContent })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         showToast("ส่งการตอบกลับเรียบร้อยแล้ว", "success");
-        
+
         // อัปเดตสถานะถ้ามีการเปลี่ยนแปลง
         if (newStatus !== selectedComplaint.status) {
           await updateComplaintStatus();
@@ -211,13 +218,13 @@ export default function AdminComplaintsPage() {
       setIsSubmittingResponse(false);
     }
   };
-  
+
   // อัปเดตสถานะเรื่องร้องเรียน
   const updateComplaintStatus = async () => {
     if (!selectedComplaint) return;
-    
+
     setIsUpdatingStatus(true);
-    
+
     try {
       // ส่งคำขออัปเดตสถานะไปยัง API
       const response = await fetch(`/api/complaints/${selectedComplaint._id}`, {
@@ -227,12 +234,12 @@ export default function AdminComplaintsPage() {
         },
         body: JSON.stringify({ status: newStatus })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         showToast(`อัปเดตสถานะเป็น "${getStatusText(newStatus)}" เรียบร้อยแล้ว`, "success");
-        
+
         // ปิด Modal และรีเฟรชข้อมูล
         onResponseModalClose();
         refreshComplaints();
@@ -246,9 +253,9 @@ export default function AdminComplaintsPage() {
       setIsUpdatingStatus(false);
     }
   };
-  
+
   // แปลงสถานะเป็นสีและข้อความ
-  const getStatusColor = (status: string): string => {
+  const getStatusColor = (status: string): StatusColor => {
     switch (status) {
       case 'pending': return "warning";
       case 'inprogress': return "primary";
@@ -257,7 +264,7 @@ export default function AdminComplaintsPage() {
       default: return "default";
     }
   };
-  
+
   // src/app/admin/complaints/page.tsx (ต่อ)
   const getStatusText = (status: string): string => {
     switch (status) {
@@ -268,7 +275,7 @@ export default function AdminComplaintsPage() {
       default: return status;
     }
   };
-  
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return <FaHourglass className="text-warning" />;
@@ -278,17 +285,17 @@ export default function AdminComplaintsPage() {
       default: return null;
     }
   };
-  
+
   // แปลงหมวดหมู่เป็นข้อความ
   const getCategoryText = (categoryValue: string): string => {
     const category = complaintCategories.find(cat => cat.value === categoryValue);
     return category ? category.label : categoryValue;
   };
-  
+
   if (status === "loading" || isLoadingAdmin) {
     return <Loading message="กำลังโหลดข้อมูล..." fullScreen />;
   }
-  
+
   if (!isAdmin) {
     return (
       <div className="container mx-auto py-10 px-4">
@@ -305,11 +312,11 @@ export default function AdminComplaintsPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex">
       <AdminSidebar isSuperAdmin={isSuperAdmin} />
-      
+
       <div className="flex-1 p-6">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -320,21 +327,21 @@ export default function AdminComplaintsPage() {
               </h1>
               <p className="text-default-500">จัดการเรื่องร้องเรียนจากผู้ใช้งานและตอบกลับ</p>
             </div>
-            
+
             <div className="flex flex-wrap gap-2">
-              <Button 
-                color="default" 
+              <Button
+                color="default"
                 onPress={handleRefreshComplaints}
                 isLoading={isRefreshing}
                 startContent={!isRefreshing && <FaSyncAlt />}
               >
                 {isRefreshing ? "กำลังโหลด..." : "รีเฟรช"}
               </Button>
-              
-              <Button 
+
+              <Button
                 as={Link}
                 href="/complaints"
-                color="primary" 
+                color="primary"
                 startContent={<FaEye />}
               >
                 ดูหน้าเรื่องร้องเรียน
@@ -387,12 +394,12 @@ export default function AdminComplaintsPage() {
                     className="w-full sm:w-60"
                   />
                 </div>
-                
+
                 <div className="text-sm text-default-500">
                   พบ {filteredComplaints.length} รายการ จากทั้งหมด {complaints.length} รายการ
                 </div>
               </div>
-              
+
               {isLoading ? (
                 <div className="flex justify-center py-10">
                   <Spinner label="กำลังโหลดข้อมูล..." color="primary" />
@@ -474,7 +481,7 @@ export default function AdminComplaintsPage() {
                               >
                                 ตอบกลับ
                               </Button>
-                              
+
                               <Button
                                 as={Link}
                                 href={`/complaints/${complaint._id}`}
@@ -491,7 +498,7 @@ export default function AdminComplaintsPage() {
                       ))}
                     </TableBody>
                   </Table>
-                  
+
                   {pagination && pagination.totalPages > 1 && (
                     <div className="flex justify-center mt-4">
                       <Pagination
@@ -508,10 +515,10 @@ export default function AdminComplaintsPage() {
             </CardBody>
           </Card>
         </div>
-        
+
         {/* Modal ตอบกลับและอัปเดตสถานะ */}
-        <Modal 
-          isOpen={isResponseModalOpen} 
+        <Modal
+          isOpen={isResponseModalOpen}
           onOpenChange={onResponseModalOpenChange}
           backdrop="blur"
           size="xl"
@@ -532,9 +539,9 @@ export default function AdminComplaintsPage() {
                         <h3 className="font-semibold mb-1">{selectedComplaint.title}</h3>
                         <p className="text-sm text-default-500 line-clamp-3">{selectedComplaint.content}</p>
                       </div>
-                      
+
                       <Divider />
-                      
+
                       <div className="flex flex-wrap gap-4">
                         <div className="w-full md:w-1/2">
                           <p className="text-sm font-semibold mb-2">ข้อมูลเรื่องร้องเรียน</p>
@@ -555,13 +562,13 @@ export default function AdminComplaintsPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="w-full md:w-1/2">
                           <p className="text-sm font-semibold mb-2">อัปเดตสถานะ</p>
                           <Select
                             label="เลือกสถานะใหม่"
                             selectedKeys={[newStatus]}
-                            onChange={(e) => setNewStatus(e.target.value)}
+                            onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
                             className="w-full"
                           >
                             <SelectItem key="pending" startContent={getStatusIcon("pending")}>
@@ -577,7 +584,7 @@ export default function AdminComplaintsPage() {
                               ไม่อนุมัติ
                             </SelectItem>
                           </Select>
-                          
+
                           <div className="mt-2">
                             <Button
                               color={getStatusColor(newStatus)}
@@ -594,9 +601,9 @@ export default function AdminComplaintsPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <Divider />
-                      
+
                       <div>
                         <p className="text-sm font-semibold mb-2">
                           ข้อความตอบกลับ <span className="text-danger">*</span>

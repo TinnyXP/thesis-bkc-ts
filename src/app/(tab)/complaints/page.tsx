@@ -30,12 +30,12 @@ import {
   Checkbox,
   Divider
 } from "@heroui/react";
-import { 
-  FaClipboardList, 
-  FaSearch, 
-  FaPlus, 
-  FaEye, 
-  FaTrash, 
+import {
+  FaClipboardList,
+  FaSearch,
+  FaPlus,
+  FaEye,
+  FaTrash,
   FaCalendarAlt,
   FaImage,
   FaTags,
@@ -72,13 +72,13 @@ const complaintStatuses: { label: string; value: string }[] = [
 export default function ComplaintsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  
+
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<"pending" | "inprogress" | "resolved" | "rejected" | "">("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  
+
   // State สำหรับฟอร์มสร้างเรื่องร้องเรียนใหม่
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
@@ -88,7 +88,7 @@ export default function ComplaintsPage() {
   const [tags, setTags] = useState<string>("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  
+
   // โหลดข้อมูลเรื่องร้องเรียน
   const {
     complaints,
@@ -102,7 +102,7 @@ export default function ComplaintsPage() {
     changePage,
     refreshComplaints
   } = useComplaints(selectedStatus, selectedCategory);
-  
+
   // Modal สร้างเรื่องร้องเรียนใหม่
   const {
     isOpen: isCreateModalOpen,
@@ -110,7 +110,7 @@ export default function ComplaintsPage() {
     onClose: onCreateModalClose,
     onOpenChange: onCreateModalOpenChange
   } = useDisclosure();
-  
+
   // Modal ยืนยันการลบเรื่องร้องเรียน
   const {
     isOpen: isDeleteModalOpen,
@@ -118,38 +118,40 @@ export default function ComplaintsPage() {
     onClose: onDeleteModalClose,
     onOpenChange: onDeleteModalOpenChange
   } = useDisclosure();
-  
+
   // ตรวจสอบสถานะการเข้าสู่ระบบ
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
-  
+
   // กรองข้อมูลเรื่องร้องเรียนตามการค้นหา
   const filteredComplaints = searchTerm
     ? complaints.filter(complaint =>
-        complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        complaint.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        complaint.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (complaint.tags && complaint.tags.some(tag => 
-          tag.toLowerCase().includes(searchTerm.toLowerCase())
-        ))
-      )
+      complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (complaint.tags && complaint.tags.some(tag =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      ))
+    )
     : complaints;
-  
+
   // เปลี่ยนหมวดหมู่ที่เลือก
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
     changeCategory(value);
   };
-  
+
   // เปลี่ยนสถานะที่เลือก
   const handleStatusChange = (value: string) => {
-    setSelectedStatus(value);
-    changeStatus(value);
+    // แปลงค่าเป็น type ที่ถูกต้องก่อนส่งไปให้ changeStatus
+    const newStatus = value as "" | "pending" | "inprogress" | "resolved" | "rejected";
+    setSelectedStatus(newStatus);
+    changeStatus(newStatus);
   };
-  
+
   // รีเฟรชข้อมูลเรื่องร้องเรียน
   const handleRefreshComplaints = async () => {
     setIsRefreshing(true);
@@ -163,11 +165,11 @@ export default function ComplaintsPage() {
       setIsRefreshing(false);
     }
   };
-  
+
   // ลบเรื่องร้องเรียน
   const handleDeleteComplaint = async () => {
     if (!selectedComplaint) return;
-    
+
     try {
       const result = await deleteComplaint(selectedComplaint._id);
       if (result.success) {
@@ -179,15 +181,15 @@ export default function ComplaintsPage() {
       console.error("Error deleting complaint:", error);
     }
   };
-  
+
   // จัดการการอัพโหลดรูปภาพ
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    
+
     const newImages: File[] = [];
     const newPreviews: string[] = [];
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.type.startsWith('image/')) {
@@ -195,26 +197,26 @@ export default function ComplaintsPage() {
         newPreviews.push(URL.createObjectURL(file));
       }
     }
-    
+
     setImages([...images, ...newImages]);
     setImagePreviews([...imagePreviews, ...newPreviews]);
   };
-  
+
   // ลบรูปภาพที่เลือก
   const handleRemoveImage = (index: number) => {
     const newImages = [...images];
     const newPreviews = [...imagePreviews];
-    
+
     // เพิ่ม URL.revokeObjectURL เพื่อป้องกัน memory leak
     URL.revokeObjectURL(newPreviews[index]);
-    
+
     newImages.splice(index, 1);
     newPreviews.splice(index, 1);
-    
+
     setImages(newImages);
     setImagePreviews(newPreviews);
   };
-  
+
   // ส่งฟอร์มสร้างเรื่องร้องเรียนใหม่
   const handleSubmitComplaint = async () => {
     // ตรวจสอบข้อมูลที่จำเป็น
@@ -222,20 +224,20 @@ export default function ComplaintsPage() {
       showToast("กรุณากรอกหัวข้อเรื่องร้องเรียน", "error");
       return;
     }
-    
+
     if (!content.trim()) {
       showToast("กรุณากรอกรายละเอียดเรื่องร้องเรียน", "error");
       return;
     }
-    
+
     if (!category) {
       showToast("กรุณาเลือกหมวดหมู่", "error");
       return;
     }
-    
+
     try {
       const tagsArray = tags.trim() ? tags.split(',').map(tag => tag.trim()) : [];
-      
+
       const result = await submitComplaint({
         title,
         content,
@@ -245,7 +247,7 @@ export default function ComplaintsPage() {
         tags: tagsArray,
         images
       });
-      
+
       if (result.success) {
         // รีเซ็ตฟอร์ม
         setTitle("");
@@ -254,27 +256,27 @@ export default function ComplaintsPage() {
         setCategory("other");
         setIsAnonymous(false);
         setTags("");
-        
+
         // ยกเลิก URL.createObjectURL เพื่อป้องกัน memory leak
         imagePreviews.forEach(url => URL.revokeObjectURL(url));
         setImages([]);
         setImagePreviews([]);
-        
+
         // ปิด Modal
         onCreateModalClose();
-        
+
         // รีเฟรชข้อมูลเรื่องร้องเรียน
         refreshComplaints();
-        
+
         showToast("ส่งเรื่องร้องเรียนเรียบร้อยแล้ว", "success");
       }
     } catch (error) {
       console.error("Error submitting complaint:", error);
     }
   };
-  
+
   // แปลงสถานะเป็นสีและข้อความ
-  const getStatusColor = (status: string): string => {
+  const getStatusColor = (status: string): "warning" | "primary" | "success" | "danger" | "default" => {
     switch (status) {
       case 'pending': return "warning";
       case 'inprogress': return "primary";
@@ -283,7 +285,7 @@ export default function ComplaintsPage() {
       default: return "default";
     }
   };
-  
+
   const getStatusText = (status: string): string => {
     switch (status) {
       case 'pending': return "รอดำเนินการ";
@@ -293,21 +295,20 @@ export default function ComplaintsPage() {
       default: return status;
     }
   };
-  
+
   // แปลงหมวดหมู่เป็นข้อความ
   const getCategoryText = (categoryValue: string): string => {
     const category = complaintCategories.find(cat => cat.value === categoryValue);
     return category ? category.label : categoryValue;
   };
-  
+
   if (status === "loading") {
     return <Loading message="กำลังโหลดข้อมูล..." fullScreen />;
   }
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 font-[family-name:var(--font-line-seed-sans)]">
-      <NavBar />
-      
+
       <div className="container mx-auto px-4 py-8 flex-1">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -318,19 +319,19 @@ export default function ComplaintsPage() {
               </h1>
               <p className="text-default-500">รายการเรื่องร้องเรียนของคุณและสถานะการดำเนินการ</p>
             </div>
-            
+
             <div className="flex flex-wrap gap-2">
-              <Button 
-                color="default" 
+              <Button
+                color="default"
                 onPress={handleRefreshComplaints}
                 isLoading={isRefreshing}
                 startContent={!isRefreshing && <FaSyncAlt />}
               >
                 {isRefreshing ? "กำลังโหลด..." : "รีเฟรช"}
               </Button>
-              
-              <Button 
-                color="primary" 
+
+              <Button
+                color="primary"
                 onPress={onCreateModalOpen}
                 startContent={<FaPlus />}
               >
@@ -382,12 +383,12 @@ export default function ComplaintsPage() {
                     className="w-full sm:w-60"
                   />
                 </div>
-                
+
                 <div className="text-sm text-default-500">
                   พบ {filteredComplaints.length} รายการ จากทั้งหมด {complaints.length} รายการ
                 </div>
               </div>
-              
+
               {isLoading ? (
                 <div className="flex justify-center py-10">
                   <Spinner label="กำลังโหลดข้อมูล..." color="primary" />
@@ -458,7 +459,7 @@ export default function ComplaintsPage() {
                               >
                                 <FaEye />
                               </Button>
-                              
+
                               <Button
                                 isIconOnly
                                 size="sm"
@@ -477,7 +478,7 @@ export default function ComplaintsPage() {
                       ))}
                     </TableBody>
                   </Table>
-                  
+
                   {pagination && pagination.totalPages > 1 && (
                     <div className="flex justify-center mt-4">
                       <Pagination
@@ -494,10 +495,10 @@ export default function ComplaintsPage() {
             </CardBody>
           </Card>
         </div>
-        
+
         {/* Modal สร้างเรื่องร้องเรียนใหม่ */}
-        <Modal 
-          isOpen={isCreateModalOpen} 
+        <Modal
+          isOpen={isCreateModalOpen}
           onOpenChange={onCreateModalOpenChange}
           backdrop="blur"
           size="lg"
@@ -522,7 +523,7 @@ export default function ComplaintsPage() {
                       variant="bordered"
                       isRequired
                     />
-                    
+
                     <Textarea
                       label="รายละเอียด"
                       placeholder="อธิบายรายละเอียดเรื่องร้องเรียนของคุณ"
@@ -533,7 +534,7 @@ export default function ComplaintsPage() {
                       maxRows={8}
                       isRequired
                     />
-                    
+
                     <Input
                       label="สถานที่"
                       placeholder="ระบุสถานที่ที่เกี่ยวข้อง (ถ้ามี)"
@@ -542,7 +543,7 @@ export default function ComplaintsPage() {
                       variant="bordered"
                       startContent={<FaMapMarkedAlt />}
                     />
-                    
+
                     <Select
                       label="หมวดหมู่"
                       placeholder="เลือกหมวดหมู่"
@@ -557,7 +558,7 @@ export default function ComplaintsPage() {
                         </SelectItem>
                       ))}
                     </Select>
-                    
+
                     <Input
                       label="แท็ก"
                       placeholder="ใส่แท็กคั่นด้วยเครื่องหมายจุลภาค (,)"
@@ -566,10 +567,10 @@ export default function ComplaintsPage() {
                       variant="bordered"
                       startContent={<FaTags />}
                     />
-                    
+
                     <div>
                       <p className="text-sm font-medium mb-2">รูปภาพประกอบ (ถ้ามี)</p>
-                      
+
                       <div className="flex flex-wrap gap-2 mb-2">
                         {imagePreviews.map((preview, index) => (
                           <div key={index} className="relative">
@@ -591,7 +592,7 @@ export default function ComplaintsPage() {
                           </div>
                         ))}
                       </div>
-                      
+
                       <Button
                         color="default"
                         variant="bordered"
@@ -609,14 +610,14 @@ export default function ComplaintsPage() {
                         onChange={handleImageUpload}
                       />
                     </div>
-                    
+
                     <Checkbox
                       isSelected={isAnonymous}
                       onValueChange={setIsAnonymous}
                     >
                       ไม่เปิดเผยตัวตน
                     </Checkbox>
-                    
+
                     {isAnonymous && (
                       <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md text-amber-800 dark:text-amber-200 text-sm">
                         <p>โปรดทราบว่าการไม่เปิดเผยตัวตนจะซ่อนชื่อของคุณจากผู้ใช้ทั่วไป แต่ผู้ดูแลระบบยังสามารถเห็นข้อมูลของคุณได้</p>
@@ -640,10 +641,10 @@ export default function ComplaintsPage() {
             )}
           </ModalContent>
         </Modal>
-        
+
         {/* Modal ยืนยันการลบเรื่องร้องเรียน */}
-        <Modal 
-          isOpen={isDeleteModalOpen} 
+        <Modal
+          isOpen={isDeleteModalOpen}
           onOpenChange={onDeleteModalOpenChange}
           backdrop="blur"
         >
@@ -682,8 +683,6 @@ export default function ComplaintsPage() {
           </ModalContent>
         </Modal>
       </div>
-      
-      <Footer />
     </div>
   );
 }

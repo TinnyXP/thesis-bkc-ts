@@ -53,7 +53,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
  * Hook สำหรับจัดการระบบร้องเรียน
  */
 export function useComplaints(
-  initialStatus?: 'pending' | 'inprogress' | 'resolved' | 'rejected',
+  initialStatus?: 'pending' | 'inprogress' | 'resolved' | 'rejected' | "",
   initialCategory?: string,
   pageSize: number = 10
 ) {
@@ -82,8 +82,8 @@ export function useComplaints(
   }, []);
   
   // เปลี่ยนสถานะที่ต้องการดู
-  const changeStatus = useCallback((newStatus?: 'pending' | 'inprogress' | 'resolved' | 'rejected') => {
-    setStatus(newStatus);
+  const changeStatus = useCallback((newStatus?: 'pending' | 'inprogress' | 'resolved' | 'rejected' | "") => {
+    setStatus(newStatus === "" ? undefined : newStatus);
     setPage(1); // รีเซ็ตหน้ากลับไปหน้าแรก
   }, []);
   
