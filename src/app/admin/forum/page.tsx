@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+// import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -32,7 +33,6 @@ import {
   FaComments,
   FaSearch,
   FaThumbtack,
-  FaCalendarAlt,
   FaTrash,
   FaEye,
   FaSyncAlt,
@@ -58,7 +58,7 @@ const forumCategories: { label: string; value: string }[] = [
 
 export default function AdminForumPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const { isAdmin, isSuperAdmin, isLoading: isLoadingAdmin } = useAdmin();
   
   const [selectedCategory, setSelectedCategory] = useState<string>("");

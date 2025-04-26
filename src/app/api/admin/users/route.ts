@@ -1,7 +1,5 @@
 // src/app/api/admin/users/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/user";
 import { withSuperAdminAuth } from "@/lib/middleware/adminMiddleware";
@@ -53,7 +51,7 @@ export const POST = withSuperAdminAuth(async (request: NextRequest) => {
     await connectDB();
     
     // สร้าง query filter
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
     
     // ค้นหาจากชื่อหรืออีเมล
     if (search) {

@@ -37,7 +37,6 @@ import {
   FaEye,
   FaTrash,
   FaCalendarAlt,
-  FaImage,
   FaTags,
   FaUpload,
   FaExclamationTriangle,
@@ -45,10 +44,11 @@ import {
   FaMapMarkedAlt
 } from "react-icons/fa";
 import Link from "next/link";
-import { NavBar, Footer, Loading } from "@/components";
+import { Loading } from "@/components";
 import { useComplaints, Complaint } from "@/hooks/useComplaints";
 import { showToast } from "@/lib/toast";
-import { formatRelativeTime, formatDateTime } from "@/lib/dateUtils";
+import { formatRelativeTime } from "@/lib/dateUtils";
+import Image from "next/image";
 
 // กำหนดประเภทเรื่องร้องเรียน
 const complaintCategories: { label: string; value: string }[] = [
@@ -71,7 +71,7 @@ const complaintStatuses: { label: string; value: string }[] = [
 
 export default function ComplaintsPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<"pending" | "inprogress" | "resolved" | "rejected" | "">("");
@@ -574,7 +574,7 @@ export default function ComplaintsPage() {
                       <div className="flex flex-wrap gap-2 mb-2">
                         {imagePreviews.map((preview, index) => (
                           <div key={index} className="relative">
-                            <img
+                            <Image
                               src={preview}
                               alt={`ภาพที่ ${index + 1}`}
                               className="w-24 h-24 object-cover rounded-md"

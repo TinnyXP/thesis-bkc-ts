@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
     
     // สร้าง query filter
-    const filter: Record<string, any> = { is_deleted: false };
+    const filter: Record<string, unknown> = { is_deleted: false };
     
     // กรองตาม category ถ้ามีการระบุ
     if (category) {

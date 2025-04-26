@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+// import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button, Tooltip, Divider } from "@heroui/react";
@@ -97,7 +98,7 @@ interface SidebarContentProps {
 }
 
 function SidebarContent({ pathname, isSuperAdmin, isMobile, onItemClick }: SidebarContentProps) {
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleSignOut = async () => {
     showToast("กำลังออกจากระบบ...", "info");

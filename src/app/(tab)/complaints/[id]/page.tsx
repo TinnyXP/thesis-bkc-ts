@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSession } from "next-auth/react";
 import { useParams } from 'next/navigation';
 import {
@@ -43,9 +43,17 @@ export default function ComplaintDetailPage() {
     isSubmittingResponse,
     addResponse,
     getStatusText,
-    getStatusColor,
-    refreshComplaint
   } = useComplaintDetail(complaintId as string);
+  
+  // const {
+  //   complaint,
+  //   isLoading,
+  //   isSubmittingResponse,
+  //   addResponse,
+  //   getStatusText,
+  //   getStatusColor,
+  //   refreshComplaint
+  // } = useComplaintDetail(complaintId as string);
 
   // สำหรับ Modal ยืนยันการลบ
   const { 

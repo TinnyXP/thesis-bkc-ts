@@ -1,6 +1,6 @@
 // src/hooks/useUsersManagement.ts
 import { useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+// import { useSession } from 'next-auth/react';
 import { showToast } from '@/lib/toast';
 
 export interface User {
@@ -17,7 +17,7 @@ export interface User {
 }
 
 export function useUsersManagement() {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   

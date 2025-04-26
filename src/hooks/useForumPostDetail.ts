@@ -35,7 +35,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export function useForumPostDetail(postId: string) {
   const { data: session } = useSession();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize] = useState(20);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   

@@ -83,7 +83,7 @@ export const PATCH = withAdminAuth(async (
   { params }: { params: { id: string } }
 ) => {
   try {
-    const session = await getServerSession(authOptions);
+    // const session = await getServerSession(authOptions);
     const { status } = await request.json();
     
     // ตรวจสอบความถูกต้องของ status

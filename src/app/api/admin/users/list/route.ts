@@ -1,7 +1,5 @@
 // src/app/api/admin/users/list/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/user";
 import { withAdminAuth } from "@/lib/middleware/adminMiddleware";
@@ -17,7 +15,7 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
     await connectDB();
     
     // สร้าง query filter
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
     
     // ค้นหาจากชื่อหรืออีเมลหรือ bkc_id
     if (search) {

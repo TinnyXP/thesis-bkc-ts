@@ -1,7 +1,8 @@
 // src/app/forum/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+// import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import {
   Button,
@@ -20,7 +21,6 @@ import {
   ModalBody,
   ModalFooter,
   Textarea,
-  Divider
 } from "@heroui/react";
 import {
   FaPlus,
@@ -32,7 +32,7 @@ import {
 } from "react-icons/fa";
 import { IoCreateOutline } from "react-icons/io5";
 import Link from "next/link";
-import { NavBar, Footer, Loading, PageHeader } from "@/components";
+import { Loading, PageHeader } from "@/components";
 import { ForumPost, useForumPosts } from "@/hooks/useForumPosts";
 import { showToast } from "@/lib/toast";
 import { formatRelativeTime } from "@/lib/dateUtils";
@@ -51,7 +51,7 @@ export default function ForumPage() {
   const { data: session, status } = useSession();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [showNewPostForm, setShowNewPostForm] = useState<boolean>(false);
+  // const [showNewPostForm, setShowNewPostForm] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [postCategory, setPostCategory] = useState<string>("general");
@@ -65,12 +65,23 @@ export default function ForumPage() {
     pagination,
     isLoading,
     isSubmitting,
-    isError,
     changePage,
     changeCategory,
     createPost,
     refreshPosts
   } = useForumPosts(selectedCategory);
+
+  // const {
+  //   posts,
+  //   pagination,
+  //   isLoading,
+  //   isSubmitting,
+  //   isError,
+  //   changePage,
+  //   changeCategory,
+  //   createPost,
+  //   refreshPosts
+  // } = useForumPosts(selectedCategory);
 
   // Modal สำหรับการสร้างกระทู้
   const {

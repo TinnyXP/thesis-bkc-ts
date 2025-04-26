@@ -2,11 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/user";
-import Bookmark from "@/models/bookmark";
-import Comment from "@/models/comment";
-import LoginHistory from "@/models/loginHistory";
 import { withAdminAuth } from "@/lib/middleware/adminMiddleware";
-import { deleteFromCloudinary } from "@/lib/cloudinary";
 
 /**
  * API สำหรับดึงข้อมูลผู้ใช้

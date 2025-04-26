@@ -1,9 +1,10 @@
 // src/app/forum/[id]/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useParams, useRouter } from "next/navigation";
+// import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   Avatar,
   AvatarIcon,
@@ -13,7 +14,6 @@ import {
   CardFooter,
   CardHeader,
   Chip,
-  Divider,
   Pagination,
   Textarea,
   Tooltip,
@@ -36,8 +36,8 @@ import {
   FaTimes
 } from "react-icons/fa";
 import Link from "next/link";
-import { NavBar, Footer, Loading, SlugBreadcrumb } from "@/components";
-import { ForumPost } from "@/hooks/useForumPosts";
+import { Loading } from "@/components";
+// import { ForumPost } from "@/hooks/useForumPosts";
 import { ForumReply, useForumPostDetail } from "@/hooks/useForumPostDetail";
 import { showToast } from "@/lib/toast";
 import { formatRelativeTime } from "@/lib/dateUtils";
@@ -54,7 +54,7 @@ const forumCategories: { label: string; value: string }[] = [
 export default function ForumDetailPage() {
   const { data: session, status } = useSession();
   const params = useParams();
-  const router = useRouter();
+  // const router = useRouter();
   const postId = params.id as string;
   const [replyContent, setReplyContent] = useState<string>("");
   const [editingReply, setEditingReply] = useState<ForumReply | null>(null);
@@ -73,16 +73,34 @@ export default function ForumDetailPage() {
     isSubmittingReply,
     isUpdating,
     isErrorPost,
-    isErrorReplies,
     currentRepliesPage,
     changeRepliesPage,
     addReply,
     editReply,
     deleteReply,
     markAsSolution,
-    refreshPost,
     refreshReplies
   } = useForumPostDetail(postId);
+
+  // const {
+  //   post,
+  //   replies,
+  //   repliesPagination,
+  //   isLoadingPost,
+  //   isLoadingReplies,
+  //   isSubmittingReply,
+  //   isUpdating,
+  //   isErrorPost,
+  //   isErrorReplies,
+  //   currentRepliesPage,
+  //   changeRepliesPage,
+  //   addReply,
+  //   editReply,
+  //   deleteReply,
+  //   markAsSolution,
+  //   refreshPost,
+  //   refreshReplies
+  // } = useForumPostDetail(postId);
 
   // Modal ยืนยันการลบการตอบกลับ
   const {
@@ -92,8 +110,8 @@ export default function ForumDetailPage() {
     onOpenChange: onDeleteModalOpenChange
   } = useDisclosure();
 
-  // สถานะการโหลดรูปโปรไฟล์
-  const [loadingAvatar, setLoadingAvatar] = useState<{ [key: string]: boolean }>({});
+  // // สถานะการโหลดรูปโปรไฟล์
+  // const [loadingAvatar, setLoadingAvatar] = useState<{ [key: string]: boolean }>({});
 
   // การส่งคำตอบ
   const handleSubmitReply = async () => {

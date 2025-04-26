@@ -28,10 +28,6 @@ import {
   useDisclosure,
   Spinner,
   Textarea,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Divider
 } from "@heroui/react";
 import {
@@ -83,7 +79,7 @@ const complaintStatuses: { label: string; value: ComplaintStatus }[] = [
 
 export default function AdminComplaintsPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const { isAdmin, isSuperAdmin, isLoading: isLoadingAdmin } = useAdmin();
 
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);

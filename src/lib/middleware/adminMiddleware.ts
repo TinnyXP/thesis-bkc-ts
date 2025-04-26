@@ -10,8 +10,8 @@ import User from '@/models/user';
  * @param handler ฟังก์ชัน handler ที่จะทำงานหลังจากตรวจสอบสิทธิ์แล้ว
  * @returns ฟังก์ชันที่ตรวจสอบสิทธิ์ก่อนเรียก handler
  */
-export function withAdminAuth(handler: (req: NextRequest, context: any) => Promise<NextResponse>) {
-  return async (req: NextRequest, context: any) => {
+export function withAdminAuth(handler: (req: NextRequest, context: {params: Record<string, string>}) => Promise<NextResponse>) {
+  return async (req: NextRequest, context: {params: Record<string, string>}) => {
     try {
       // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
       const session = await getServerSession(authOptions);
@@ -61,8 +61,8 @@ export function withAdminAuth(handler: (req: NextRequest, context: any) => Promi
  * @param handler ฟังก์ชัน handler ที่จะทำงานหลังจากตรวจสอบสิทธิ์แล้ว
  * @returns ฟังก์ชันที่ตรวจสอบสิทธิ์ก่อนเรียก handler
  */
-export function withSuperAdminAuth(handler: (req: NextRequest, context: any) => Promise<NextResponse>) {
-  return async (req: NextRequest, context: any) => {
+export function withSuperAdminAuth(handler: (req: NextRequest, context: {params: Record<string, string>}) => Promise<NextResponse>) {
+  return async (req: NextRequest, context: {params: Record<string, string>}) => {
     try {
       // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
       const session = await getServerSession(authOptions);

@@ -37,7 +37,7 @@ import { showToast } from "@/lib/toast";
 
 export default function AdminManagementListPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const {
     isAdmin,
     isSuperAdmin,
@@ -54,7 +54,7 @@ export default function AdminManagementListPage() {
   } = useAdmin();
 
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<AdminUser[]>([]);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
@@ -118,6 +118,7 @@ export default function AdminManagementListPage() {
       await refreshAdmins();
       showToast("รีเฟรชข้อมูลเรียบร้อย", "success");
     } catch (error) {
+      console.error("Error fetching users:", error);
       showToast("เกิดข้อผิดพลาดในการรีเฟรชข้อมูล", "error");
     } finally {
       setIsRefreshing(false);

@@ -202,6 +202,8 @@ export function useAdmin() {
       await mutateAdmins();
       return true;
     } catch (error) {
+      console.error("Error refreshing admins:", error);
+      showToast("เกิดข้อผิดพลาดในการรีเฟรชข้อมูลผู้ดูแลระบบ", "error");
       return false;
     }
   }, [mutateAdmins]);

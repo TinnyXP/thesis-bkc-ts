@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     // สร้าง query filter
-    const filter: Record<string, any> = { is_deleted: false };
+    const filter: Record<string, unknown> = { is_deleted: false };
     
     // ถ้าไม่ใช่ admin ให้ดึงเฉพาะเรื่องร้องเรียนของตัวเอง
     if (!isAdmin) {
