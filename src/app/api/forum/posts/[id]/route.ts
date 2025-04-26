@@ -191,7 +191,7 @@ export async function DELETE(
  */
 export const PATCH = withAdminAuth(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) => {
   try {
     const { is_pinned } = await request.json();
@@ -204,7 +204,7 @@ export const PATCH = withAdminAuth(async (
     }
     
     // ดึงข้อมูลกระทู้
-    const post = await ForumPost.findById(params.id);
+    const post = await ForumPost.findById(context.params.id);
     
     if (!post) {
       return NextResponse.json({

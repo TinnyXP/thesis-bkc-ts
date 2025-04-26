@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/user";
 import { withAdminAuth } from "@/lib/middleware/adminMiddleware";
 
+export const dynamic = 'force-dynamic';
 /**
  * API สำหรับดึงรายชื่อผู้ใช้ทั้งหมด (สำหรับผู้ดูแลระบบ)
  */

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button, Card, CardBody, Link } from "@heroui/react";
 import Image from "next/image";
 import { FaExclamationTriangle, FaHome, FaSignInAlt } from "react-icons/fa";
 
-export default function ErrorPage() {
+function ErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -129,5 +129,22 @@ export default function ErrorPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary-color border-r-transparent align-[-0.125em]" role="status">
+            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">กำลังโหลด...</span>
+          </div>
+          <p className="mt-4 text-default-500">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    }>
+      <ErrorContent />
+    </Suspense>
   );
 }

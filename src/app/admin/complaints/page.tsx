@@ -567,16 +567,16 @@ export default function AdminComplaintsPage() {
                             onChange={(e) => setNewStatus(e.target.value as ComplaintStatus)}
                             className="w-full"
                           >
-                            <SelectItem key="pending" startContent={getStatusIcon("pending")}>
+                            <SelectItem key="pending" startContent={getStatusIcon("pending")} textValue="รอดำเนินการ">
                               รอดำเนินการ
                             </SelectItem>
-                            <SelectItem key="inprogress" startContent={getStatusIcon("inprogress")}>
+                            <SelectItem key="inprogress" startContent={getStatusIcon("inprogress")} textValue="กำลังดำเนินการ">
                               กำลังดำเนินการ
                             </SelectItem>
-                            <SelectItem key="resolved" startContent={getStatusIcon("resolved")}>
+                            <SelectItem key="resolved" startContent={getStatusIcon("resolved")} textValue="แก้ไขแล้ว">
                               แก้ไขแล้ว
                             </SelectItem>
-                            <SelectItem key="rejected" startContent={getStatusIcon("rejected")}>
+                            <SelectItem key="rejected" startContent={getStatusIcon("rejected")} textValue="ไม่อนุมัติ">
                               ไม่อนุมัติ
                             </SelectItem>
                           </Select>

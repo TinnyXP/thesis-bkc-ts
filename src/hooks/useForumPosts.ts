@@ -47,30 +47,37 @@ export function useForumPosts(
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState<string | undefined>(initialCategory);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // สร้าง URL สำหรับการดึงข้อมูล
+
+  // แก้ไขฟังก์ชัน getUrl โดยตรวจสอบ window ก่อนใช้
+
   const getUrl = useCallback(() => {
-    const url = new URL('/api/forum/posts', window.location.origin);
+    // ตรวจสอบว่าอยู่ในสภาพแวดล้อม browser หรือไม่
+    if (typeof window === 'undefined') {
+      // ถ้าทำงานบน server ให้คืนค่า placeholder
+      return '';
+    }
+
+    const url = new URL(`/api/forum/posts`, window.location.origin);
     if (category) url.searchParams.append('category', category);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('limit', pageSize.toString());
     return url.toString();
   }, [category, page, pageSize]);
-  
+
   // ดึงข้อมูลกระทู้ทั้งหมด
   const { data, error, isLoading, mutate } = useSWR(getUrl(), fetcher);
-  
+
   // เปลี่ยนหน้า
   const changePage = useCallback((newPage: number) => {
     setPage(newPage);
   }, []);
-  
+
   // เปลี่ยนหมวดหมู่ที่ต้องการดู
   const changeCategory = useCallback((newCategory?: string) => {
     setCategory(newCategory);
     setPage(1); // รีเซ็ตหน้ากลับไปหน้าแรก
   }, []);
-  
+
   // สร้างกระทู้ใหม่
   const createPost = useCallback(async (postData: ForumPostSubmitData) => {
     try {
@@ -78,9 +85,9 @@ export function useForumPosts(
         showToast("กรุณาเข้าสู่ระบบก่อนสร้างกระทู้", "error");
         return { success: false, message: "กรุณาเข้าสู่ระบบก่อนสร้างกระทู้" };
       }
-      
+
       setIsSubmitting(true);
-      
+
       // ส่งข้อมูลไปยัง API
       const response = await fetch('/api/forum/posts', {
         method: 'POST',
@@ -89,9 +96,9 @@ export function useForumPosts(
         },
         body: JSON.stringify(postData)
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // รีเฟรชข้อมูลกระทู้
         mutate();
@@ -101,19 +108,19 @@ export function useForumPosts(
         showToast(result.message || "ไม่สามารถสร้างกระทู้ได้", "error");
         return { success: false, message: result.message };
       }
-      
+
     } catch (error) {
       console.error("Error creating forum post:", error);
       showToast("เกิดข้อผิดพลาดในการสร้างกระทู้", "error");
-      return { 
-        success: false, 
-        message: "เกิดข้อผิดพลาดในการสร้างกระทู้" 
+      return {
+        success: false,
+        message: "เกิดข้อผิดพลาดในการสร้างกระทู้"
       };
     } finally {
       setIsSubmitting(false);
     }
   }, [session, mutate]);
-  
+
   // ปักหมุดหรือยกเลิกการปักหมุดกระทู้ (สำหรับ admin เท่านั้น)
   const togglePin = useCallback(async (postId: string, isPinned: boolean) => {
     try {
@@ -121,19 +128,19 @@ export function useForumPosts(
         showToast("กรุณาเข้าสู่ระบบก่อนปักหมุดกระทู้", "error");
         return { success: false, message: "กรุณาเข้าสู่ระบบก่อนปักหมุดกระทู้" };
       }
-      
+
       // ทำ optimistic update
       if (data && data.posts) {
-        const updatedPosts = data.posts.map((post: ForumPost) => 
+        const updatedPosts = data.posts.map((post: ForumPost) =>
           post._id === postId ? { ...post, is_pinned: isPinned } : post
         );
-        
+
         mutate({
           ...data,
           posts: updatedPosts
         }, false);
       }
-      
+
       // ส่งข้อมูลไปยัง API
       const response = await fetch(`/api/forum/posts/${postId}`, {
         method: 'PATCH',
@@ -142,14 +149,14 @@ export function useForumPosts(
         },
         body: JSON.stringify({ is_pinned: isPinned })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // รีเฟรชข้อมูลกระทู้
         mutate();
         showToast(
-          isPinned ? "ปักหมุดกระทู้สำเร็จ" : "ยกเลิกการปักหมุดกระทู้สำเร็จ", 
+          isPinned ? "ปักหมุดกระทู้สำเร็จ" : "ยกเลิกการปักหมุดกระทู้สำเร็จ",
           "success"
         );
         return { success: true };
@@ -159,19 +166,19 @@ export function useForumPosts(
         showToast(result.message || "ไม่สามารถปักหมุดกระทู้ได้", "error");
         return { success: false, message: result.message };
       }
-      
+
     } catch (error) {
       console.error("Error toggling pin status:", error);
       // ยกเลิก optimistic update ถ้าเกิดข้อผิดพลาด
       mutate();
       showToast("เกิดข้อผิดพลาดในการปักหมุดกระทู้", "error");
-      return { 
-        success: false, 
-        message: "เกิดข้อผิดพลาดในการปักหมุดกระทู้" 
+      return {
+        success: false,
+        message: "เกิดข้อผิดพลาดในการปักหมุดกระทู้"
       };
     }
   }, [session, data, mutate]);
-  
+
   // ลบกระทู้
   const deletePost = useCallback(async (postId: string) => {
     try {
@@ -179,26 +186,26 @@ export function useForumPosts(
         showToast("กรุณาเข้าสู่ระบบก่อนลบกระทู้", "error");
         return { success: false, message: "กรุณาเข้าสู่ระบบก่อนลบกระทู้" };
       }
-      
+
       // ทำ optimistic update
       if (data && data.posts) {
         const updatedPosts = data.posts.filter(
           (post: ForumPost) => post._id !== postId
         );
-        
+
         mutate({
           ...data,
           posts: updatedPosts
         }, false);
       }
-      
+
       // ส่งข้อมูลไปยัง API
       const response = await fetch(`/api/forum/posts/${postId}`, {
         method: 'DELETE'
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // รีเฟรชข้อมูลกระทู้
         mutate();
@@ -210,25 +217,25 @@ export function useForumPosts(
         showToast(result.message || "ไม่สามารถลบกระทู้ได้", "error");
         return { success: false, message: result.message };
       }
-      
+
     } catch (error) {
       console.error("Error deleting forum post:", error);
       // ยกเลิก optimistic update ถ้าเกิดข้อผิดพลาด
       mutate();
       showToast("เกิดข้อผิดพลาดในการลบกระทู้", "error");
-      return { 
-        success: false, 
-        message: "เกิดข้อผิดพลาดในการลบกระทู้" 
+      return {
+        success: false,
+        message: "เกิดข้อผิดพลาดในการลบกระทู้"
       };
     }
   }, [session, data, mutate]);
-  
+
   return {
     posts: data?.posts as ForumPost[] || [],
-    pagination: data?.pagination as ForumPostPagination || { 
-      currentPage: 1, 
-      totalPages: 1, 
-      totalItems: 0 
+    pagination: data?.pagination as ForumPostPagination || {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0
     },
     isLoading,
     isSubmitting,

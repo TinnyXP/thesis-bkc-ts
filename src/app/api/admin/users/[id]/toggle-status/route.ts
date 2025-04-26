@@ -9,7 +9,7 @@ import { withAdminAuth } from "@/lib/middleware/adminMiddleware";
  */
 export const PATCH = withAdminAuth(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) => {
   try {
     const { isActive } = await request.json();
@@ -24,7 +24,7 @@ export const PATCH = withAdminAuth(async (
     await connectDB();
     
     // ดึงข้อมูลผู้ใช้
-    const user = await User.findById(params.id);
+    const user = await User.findById(context.params.id);
     
     if (!user) {
       return NextResponse.json({

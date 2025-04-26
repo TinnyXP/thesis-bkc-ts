@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/user";
 
+export const dynamic = 'force-dynamic';
 /**
  * API ตรวจสอบว่าผู้ใช้ปัจจุบันเป็น admin หรือไม่
  */

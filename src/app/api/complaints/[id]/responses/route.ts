@@ -67,7 +67,7 @@ export async function GET(
  */
 export const POST = withAdminAuth(async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -91,7 +91,7 @@ export const POST = withAdminAuth(async (
     }
     
     // ดึงข้อมูลเรื่องร้องเรียน
-    const complaint = await Complaint.findById(params.id);
+    const complaint = await Complaint.findById(context.params.id);
     
     if (!complaint) {
       return NextResponse.json({
