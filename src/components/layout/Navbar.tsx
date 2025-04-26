@@ -65,6 +65,14 @@ export default function NavBar() {
       href: "/blog"
     },
     {
+      label: t('forum'),  // เพิ่มเมนู Forum
+      href: "/forum"
+    },
+    {
+      label: t('complaints'),  // เพิ่มเมนู Complaints
+      href: "/complaints"
+    },
+    {
       label: t('static'),
       href: "/static"
     },
@@ -377,6 +385,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ size = "sm" }) => {
           >
             การตั้งค่า
           </DropdownItem>
+          
           <DropdownItem
             key="logout"
             color="danger"

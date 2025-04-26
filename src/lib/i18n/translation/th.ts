@@ -18,6 +18,8 @@ const translations = {
   history: "ประวัติความเป็นมา",
   place: "สถานที่ท่องเที่ยว",
   news: "ข่าวสาร",
+  forum: "ฟอรัม",
+  complaints: "ร้องเรียน",
   static: "สถิติ",
 
   // Authentication

@@ -13,6 +13,7 @@ export interface UserProfile {
   bkcId: string;
   isActive: boolean;
   profileCompleted: boolean;
+  role?: 'user' | 'admin' | 'superadmin'; // เพิ่ม role ที่เป็นไปได้
 }
 
 const PROFILE_CACHE_KEY = 'user_profile_cache';

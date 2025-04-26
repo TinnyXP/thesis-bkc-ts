@@ -12,6 +12,7 @@ declare module "next-auth" {
       provider: string;
       isNewUser?: boolean;
       isActive?: boolean;  // เพิ่มบรรทัดนี้
+      role?: 'user' | 'admin' | 'superadmin';  // เพิ่ม role!
     } & DefaultSession["user"];
   }
 
@@ -24,6 +25,7 @@ declare module "next-auth" {
     line_id?: string;
     isNewUser?: boolean;
     isActive?: boolean;  // เพิ่มบรรทัดนี้
+    role?: 'user' | 'admin' | 'superadmin';  // เพิ่ม role!
   }
 }
 
@@ -37,5 +39,6 @@ declare module "next-auth/jwt" {
     provider: string;
     isNewUser?: boolean;
     isActive?: boolean;  // เพิ่มบรรทัดนี้
+    role?: 'user' | 'admin' | 'superadmin';  // เพิ่ม role!
   }
 }

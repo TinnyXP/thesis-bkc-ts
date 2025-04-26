@@ -17,23 +17,22 @@ const footerNavigation = {
     { name: "Market Research", href: "#" }
   ],
   supportOptions: [
-    { name: "Pricing Plans", href: "#" },
-    { name: "User Guides", href: "#" },
-    { name: "Tutorials", href: "#" },
-    { name: "Service Status", href: "#" },
+    { name: "กระทู้และคำถาม", href: "/forum" },  // เพิ่มลิงก์ไปยังกระทู้
+    { name: "ร้องเรียนปัญหา", href: "/complaints" },  // เพิ่มลิงก์ไปยังหน้าร้องเรียน
+    { name: "ติดต่อเรา", href: "#" },
+    { name: "นโยบายความเป็นส่วนตัว", href: "/privacy-policy" },
   ],
   aboutUs: [
-    { name: "Our Story", href: "#" },
-    { name: "Latest News", href: "#" },
-    { name: "Career Opportunities", href: "#" },
-    { name: "Media Enquiries", href: "#" },
-    { name: "Collaborations", href: "#" },
+    { name: "ประวัติบางกระเจ้า", href: "/history" },
+    { name: "สถานที่ท่องเที่ยว", href: "/place" },
+    { name: "ข่าวสารและกิจกรรม", href: "/blog" },
+    { name: "ทำเนียบผู้บริหาร", href: "#" },
   ],
   legal: [
-    { name: "Claim", href: "#" },
-    { name: "Privacy", href: "#" },
-    { name: "Terms", href: "#" },
-    { name: "User Agreement", href: "#" },
+    { name: "ข้อกำหนดการใช้งาน", href: "/terms" },
+    { name: "นโยบายความเป็นส่วนตัว", href: "/privacy-policy" },
+    { name: "นโยบายคุกกี้", href: "#" },
+    { name: "สิทธิ์ผู้ใช้บริการ", href: "#" },
   ],
   social: [
     {
@@ -63,7 +62,7 @@ export default function Footer() {
       <FooterBorder />
       <FooterContent />
       <div className="w-full flex justify-center items-center py-1.5 bg-black border-t-small border-default-200/70 rounded-t-2xl">
-        <span className="text-xs font-medium flex leading-none text-zinc-200">&copy; 2024 Bangkrajao. All rights reserved.</span>
+        <span className="text-xs font-medium flex leading-none text-zinc-200">&copy; 2024 Bangkrajao. สงวนลิขสิทธิ์ทั้งหมด</span>
       </div>
     </footer>
   )
@@ -160,7 +159,7 @@ const FooterContent = () => {
             </div>
           </form>
         </div>
-        
+
       </div>
     </footer>
   );
