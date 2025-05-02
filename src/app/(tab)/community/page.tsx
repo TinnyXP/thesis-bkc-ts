@@ -1,8 +1,9 @@
-// src/app/(tab)/community/page.tsx
+// src/app/(tab)/community/page.tsx (แก้ไข)
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Card,
@@ -14,7 +15,8 @@ import {
   Pagination,
   Tabs,
   Tab,
-  Spinner
+  Spinner,
+  useDisclosure
 } from "@heroui/react";
 import {
   FaClipboardList,
@@ -27,7 +29,7 @@ import {
   FaSyncAlt
 } from "react-icons/fa";
 import Link from "next/link";
-import { Loading, PageHeader } from "@/components";
+import { Loading, PageHeader, CreateForumModal, CreateComplaintModal } from "@/components";
 import { ForumPost, useForumPosts } from "@/hooks/useForumPosts";
 import { Complaint, useComplaints } from "@/hooks/useComplaints";
 import { showToast } from "@/lib/toast";
@@ -65,6 +67,7 @@ const complaintStatuses: { label: string; value: string }[] = [
 // Component หลัก
 export default function CommunityPage() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("forum");
 
   // State สำหรับ Forum
@@ -74,12 +77,26 @@ export default function CommunityPage() {
 
   // State สำหรับ Complaints
   const [complaintCategory, setComplaintCategory] = useState<string>("");
-  // แก้ไขตัวแปรให้มีประเภทข้อมูลที่ถูกต้อง
   const [complaintStatus, setComplaintStatus] = useState<"" | "pending" | "inprogress" | "resolved" | "rejected">("");
   const [complaintSearchTerm, setComplaintSearchTerm] = useState<string>("");
   const [isRefreshingComplaints, setIsRefreshingComplaints] = useState<boolean>(false);
 
-  // ในส่วน useEffect ของไฟล์ community/page.tsx
+  // Modal สำหรับสร้างกระทู้
+  const {
+    isOpen: isCreateForumOpen,
+    onOpen: onCreateForumOpen,
+    onClose: onCreateForumClose,
+    onOpenChange: onCreateForumOpenChange
+  } = useDisclosure();
+
+  // Modal สำหรับสร้างเรื่องร้องเรียน
+  const {
+    isOpen: isCreateComplaintOpen,
+    onOpen: onCreateComplaintOpen,
+    onClose: onCreateComplaintClose,
+    onOpenChange: onCreateComplaintOpenChange
+  } = useDisclosure();
+
   useEffect(() => {
     // ใช้ searchParams จาก next/navigation ตรวจสอบ tab
     const params = new URLSearchParams(window.location.search);
@@ -98,6 +115,13 @@ export default function CommunityPage() {
       setActiveTab(tabParam);
     }
   }, []);
+
+  // เมื่อเปลี่ยน tab อัปเดต URL โดยไม่รีโหลดหน้า
+  useEffect(() => {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('tab', activeTab);
+    window.history.replaceState({}, '', newUrl);
+  }, [activeTab]);
 
   // ใช้ hooks ที่มีอยู่แล้ว
   const {
@@ -156,9 +180,7 @@ export default function CommunityPage() {
   };
 
   // ฟังก์ชันเปลี่ยนสถานะเรื่องร้องเรียน
-  // แก้ไขฟังก์ชันให้รับและส่งต่อด้วยประเภทข้อมูลที่ถูกต้อง
   const handleComplaintStatusChange = (value: string) => {
-    // แปลงค่าเป็น type ที่ถูกต้องก่อนส่งไปให้ changeStatus
     const newStatus = value as "" | "pending" | "inprogress" | "resolved" | "rejected";
     setComplaintStatus(newStatus);
     changeStatus(newStatus);
@@ -192,6 +214,15 @@ export default function CommunityPage() {
     }
   };
 
+  // เมื่อสร้างกระทู้หรือเรื่องร้องเรียนสำเร็จ ให้รีเฟรชข้อมูล
+  const handleForumCreated = () => {
+    refreshPosts();
+  };
+
+  const handleComplaintCreated = () => {
+    refreshComplaints();
+  };
+
   // แปลงหมวดหมู่กระทู้เป็นชื่อภาษาไทย
   const getForumCategoryLabel = (value: string): string => {
     const category = forumCategories.find(cat => cat.value === value);
@@ -223,6 +254,21 @@ export default function CommunityPage() {
       case 'resolved': return "success";
       case 'rejected': return "danger";
       default: return "default";
+    }
+  };
+
+  // เช็คว่าต้องล็อกอินก่อนไหม
+  const handleCreateButtonClick = (type: 'forum' | 'complaint') => {
+    if (!isAuthenticated) {
+      showToast("กรุณาเข้าสู่ระบบก่อนสร้าง" + (type === 'forum' ? "กระทู้" : "เรื่องร้องเรียน"), "error");
+      router.push('/login');
+      return;
+    }
+
+    if (type === 'forum') {
+      onCreateForumOpen();
+    } else {
+      onCreateComplaintOpen();
     }
   };
 
@@ -325,12 +371,10 @@ export default function CommunityPage() {
                   </Button>
 
                   <Button
-                    as={Link}
-                    href="/forum/create"
                     color="primary"
                     startContent={<FaPlus />}
-                    isDisabled={!isAuthenticated}
                     className="flex-1 sm:flex-none"
+                    onPress={() => handleCreateButtonClick('forum')}
                   >
                     สร้างกระทู้ใหม่
                   </Button>
@@ -452,12 +496,10 @@ export default function CommunityPage() {
                   </Button>
 
                   <Button
-                    as={Link}
-                    href="/complaints/create"
                     color="primary"
                     startContent={<FaPlus />}
-                    isDisabled={!isAuthenticated}
                     className="flex-1 sm:flex-none"
+                    onPress={() => handleCreateButtonClick('complaint')}
                   >
                     สร้างเรื่องร้องเรียนใหม่
                   </Button>
@@ -517,6 +559,20 @@ export default function CommunityPage() {
           </Tab>
         </Tabs>
       </main>
+
+      {/* Modal สร้างกระทู้ */}
+      <CreateForumModal
+        isOpen={isCreateForumOpen}
+        onOpenChange={onCreateForumOpenChange}
+        onCreated={handleForumCreated}
+      />
+
+      {/* Modal สร้างเรื่องร้องเรียน */}
+      <CreateComplaintModal
+        isOpen={isCreateComplaintOpen}
+        onOpenChange={onCreateComplaintOpenChange}
+        onCreated={handleComplaintCreated}
+      />
     </div>
   );
 }
@@ -530,7 +586,7 @@ interface ForumPostItemProps {
 function ForumPostItem({ post, getCategoryLabel }: ForumPostItemProps) {
   return (
     <div className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-      <Link href={`/forum/${post._id}`} className="block">
+      <Link href={`/community/forum/${post._id}`} className="block">
         <div className="flex items-start gap-3">
           <div className="flex-grow">
             <div className="flex items-center gap-2 mb-1">
@@ -593,7 +649,7 @@ interface ComplaintItemProps {
 function ComplaintItem({ complaint, getCategoryLabel, getStatusText, getStatusColor }: ComplaintItemProps) {
   return (
     <div className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-      <Link href={`/complaints/${complaint._id}`} className="block">
+      <Link href={`/community/complaint/${complaint._id}`} className="block">
         <div className="flex items-start gap-3">
           <div className="flex-grow">
             <div className="flex items-center gap-2 mb-1">

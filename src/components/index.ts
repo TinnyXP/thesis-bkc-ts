@@ -50,3 +50,7 @@ export { default as FeatureSection } from './home/FeatureSection';
 export { default as HeroSection } from './home/HeroSection';
 export { default as PlacePreview } from './home/PlacePreview';
 export { default as AccordionMain } from './home/AccordionMain';
+
+// Community
+export { default as CreateForumModal } from './ui/Community/CreateForumModal';
+export { default as CreateComplaintModal } from './ui/Community/CreateComplaintModal';
