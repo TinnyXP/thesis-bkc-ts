@@ -14,7 +14,6 @@ import {
   Button,
   Select,
   SelectItem,
-  Chip,
   Divider
 } from "@heroui/react";
 import { FaArrowLeft, FaPaperPlane, FaTags } from "react-icons/fa";
@@ -33,7 +32,7 @@ const forumCategories: { label: string; value: string }[] = [
 ];
 
 export default function CreateForumPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");

@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import {
   Button,
   Card,
@@ -13,10 +12,8 @@ import {
   Select,
   SelectItem,
   Pagination,
-  useDisclosure,
   Tabs,
   Tab,
-  Divider,
   Spinner
 } from "@heroui/react";
 import {
@@ -24,11 +21,9 @@ import {
   FaSearch,
   FaPlus,
   FaEye,
-  FaTrash,
   FaCalendarAlt,
   FaComments,
   FaThumbtack,
-  FaUsers,
   FaSyncAlt
 } from "react-icons/fa";
 import Link from "next/link";
@@ -70,7 +65,6 @@ const complaintStatuses: { label: string; value: string }[] = [
 // Component หลัก
 export default function CommunityPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState("forum");
 
   // State สำหรับ Forum

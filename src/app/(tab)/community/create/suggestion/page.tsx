@@ -34,7 +34,7 @@ const complaintCategories: { label: string; value: string }[] = [
 ];
 
 export default function CreateComplaintPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
@@ -44,7 +44,7 @@ export default function CreateComplaintPage() {
   const [tags, setTags] = useState<string>("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  
+
   const { submitComplaint, isSubmitting } = useComplaints();
 
   // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
@@ -125,7 +125,7 @@ export default function CreateComplaintPage() {
       if (result.success) {
         // ยกเลิก URL.createObjectURL เพื่อป้องกัน memory leak
         imagePreviews.forEach(url => URL.revokeObjectURL(url));
-        
+
         showToast("ส่งเรื่องร้องเรียนเรียบร้อยแล้ว", "success");
         router.push("/community?tab=complaints");
       }
@@ -162,7 +162,7 @@ export default function CreateComplaintPage() {
             variant="bordered"
             isRequired
           />
-          
+
           <Select
             label="หมวดหมู่"
             placeholder="เลือกหมวดหมู่"
@@ -177,7 +177,7 @@ export default function CreateComplaintPage() {
               </SelectItem>
             ))}
           </Select>
-          
+
           <Textarea
             label="รายละเอียด"
             placeholder="อธิบายรายละเอียดเรื่องร้องเรียนของคุณ"
@@ -187,7 +187,7 @@ export default function CreateComplaintPage() {
             minRows={8}
             isRequired
           />
-          
+
           <Input
             label="สถานที่"
             placeholder="ระบุสถานที่ที่เกี่ยวข้อง (ถ้ามี)"
@@ -196,7 +196,7 @@ export default function CreateComplaintPage() {
             variant="bordered"
             startContent={<FaMapMarkerAlt />}
           />
-          
+
           <Input
             label="แท็ก (คั่นด้วยเครื่องหมายจุลภาค)"
             placeholder="เช่น สาธารณูปโภค, ถนน, ความสะอาด"
