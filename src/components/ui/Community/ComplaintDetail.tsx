@@ -1,7 +1,7 @@
 // src/components/ui/Community/ComplaintDetail.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSession } from "next-auth/react";
 import {
   Card,
@@ -33,8 +33,19 @@ export default function ComplaintDetail({ complaintId }: ComplaintDetailProps) {
     complaint,
     isLoading,
     getStatusText,
-    getStatusColor,
+    // getStatusColor,
   } = useComplaintDetail(complaintId);
+
+  // ฟังก์ชัน getStatusColor ใน src/hooks/useComplaintDetail.ts
+  const getStatusColor = useCallback((status: string): "default" | "primary" | "secondary" | "success" | "warning" | "danger" => {
+    switch (status) {
+      case 'pending': return "warning";
+      case 'inprogress': return "primary";
+      case 'resolved': return "success";
+      case 'rejected': return "danger";
+      default: return "default";
+    }
+  }, []);
 
   if (isLoading || status === "loading") {
     return <Loading message="กำลังโหลดข้อมูล..." fullScreen={false} />;
