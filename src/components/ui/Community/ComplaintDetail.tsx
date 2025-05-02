@@ -1,7 +1,7 @@
 // src/components/ui/Community/ComplaintDetail.tsx
 "use client";
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useSession } from "next-auth/react";
 import {
   Card,
@@ -14,7 +14,7 @@ import {
   AvatarIcon,
   Tooltip
 } from "@heroui/react";
-import { FaCalendarAlt, FaUser, FaTag, FaMapMarkerAlt, FaReply } from "react-icons/fa";
+import { FaCalendarAlt, FaUser, FaTag, FaMapMarkerAlt } from "react-icons/fa";
 import Image from "next/image";
 import { formatDateTime } from "@/lib/dateUtils";
 import { Loading } from "@/components";
@@ -26,7 +26,7 @@ interface ComplaintDetailProps {
 }
 
 export default function ComplaintDetail({ complaintId }: ComplaintDetailProps) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   // useComplaintDetail hook
   const {
@@ -151,7 +151,6 @@ export default function ComplaintDetail({ complaintId }: ComplaintDetailProps) {
           <CardBody className="divide-y divide-default-200">
             {complaint.responses.map((response, index) => (
               <div key={index} className="py-4 first:pt-0 last:pb-0">
-                // src/components/ui/Community/ComplaintDetail.tsx (ต่อ)
                 <div className="flex items-center gap-2 mb-2">
                   <div className="bg-primary-color rounded-full w-8 h-8 flex items-center justify-center text-white">
                     <FaUser />
