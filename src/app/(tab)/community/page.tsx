@@ -85,6 +85,26 @@ export default function CommunityPage() {
   const [complaintSearchTerm, setComplaintSearchTerm] = useState<string>("");
   const [isRefreshingComplaints, setIsRefreshingComplaints] = useState<boolean>(false);
 
+  // ในส่วน useEffect ของไฟล์ community/page.tsx
+  useEffect(() => {
+    // ใช้ searchParams จาก next/navigation ตรวจสอบ tab
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+
+    // ถ้าไม่มี tab หรือ tab ไม่ถูกต้อง ให้ตั้งค่าเริ่มต้นเป็น 'forum'
+    if (!tabParam || (tabParam !== 'forum' && tabParam !== 'complaints')) {
+      setActiveTab('forum');
+
+      // ปรับ URL โดยไม่รีโหลดหน้า
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('tab', 'forum');
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      // ถ้ามี tab ที่ถูกต้องแล้ว ให้ใช้ค่านั้น
+      setActiveTab(tabParam);
+    }
+  }, []);
+
   // ใช้ hooks ที่มีอยู่แล้ว
   const {
     posts,
