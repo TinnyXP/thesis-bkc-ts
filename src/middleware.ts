@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+// ภาษา
+const PUBLIC_LOCALES = ['th', 'en', 'zh'];
+const DEFAULT_LOCALE = 'th';
+const COOKIE_NAME = 'NEXT_LOCALE';
+
 // กำหนดเส้นทางที่ต้องล็อกอิน (Protected Routes)
 const authRequiredRoutes = ['/welcome', '/complete-profile'];
 
@@ -13,7 +18,20 @@ const authRoutes = ['/login'];
 const requiresCompleteProfile = ['/user/settings', '/user/dashboard'];
 
 export async function middleware(request: NextRequest) {
+
   const { pathname } = request.nextUrl;
+  const pathnameParts = pathname.split('/');
+  const currentLocale = pathnameParts[1];
+  const hasLocalePrefix = PUBLIC_LOCALES.includes(currentLocale);
+
+  if (!hasLocalePrefix) {
+    const localeCookie = request.cookies.get(COOKIE_NAME)?.value;
+    const targetLocale = PUBLIC_LOCALES.includes(localeCookie || '') ? localeCookie : DEFAULT_LOCALE;
+  
+    const newUrl = request.nextUrl.clone();
+    newUrl.pathname = `/${targetLocale}${pathname}`;
+    return NextResponse.redirect(newUrl);
+  }
   
   // ตรวจสอบว่าเส้นทางปัจจุบันอยู่ในรายการที่ต้องล็อกอิน
   const isAuthRequired = authRequiredRoutes.some(route => pathname.startsWith(route));
@@ -67,6 +85,8 @@ export async function middleware(request: NextRequest) {
   
   // ให้ request ผ่านไปยังหน้าต่อไป
   return NextResponse.next();
+
+  
 }
 
 // กำหนดว่า middleware จะทำงานกับเส้นทางไหนบ้าง
@@ -82,5 +102,9 @@ export const config = {
     
     // เส้นทางที่ต้องตรวจสอบสถานะล็อกอินเพิ่มเติม
     '/dashboard/:path*',
+
+    
+
+    
   ],
 };
