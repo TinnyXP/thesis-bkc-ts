@@ -18,6 +18,7 @@ const translations = {
   history: "ประวัติความเป็นมา",
   place: "สถานที่ท่องเที่ยว",
   news: "ข่าวสาร",
+  community : "ชุมชน",
   forum: "ฟอรัม",
   complaints: "ร้องเรียน",
   static: "สถิติ",

@@ -18,6 +18,7 @@ const translations = {
   history: "歷史",
   place: "旅遊景點",
   news: "資訊",
+  community : "ชุมชน",
   forum: "ฟอรัม",
   complaints: "ร้องเรียน",
   static: "統計數據",
