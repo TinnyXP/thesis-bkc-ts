@@ -17,8 +17,7 @@ const footerNavigation = {
     { name: "Market Research", href: "#" }
   ],
   supportOptions: [
-    { name: "กระทู้และคำถาม", href: "/forum" },  // เพิ่มลิงก์ไปยังกระทู้
-    { name: "ร้องเรียนปัญหา", href: "/complaints" },  // เพิ่มลิงก์ไปยังหน้าร้องเรียน
+    { name: "ชุมชนและคำถาม", href: "/community" },  // เปลี่ยนจากกระทู้และเรื่องร้องเรียนเป็นชุมชน
     { name: "ติดต่อเรา", href: "#" },
     { name: "นโยบายความเป็นส่วนตัว", href: "/privacy-policy" },
   ],

@@ -65,12 +65,8 @@ export default function NavBar() {
       href: "/blog"
     },
     {
-      label: t('forum'),  // เพิ่มเมนู Forum
-      href: "/forum"
-    },
-    {
-      label: t('complaints'),  // เพิ่มเมนู Complaints
-      href: "/complaints"
+      label: t('community'),  // เปลี่ยนจาก forum และ complaints เป็น community
+      href: "/community"
     },
     {
       label: t('static'),
