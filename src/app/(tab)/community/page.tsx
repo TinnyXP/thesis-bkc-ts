@@ -85,7 +85,7 @@ export default function CommunityPage() {
   const {
     isOpen: isCreateForumOpen,
     onOpen: onCreateForumOpen,
-    onClose: onCreateForumClose,
+    // onClose: onCreateForumClose,
     onOpenChange: onCreateForumOpenChange
   } = useDisclosure();
 
@@ -93,7 +93,7 @@ export default function CommunityPage() {
   const {
     isOpen: isCreateComplaintOpen,
     onOpen: onCreateComplaintOpen,
-    onClose: onCreateComplaintClose,
+    // onClose: onCreateComplaintClose,
     onOpenChange: onCreateComplaintOpenChange
   } = useDisclosure();
 

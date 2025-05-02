@@ -54,3 +54,5 @@ export { default as AccordionMain } from './home/AccordionMain';
 // Community
 export { default as CreateForumModal } from './ui/Community/CreateForumModal';
 export { default as CreateComplaintModal } from './ui/Community/CreateComplaintModal';
+export { default as ForumDetail } from './ui/Community/ForumDetail';
+export { default as ComplaintDetail } from './ui/Community/ComplaintDetail';
