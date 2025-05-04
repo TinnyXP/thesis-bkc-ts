@@ -13,6 +13,8 @@ export { default as ImageModal } from './ui/Sanity/Shared/ImageModal';
 export { default as SlugBreadcrumb } from './ui/Sanity/Shared/SlugBreadcrumb';
 export { default as SlugShareButton } from './ui/Sanity/Shared/SlugShareButton';
 export { default as BookmarkButton } from './ui/Sanity/Shared/BookmarkButton';
+export { default as YouTubeEmbed } from './ui/Sanity/Place/YouTubeEmbed';
+export { default as AudioPlayer } from './ui/Sanity/Place/AudioPlayer';
 
 // Blog Sanity Components
 export { default as BlogCard } from './ui/Sanity/Blog/BlogCard';

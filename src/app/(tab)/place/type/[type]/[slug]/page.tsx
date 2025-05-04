@@ -1,7 +1,7 @@
 // src/app/place/[type]/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
-import { ImageModal, SlugBreadcrumb, SlugShareButton, ReviewSection } from "@/components";
+import { ImageModal, SlugBreadcrumb, SlugShareButton, ReviewSection, YouTubeEmbed, AudioPlayer } from "@/components";
 import { getPlaceBySlug } from "@/lib/sanity/placeQueries";
 import { urlFor } from "@/lib/sanity/image";
 import { createPlaceMetadata } from "@/lib/sanity/placeMetadata";
@@ -12,6 +12,8 @@ import { headers } from 'next/headers';
 import { PortableTextReactComponents } from "@portabletext/react";
 import { FaQuoteLeft, FaMapMarkerAlt, FaClock, FaPhone, FaGlobe, FaFacebook, FaLine, FaCalendarAlt, FaTag, FaDollarSign } from "react-icons/fa";
 import Script from "next/script";
+import { IoMdContact } from "react-icons/io";
+
 
 // กำหนด metadata แบบ dynamic จากข้อมูลสถานที่ท่องเที่ยว
 export async function generateMetadata(
@@ -287,6 +289,14 @@ export default async function PlacePage({
                 )}
               </article>
 
+              {/* แสดงวิดีโอ YouTube (ถ้ามี) */}
+              {place.youtubeUrl && (
+                <div className="mb-10">
+                  <h2 className="text-2xl font-bold mb-4">วิดีโอแนะนำ</h2>
+                  <YouTubeEmbed url={place.youtubeUrl} title={place.title} />
+                </div>
+              )}
+
               {/* แกลเลอรี่รูปภาพ */}
               {place.gallery && place.gallery.length > 0 && (
                 <div className="mb-10">
@@ -319,6 +329,17 @@ export default async function PlacePage({
                 </div>
               )}
 
+              {/* แสดงไฟล์เสียง (ถ้ามี) */}
+              {place.audioFile && place.audioFile.asset?.url && (
+                <div className="mb-10">
+                  <h2 className="text-2xl font-bold mb-4">เสียงบรรยาย</h2>
+                  <AudioPlayer
+                    audioUrl={place.audioFile.asset.url}
+                    title={`เสียงบรรยาย ${place.title}`}
+                  />
+                </div>
+              )}
+
               {/* แท็ก */}
               {place.tags && place.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-10">
@@ -337,45 +358,58 @@ export default async function PlacePage({
               {place.contactInfo && (
                 <Card className="bg-white shadow-md dark:bg-zinc-950 border-2 border-zinc-150 dark:border-zinc-900">
                   <CardBody>
-                    <h3 className="text-xl font-bold mb-4">ข้อมูลการติดต่อ</h3>
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <IoMdContact className="text-primary-color" />
+                      <span>ข้อมูลการติดต่อ</span>
+                    </h3>
                     <div className="space-y-3">
                       {place.contactInfo.phone && (
-                        <p className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <FaPhone className="text-primary-color" />
                           <a href={`tel:${place.contactInfo.phone}`} className="hover:underline">
                             {place.contactInfo.phone}
                           </a>
-                        </p>
+                        </div>
                       )}
                       {place.contactInfo.email && (
-                        <p className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <span className="text-primary-color">✉</span>
                           <a href={`mailto:${place.contactInfo.email}`} className="hover:underline">
                             {place.contactInfo.email}
                           </a>
-                        </p>
+                        </div>
                       )}
                       {place.contactInfo.website && (
-                        <p className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <FaGlobe className="text-primary-color" />
-                          <a href={place.contactInfo.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            เว็บไซต์
+                          <a
+                            href={place.contactInfo.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                          >
+                            เว็บไซต์ทางการ
                           </a>
-                        </p>
+                        </div>
                       )}
                       {place.contactInfo.facebook && (
-                        <p className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <FaFacebook className="text-blue-600" />
-                          <a href={place.contactInfo.facebook} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          <a
+                            href={place.contactInfo.facebook}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                          >
                             Facebook
                           </a>
-                        </p>
+                        </div>
                       )}
                       {place.contactInfo.line && (
-                        <p className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <FaLine className="text-green-500" />
                           <span>Line: {place.contactInfo.line}</span>
-                        </p>
+                        </div>
                       )}
                     </div>
                   </CardBody>

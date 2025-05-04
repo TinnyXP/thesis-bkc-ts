@@ -134,6 +134,13 @@ export const PLACE_QUERY = `*[_type == "place" && slug.current == $slug][0] {
       _ref,
       url
     }
+  },
+  youtubeUrl,
+  audioFile {
+    asset-> {
+      _ref,
+      url
+    }
   }
 }`;
 

@@ -135,6 +135,14 @@ export interface Place {
   tags?: string[];
   publishedAt?: string;
   updatedAt?: string;
+  // เพิ่มฟิลด์สำหรับวิดีโอและไฟล์เสียง
+  youtubeUrl?: string;
+  audioFile?: {
+    asset?: {
+      _ref: string;
+      url: string;
+    }
+  };
 }
 
 // สำหรับประเภทสถานที่
