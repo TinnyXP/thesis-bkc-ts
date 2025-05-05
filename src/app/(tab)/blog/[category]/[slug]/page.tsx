@@ -1,7 +1,7 @@
 // src/app/blog/[category]/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
-import { CommentSection, ImageModal, SlugBreadcrumb, SlugShareButton } from "@/components";
+import { CommentSection, ImageModal, SlugBreadcrumb, SlugShareButton, YouTubeEmbed, AudioPlayer } from "@/components";
 import { getPostBySlug, urlFor, formatThaiDate, createPostMetadata } from "@/lib/sanity";
 import { Image, Link } from "@heroui/react";
 import { PortableText } from "next-sanity";
@@ -271,6 +271,25 @@ export default async function PostPage({
               <p className="text-zinc-500">ไม่มีเนื้อหา</p>
             )}
           </article>
+
+          {/* แสดงวิดีโอ YouTube (ถ้ามี) */}
+          {post.youtubeUrl && (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold mb-4">วิดีโอที่เกี่ยวข้อง</h2>
+              <YouTubeEmbed url={post.youtubeUrl} title={post.title} />
+            </div>
+          )}
+
+          {/* แสดงไฟล์เสียง (ถ้ามี) */}
+          {post.audioFile && post.audioFile.asset?.url && (
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold mb-4">เสียงบรรยาย</h2>
+              <AudioPlayer
+                audioUrl={post.audioFile.asset.url}
+                title={`เสียงบรรยาย ${post.title}`}
+              />
+            </div>
+          )}
         </section>
 
         {/* ส่วนความคิดเห็น */}

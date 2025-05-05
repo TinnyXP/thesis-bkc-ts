@@ -35,7 +35,14 @@ export interface Post {
   mainImage?: SanityImage;
   categories: Category[];
   author?: Author;
-  body?: PortableTextBlock[]; // สำหรับ Portable Text
+  body?: PortableTextBlock[];
+  youtubeUrl?: string;
+  audioFile?: {
+    asset?: {
+      _ref: string;
+      url: string;
+    }
+  };
 }
 
 /**

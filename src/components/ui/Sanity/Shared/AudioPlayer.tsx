@@ -10,7 +10,8 @@ interface AudioPlayerProps {
   title?: string;
 }
 
-export default function AudioPlayer({ audioUrl, title = "Audio guide" }: AudioPlayerProps) {
+// export default function AudioPlayer({ audioUrl, title = "Audio guide" }: AudioPlayerProps) {
+export default function AudioPlayer({ audioUrl = "Audio guide" }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -97,9 +98,9 @@ export default function AudioPlayer({ audioUrl, title = "Audio guide" }: AudioPl
       />
       
       <div className="flex flex-col gap-2">
-        {title && (
+        {/* {title && (
           <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        )}
+        )} */}
         
         <div className="flex items-center gap-3">
           <Button

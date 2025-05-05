@@ -79,6 +79,13 @@ export const POST_QUERY = `*[_type == "post" && slug.current == $slug][0] {
       _ref,
       url
     }
+  },
+  youtubeUrl,
+  audioFile {
+    asset-> {
+      _ref,
+      url
+    }
   }
 }`;
 
