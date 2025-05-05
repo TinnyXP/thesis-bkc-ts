@@ -5,22 +5,22 @@ import { AccordionMain, BlogPreview, CTASection, FeatureSection, Footer, HeroSec
 
 // กำหนด Metadata สำหรับ SEO
 export const metadata: Metadata = {
-  title: "บางกระเจ้า - ปอดสีเขียวของกรุงเทพฯ | Bangkrachao - The Green Lung of Bangkok",
-  description: "ค้นพบความมหัศจรรย์ของบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ ด้วยข้อมูลสถานที่ท่องเที่ยว ประวัติศาสตร์ และกิจกรรมน่าสนใจ | Discover Bangkrachao, the green lung of Bangkok with tourist attractions, history, and activities.",
-  keywords: "บางกระเจ้า, bangkrachao, green lung, ปอดสีเขียว, ท่องเที่ยวใกล้กรุงเทพ, ที่เที่ยวธรรมชาติ, สมุทรปราการ, เกาะกะเพาะหมู",
+  title: "บางกะเจ้า - ปอดสีเขียวของกรุงเทพฯ | Bangkrachao - The Green Lung of Bangkok",
+  description: "ค้นพบความมหัศจรรย์ของบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ ด้วยข้อมูลสถานที่ท่องเที่ยว ประวัติศาสตร์ และกิจกรรมน่าสนใจ | Discover Bangkrachao, the green lung of Bangkok with tourist attractions, history, and activities.",
+  keywords: "บางกะเจ้า, bangkrachao, green lung, ปอดสีเขียว, ท่องเที่ยวใกล้กรุงเทพ, ที่เที่ยวธรรมชาติ, สมุทรปราการ, เกาะกะเพาะหมู",
   authors: [{ name: "Bangkrachao Tourism Project" }],
   openGraph: {
     type: "website",
     url: "https://www.bangkrachao.com",
-    title: "บางกระเจ้า - ปอดสีเขียวของกรุงเทพฯ",
-    description: "ค้นพบความมหัศจรรย์ของบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ",
+    title: "บางกะเจ้า - ปอดสีเขียวของกรุงเทพฯ",
+    description: "ค้นพบความมหัศจรรย์ของบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ",
     siteName: "Bangkrachao",
     images: [
       {
         url: "/og-image.jpg", 
         width: 1200,
         height: 630,
-        alt: "บางกระเจ้า - ปอดสีเขียวของกรุงเทพฯ"
+        alt: "บางกะเจ้า - ปอดสีเขียวของกรุงเทพฯ"
       }
     ]
   },

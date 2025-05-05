@@ -4,8 +4,8 @@ import { Footer, NavBar, ScrollToTop } from "@/components";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "บางกระเจ้า - ปอดสีเขียวของกรุงเทพฯ",
-  description: "เรียนรู้เกี่ยวกับบางกระเจ้า พื้นที่สีเขียวในจังหวัดสมุทรปราการ ใกล้กรุงเทพมหานคร",
+  title: "บางกะเจ้า - ปอดสีเขียวของกรุงเทพฯ",
+  description: "เรียนรู้เกี่ยวกับบางกะเจ้า พื้นที่สีเขียวในจังหวัดสมุทรปราการ ใกล้กรุงเทพมหานคร",
 };
 
 export default function TabLayout({

@@ -20,7 +20,7 @@ export default function BlogPreview() {
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">บทความล่าสุด</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
-            ติดตามข่าวสาร บทความ และเรื่องราวน่าสนใจเกี่ยวกับบางกระเจ้า
+            ติดตามข่าวสาร บทความ และเรื่องราวน่าสนใจเกี่ยวกับบางกะเจ้า
           </p>
         </motion.div>
         

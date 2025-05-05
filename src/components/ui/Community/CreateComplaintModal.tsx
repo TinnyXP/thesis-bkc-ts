@@ -158,7 +158,7 @@ export default function CreateComplaintModal({
           <>
             <ModalHeader className="flex flex-col gap-1">
               <h1 className="text-xl font-bold">สร้างเรื่องร้องเรียนใหม่</h1>
-              <p className="text-default-500 text-sm">แจ้งปัญหาที่พบเกี่ยวกับบางกระเจ้าเพื่อให้เจ้าหน้าที่ดำเนินการแก้ไข</p>
+              <p className="text-default-500 text-sm">แจ้งปัญหาที่พบเกี่ยวกับบางกะเจ้าเพื่อให้เจ้าหน้าที่ดำเนินการแก้ไข</p>
             </ModalHeader>
             <Divider />
             <ModalBody className="space-y-6">

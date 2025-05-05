@@ -112,7 +112,7 @@ function SidebarContent({ pathname, isSuperAdmin, isMobile, onItemClick }: Sideb
         <Link href="/" onClick={onItemClick}>
           <Image
             src="/Bkj_logo.svg"
-            alt="บางกระเจ้า"
+            alt="บางกะเจ้า"
             width={120}
             height={60}
             className="mx-auto"

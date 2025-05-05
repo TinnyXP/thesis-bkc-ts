@@ -56,7 +56,7 @@ export default function WelcomePage() {
             สวัสดี, คุณ {session.user.name} !
           </h1>
           <p className="text-default-500 mt-1">
-            ยินดีต้อนรับสู่บางกระเจ้า
+            ยินดีต้อนรับสู่บางกะเจ้า
           </p>
           <p className="text-xs text-zinc-500 mt-1">
             ID ของคุณ: {session.user.bkcId}
@@ -69,14 +69,14 @@ export default function WelcomePage() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <h2 className="text-lg font-semibold">เข้าสู่ระบบสำเร็จ!</h2>
-                <p className="text-sm">ขอบคุณที่เข้าร่วมเป็นส่วนหนึ่งของชุมชนบางกระเจ้า</p>
+                <p className="text-sm">ขอบคุณที่เข้าร่วมเป็นส่วนหนึ่งของชุมชนบางกะเจ้า</p>
               </div>
               <Button
                 variant="flat"
                 className="bg-white/30 text-white hover:bg-white/40"
                 size="sm"
                 onPress={() => {
-                  showToast("เริ่มต้นใช้งานระบบบางกระเจ้า!", "info");
+                  showToast("เริ่มต้นใช้งานระบบบางกะเจ้า!", "info");
                 }}
               >
                 เริ่มต้นใช้งาน
@@ -90,7 +90,7 @@ export default function WelcomePage() {
           <Card className="border-none bg-background/60 dark:bg-default-100/50 shadow-sm">
             <CardBody className="p-4">
               <h2 className="text-lg font-bold mb-2">บทความล่าสุด</h2>
-              <p className="text-default-500 text-sm mb-4">อัพเดทข่าวสารและบทความเกี่ยวกับบางกระเจ้า</p>
+              <p className="text-default-500 text-sm mb-4">อัพเดทข่าวสารและบทความเกี่ยวกับบางกะเจ้า</p>
               <Button
                 color="primary"
                 size="sm"

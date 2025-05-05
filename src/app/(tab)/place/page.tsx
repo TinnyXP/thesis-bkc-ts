@@ -10,9 +10,9 @@ import { FaMapMarkedAlt, FaCompass, FaMap, FaBuilding, FaCamera } from "react-ic
 
 // Metadata สำหรับหน้ารวมสถานที่ท่องเที่ยว
 export const metadata: Metadata = {
-  title: "สถานที่ท่องเที่ยว - บางกระเจ้า",
-  description: "รวมสถานที่ท่องเที่ยวน่าสนใจในบางกระเจ้า ที่คุณไม่ควรพลาด",
-  keywords: "สถานที่ท่องเที่ยว บางกระเจ้า, ที่เที่ยวบางกระเจ้า, แหล่งท่องเที่ยวบางกระเจ้า",
+  title: "สถานที่ท่องเที่ยว - บางกะเจ้า",
+  description: "รวมสถานที่ท่องเที่ยวน่าสนใจในบางกะเจ้า ที่คุณไม่ควรพลาด",
+  keywords: "สถานที่ท่องเที่ยว บางกะเจ้า, ที่เที่ยวบางกะเจ้า, แหล่งท่องเที่ยวบางกะเจ้า",
 };
 
 export default async function PlacePage() {
@@ -23,9 +23,9 @@ export default async function PlacePage() {
   return (
     <>
       <PageHeader 
-        title="สถานที่ท่องเที่ยวในบางกระเจ้า"
+        title="สถานที่ท่องเที่ยวในบางกะเจ้า"
         subtitle="แหล่งท่องเที่ยว"
-        description="ค้นพบสถานที่ท่องเที่ยวที่น่าสนใจในบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ เพียงไม่กี่นาทีจากใจกลางเมือง"
+        description="ค้นพบสถานที่ท่องเที่ยวที่น่าสนใจในบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ เพียงไม่กี่นาทีจากใจกลางเมือง"
         buttons={{
           primary: {
             text: "ดูประเภทสถานที่",
@@ -90,10 +90,10 @@ export default async function PlacePage() {
           {/* แสดงตำบล/พื้นที่ในรูปแบบการ์ด */}
           <section id="districts" className="mb-12 scroll-mt-24">
             <SectionHeading
-              title="พื้นที่ในบางกระเจ้า"
+              title="พื้นที่ในบางกะเจ้า"
               subtitle="ตำบล"
               icon={<FaMap className="text-blue-600" />}
-              description="ค้นพบสถานที่ท่องเที่ยวในแต่ละตำบลของบางกระเจ้า"
+              description="ค้นพบสถานที่ท่องเที่ยวในแต่ละตำบลของบางกะเจ้า"
             />
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -134,7 +134,7 @@ export default async function PlacePage() {
               title="สถานที่ท่องเที่ยวล่าสุด"
               subtitle="มาใหม่"
               icon={<FaMapMarkedAlt className="text-primary-color" />}
-              description="สถานที่ท่องเที่ยวที่เพิ่มเข้ามาล่าสุดในบางกระเจ้า"
+              description="สถานที่ท่องเที่ยวที่เพิ่มเข้ามาล่าสุดในบางกะเจ้า"
             />
             
             <PlaceCardList />

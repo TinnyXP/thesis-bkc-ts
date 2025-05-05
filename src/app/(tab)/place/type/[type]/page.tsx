@@ -22,8 +22,8 @@ export async function generateMetadata(
   const placeTypeName = places[0]?.placeType?.title || params.type;
   
   return {
-    title: `${placeTypeName} - สถานที่ท่องเที่ยวบางกระเจ้า`,
-    description: `รวมสถานที่ท่องเที่ยวประเภท${placeTypeName}ในบางกระเจ้า`,
+    title: `${placeTypeName} - สถานที่ท่องเที่ยวบางกะเจ้า`,
+    description: `รวมสถานที่ท่องเที่ยวประเภท${placeTypeName}ในบางกะเจ้า`,
   };
 }
 

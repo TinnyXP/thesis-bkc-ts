@@ -96,7 +96,7 @@ export const createPostMetadata = (post: Post, baseUrl: string) => {
     } : undefined,
     'publisher': {
       '@type': 'Organization',
-      'name': 'บางกระเจ้า',
+      'name': 'บางกะเจ้า',
       'logo': {
         '@type': 'ImageObject',
         'url': `${baseUrl}/Bkj_logo.svg`

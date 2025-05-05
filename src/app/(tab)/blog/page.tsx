@@ -10,7 +10,7 @@ import { FaNewspaper, FaTags, FaBookOpen, FaThList } from "react-icons/fa";
 // Metadata สำหรับหน้ารวมบทความ
 export const metadata: Metadata = {
   title: "Bangkrajao - บทความทั้งหมด",
-  description: "รวมบทความและข่าวสารเกี่ยวกับบางกระเจ้าทั้งหมด",
+  description: "รวมบทความและข่าวสารเกี่ยวกับบางกะเจ้าทั้งหมด",
 };
 
 /**
@@ -24,9 +24,9 @@ export default async function BlogPage() {
   return (
     <>
       <PageHeader 
-        title="บทความเกี่ยวกับบางกระเจ้า"
+        title="บทความเกี่ยวกับบางกะเจ้า"
         subtitle="ข่าวสาร"
-        description="รวมบทความและข่าวสารน่าสนใจเกี่ยวกับบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ"
+        description="รวมบทความและข่าวสารน่าสนใจเกี่ยวกับบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ"
         buttons={{
           primary: {
             text: "ดูบทความล่าสุด",
@@ -112,7 +112,7 @@ export default async function BlogPage() {
               title="บทความล่าสุด"
               subtitle="อัปเดตล่าสุด"
               icon={<FaNewspaper className="text-primary-color" />}
-              description="บทความและข่าวสารล่าสุดเกี่ยวกับบางกระเจ้า"
+              description="บทความและข่าวสารล่าสุดเกี่ยวกับบางกะเจ้า"
             />
             
             <BlogCardList />

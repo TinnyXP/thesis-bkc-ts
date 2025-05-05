@@ -34,7 +34,7 @@ export const createPlaceMetadata = (place: Place, baseUrl: string): PlaceMetadat
     '@context': 'https://schema.org',
     '@type': 'TouristAttraction',
     'name': place.title,
-    'description': description || `สถานที่ท่องเที่ยว ${place.title} ที่บางกระเจ้า`,
+    'description': description || `สถานที่ท่องเที่ยว ${place.title} ที่บางกะเจ้า`,
     'url': url
   };
   
@@ -47,7 +47,7 @@ export const createPlaceMetadata = (place: Place, baseUrl: string): PlaceMetadat
   if (place.address || place.district) {
     jsonLdObject.address = {
       '@type': 'PostalAddress',
-      'addressLocality': place.district?.title || 'บางกระเจ้า',
+      'addressLocality': place.district?.title || 'บางกะเจ้า',
       'addressRegion': 'สมุทรปราการ',
       'addressCountry': 'TH',
       'streetAddress': place.address
@@ -107,7 +107,7 @@ export const createPlaceMetadata = (place: Place, baseUrl: string): PlaceMetadat
   
   return {
     title: place.title,
-    description: description || `สถานที่ท่องเที่ยว ${place.title} ที่บางกระเจ้า`,
+    description: description || `สถานที่ท่องเที่ยว ${place.title} ที่บางกะเจ้า`,
     url,
     imageUrl,
     publishedAt: place.publishedAt,

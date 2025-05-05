@@ -2,8 +2,8 @@ import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "บทความ | บางกระเจ้า",
-  description: "บทความและข่าวสารเกี่ยวกับบางกระเจ้า",
+  title: "บทความ | บางกะเจ้า",
+  description: "บทความและข่าวสารเกี่ยวกับบางกะเจ้า",
 };
 
 /**

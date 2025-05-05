@@ -22,7 +22,7 @@ const footerNavigation = {
     { name: "นโยบายความเป็นส่วนตัว", href: "/privacy-policy" },
   ],
   aboutUs: [
-    { name: "ประวัติบางกระเจ้า", href: "/history" },
+    { name: "ประวัติบางกะเจ้า", href: "/history" },
     { name: "สถานที่ท่องเที่ยว", href: "/place" },
     { name: "ข่าวสารและกิจกรรม", href: "/blog" },
     { name: "ทำเนียบผู้บริหาร", href: "#" },

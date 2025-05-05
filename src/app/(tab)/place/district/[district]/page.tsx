@@ -22,8 +22,8 @@ export async function generateMetadata(
   const districtName = places[0]?.district?.title || params.district;
   
   return {
-    title: `${districtName} - สถานที่ท่องเที่ยวบางกระเจ้า`,
-    description: `รวมสถานที่ท่องเที่ยวใน${districtName} บางกระเจ้า`,
+    title: `${districtName} - สถานที่ท่องเที่ยวบางกะเจ้า`,
+    description: `รวมสถานที่ท่องเที่ยวใน${districtName} บางกะเจ้า`,
   };
 }
 

@@ -324,7 +324,7 @@ export const createPlaceMetadata = (place: Place, baseUrl: string) => {
     'description': description,
     'address': {
       '@type': 'PostalAddress',
-      'addressLocality': place.district?.title || 'บางกระเจ้า',
+      'addressLocality': place.district?.title || 'บางกะเจ้า',
       'addressRegion': 'สมุทรปราการ',
       'addressCountry': 'TH'
     },
@@ -342,7 +342,7 @@ export const createPlaceMetadata = (place: Place, baseUrl: string) => {
   
   return {
     title: place.title,
-    description: description || `สถานที่ท่องเที่ยว ${place.title} ที่บางกระเจ้า`,
+    description: description || `สถานที่ท่องเที่ยว ${place.title} ที่บางกะเจ้า`,
     url,
     imageUrl,
     publishedAt: place.publishedAt,

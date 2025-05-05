@@ -31,19 +31,19 @@ const baiJamjuree = Bai_Jamjuree({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bangkrachao.com"),
   title: {
-    default: "บางกระเจ้า - ปอดสีเขียวของกรุงเทพฯ",
-    template: "%s | บางกระเจ้า"
+    default: "บางกะเจ้า - ปอดสีเขียวของกรุงเทพฯ",
+    template: "%s | บางกะเจ้า"
   },
-  description: "ค้นพบเรื่องราว ประวัติศาสตร์ และสถานที่ท่องเที่ยวน่าสนใจในบางกระเจ้า ปอดสีเขียวแห่งกรุงเทพฯ",
+  description: "ค้นพบเรื่องราว ประวัติศาสตร์ และสถานที่ท่องเที่ยวน่าสนใจในบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ",
   openGraph: {
-    siteName: "บางกระเจ้า",
+    siteName: "บางกะเจ้า",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     site: "@bangkrachao",
-    title: "บางกระเจ้า - ปอดสีเขียวของกรุงเทพฯ",
-    description: "ค้นพบเรื่องราว ประวัติศาสตร์ และสถานที่ท่องเที่ยวน่าสนใจในบางกระเจ้า",
+    title: "บางกะเจ้า - ปอดสีเขียวของกรุงเทพฯ",
+    description: "ค้นพบเรื่องราว ประวัติศาสตร์ และสถานที่ท่องเที่ยวน่าสนใจในบางกะเจ้า",
   },
   robots: {
     index: true,
@@ -76,7 +76,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "บางกระเจ้า",
+              "name": "บางกะเจ้า",
               "url": "https://www.bangkrachoa.com",
               "potentialAction": {
                 "@type": "SearchAction",
@@ -93,7 +93,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              "name": "บางกระเจ้า",
+              "name": "บางกะเจ้า",
               "url": "https://www.bangkrachoa.com",
               "logo": "https://www.bangkrachoa.com/Bkj_logo.svg",
               "sameAs": [

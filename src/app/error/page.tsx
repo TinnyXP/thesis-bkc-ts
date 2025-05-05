@@ -56,7 +56,7 @@ function ErrorContent() {
           <div className="mb-2">
             <Image
               src="/Bkj_logo.svg"
-              alt="บางกระเจ้า"
+              alt="บางกะเจ้า"
               width={100}
               height={50}
             />

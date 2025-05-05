@@ -20,7 +20,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 w-full h-full z-0">
         <Image 
           src="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/hero-bg-OvG0QPx1SQz0uMAhbRHIFH8E5tuUzB.jpeg" 
-          alt="บางกระเจ้า" 
+          alt="บางกะเจ้า" 
           fill
           style={{ objectFit: 'cover' }}
           quality={90}
@@ -42,7 +42,7 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            บางกระเจ้า
+            บางกะเจ้า
             <span className="block text-primary-color mt-2">ปอดสีเขียวแห่งกรุงเทพฯ</span>
           </motion.h1>
           

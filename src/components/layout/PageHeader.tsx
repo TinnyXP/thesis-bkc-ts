@@ -32,7 +32,7 @@ export default function PageHeader({
   subtitle,
   description,
   imageSrc = "https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/hero-bg-OvG0QPx1SQz0uMAhbRHIFH8E5tuUzB.jpeg",
-  imageAlt = "บางกระเจ้า",
+  imageAlt = "บางกะเจ้า",
   buttons,
   children
 }: PageHeaderProps) {

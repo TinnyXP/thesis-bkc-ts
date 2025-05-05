@@ -279,11 +279,11 @@ export default function CommunityPage() {
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-black">
       <PageHeader
-        title="ชุมชนบางกระเจ้า"
+        title="ชุมชนบางกะเจ้า"
         subtitle="พูดคุยและแจ้งปัญหา"
-        description="พื้นที่สำหรับพูดคุยแลกเปลี่ยน ถามคำถาม แบ่งปันประสบการณ์ และแจ้งปัญหาเกี่ยวกับบางกระเจ้า"
+        description="พื้นที่สำหรับพูดคุยแลกเปลี่ยน ถามคำถาม แบ่งปันประสบการณ์ และแจ้งปัญหาเกี่ยวกับบางกะเจ้า"
         imageSrc="https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=2070"
-        imageAlt="ชุมชนบางกระเจ้า"
+        imageAlt="ชุมชนบางกะเจ้า"
       >
         <div className="flex flex-wrap justify-center gap-2">
           <Button

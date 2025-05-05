@@ -3,7 +3,7 @@ import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "เข้าสู่ระบบ | บางกระเจ้า",
+  title: "เข้าสู่ระบบ | บางกะเจ้า",
   description: "เข้าสู่ระบบด้วย LINE หรืออีเมล OTP",
 };
 

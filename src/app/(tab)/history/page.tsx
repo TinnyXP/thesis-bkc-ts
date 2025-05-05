@@ -68,10 +68,10 @@ export default function HistoryPage() {
       <PageHeader
         title={t('history')}
         subtitle="ประวัติศาสตร์"
-        description="เรียนรู้ประวัติศาสตร์อันน่าสนใจของบางกระเจ้า พื้นที่สีเขียวสำคัญใกล้กรุงเทพฯ ที่มีเรื่องราวน่าสนใจนับร้อยปี"
+        description="เรียนรู้ประวัติศาสตร์อันน่าสนใจของบางกะเจ้า พื้นที่สีเขียวสำคัญใกล้กรุงเทพฯ ที่มีเรื่องราวน่าสนใจนับร้อยปี"
         buttons={{
           primary: {
-            text: "ตำบลในบางกระเจ้า",
+            text: "ตำบลในบางกะเจ้า",
             href: "#districts",
             icon: <FaMapMarkerAlt />
           },

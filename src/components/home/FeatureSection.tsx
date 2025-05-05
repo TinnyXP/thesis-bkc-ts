@@ -46,7 +46,7 @@ export default function FeatureSection() {
     {
       icon: <FaMapMarkedAlt />,
       title: "6 ตำบลที่น่าค้นหา",
-      description: "บางกระเจ้า บางน้ำผึ้ง บางกอบัว บางกระสอบ ทรงคนอง และบางยอ แต่ละพื้นที่มีเอกลักษณ์เฉพาะตัว",
+      description: "บางกะเจ้า บางน้ำผึ้ง บางกอบัว บางกระสอบ ทรงคนอง และบางยอ แต่ละพื้นที่มีเอกลักษณ์เฉพาะตัว",
       delay: 0.2
     },
     {
@@ -73,9 +73,9 @@ export default function FeatureSection() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">ค้นพบบางกระเจ้า</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">ค้นพบบางกะเจ้า</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
-            บางกระเจ้าเป็นพื้นที่สีเขียวที่ใหญ่ที่สุดใกล้กรุงเทพมหานคร ดั่งปอดของเมืองหลวงที่มอบอากาศบริสุทธิ์และธรรมชาติอันงดงาม
+            บางกะเจ้าเป็นพื้นที่สีเขียวที่ใหญ่ที่สุดใกล้กรุงเทพมหานคร ดั่งปอดของเมืองหลวงที่มอบอากาศบริสุทธิ์และธรรมชาติอันงดงาม
           </p>
         </motion.div>
         

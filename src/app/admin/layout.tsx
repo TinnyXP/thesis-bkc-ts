@@ -2,7 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ระบบจัดการ | บางกระเจ้า",
+  title: "ระบบจัดการ | บางกะเจ้า",
   description: "ระบบจัดการสำหรับผู้ดูแลระบบ",
 };
 

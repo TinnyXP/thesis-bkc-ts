@@ -42,7 +42,7 @@ export const MetaTags: React.FC<MetaTagsProps> = ({
       <meta property="og:type" content={ogType} />
       {ogUrl && <meta property="og:url" content={ogUrl} />}
       {ogImage && <meta property="og:image" content={ogImage} />}
-      <meta property="og:site_name" content="บางกระเจ้า" />
+      <meta property="og:site_name" content="บางกะเจ้า" />
       
       {/* Twitter Card */}
       <meta name="twitter:card" content={twitterCard} />
