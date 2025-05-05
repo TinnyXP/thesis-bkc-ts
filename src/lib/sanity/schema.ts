@@ -85,16 +85,17 @@ export interface RevalidateOptions {
 // สำหรับพิกัด Geolocation
 export interface GeoPoint {
   _type: 'geopoint';
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
+  alt?: number;   // ความสูง (Altitude)
 }
-
 // สำหรับข้อมูลการติดต่อ
 export interface ContactInfo {
   phone?: string;
   email?: string;
   website?: string;
   facebook?: string;
+  instagram?: string;
   line?: string;
 }
 

@@ -1,7 +1,7 @@
 // src/app/place/[type]/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
-import { ImageModal, SlugBreadcrumb, SlugShareButton, ReviewSection, YouTubeEmbed, AudioPlayer } from "@/components";
+import { ImageModal, SlugBreadcrumb, SlugShareButton, ReviewSection, YouTubeEmbed, AudioPlayer, OpenStreetMapView } from "@/components";
 import { getPlaceBySlug } from "@/lib/sanity/placeQueries";
 import { urlFor } from "@/lib/sanity/image";
 import { createPlaceMetadata } from "@/lib/sanity/placeMetadata";
@@ -10,7 +10,7 @@ import { PortableText } from "next-sanity";
 import { Metadata } from "next";
 import { headers } from 'next/headers';
 import { PortableTextReactComponents } from "@portabletext/react";
-import { FaQuoteLeft, FaMapMarkerAlt, FaClock, FaPhone, FaGlobe, FaFacebook, FaLine, FaCalendarAlt, FaTag, FaDollarSign } from "react-icons/fa";
+import { FaQuoteLeft, FaMapMarkerAlt, FaClock, FaPhone, FaGlobe, FaFacebook, FaLine, FaCalendarAlt, FaTag, FaDollarSign, FaInstagram } from "react-icons/fa";
 import Script from "next/script";
 import { IoMdContact } from "react-icons/io";
 
@@ -189,6 +189,8 @@ export default async function PlacePage({
       };
       return days[day] || day;
     };
+
+    console.log("Location data:", place.location);
 
     return (
       <div className="min-h-screen">
@@ -405,6 +407,19 @@ export default async function PlacePage({
                           </a>
                         </div>
                       )}
+                      {place.contactInfo.instagram && (
+                        <div className="flex items-center gap-2">
+                          <FaInstagram className="text-pink-600" />
+                          <a
+                            href={place.contactInfo.instagram}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                          >
+                            Instagram
+                          </a>
+                        </div>
+                      )}
                       {place.contactInfo.line && (
                         <div className="flex items-center gap-2">
                           <FaLine className="text-green-500" />
@@ -427,6 +442,25 @@ export default async function PlacePage({
                     </p>
                   </CardBody>
                 </Card>
+              )}
+
+              {/* เพิ่มแผนที่ Google Maps */}
+              {place.location && (
+                <div className="my-4">
+                  {/* <h3 className="text-xl font-bold mb-4">ตำแหน่งที่ตั้ง (Debug)</h3>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
+                    {JSON.stringify(place.location, null, 2)}
+                  </pre> */}
+
+                  {/* จากนั้นปรับการตรวจสอบตามโครงสร้างข้อมูลจริง */}
+                  {typeof place.location.lat === 'number' && typeof place.location.lng === 'number' && (
+                    <OpenStreetMapView
+                      latitude={place.location.lat}
+                      longitude={place.location.lng}
+                      title={place.title}
+                    />
+                  )}
+                </div>
               )}
 
               {/* เวลาทำการ */}
