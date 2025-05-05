@@ -68,10 +68,10 @@ export default function NavBar() {
       label: t('community'),  // เปลี่ยนจาก forum และ complaints เป็น community
       href: "/community"
     },
-    {
-      label: t('static'),
-      href: "/static"
-    },
+    // {
+    //   label: t('static'),
+    //   href: "/static"
+    // },
   ], [t]); // ให้ dependency เป็น t เท่านั้น เพื่อให้สร้างใหม่เฉพาะเมื่อภาษาเปลี่ยน
 
   // เพิ่มข้อมูล schema.org สำหรับ navigation
