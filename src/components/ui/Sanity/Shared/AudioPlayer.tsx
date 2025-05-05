@@ -20,6 +20,10 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
   // สร้าง audio element และตั้งค่า event listeners
   useEffect(() => {
+    // เก็บค่าเริ่มต้นไว้เพื่อใช้ในการสร้าง audio element
+    const initialVolume = volume;
+    const initialMuted = isMuted;
+    
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
     
@@ -27,8 +31,8 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
     console.log("Loading audio:", audioUrl);
     
     // ตั้งค่า volume เริ่มต้น
-    audio.volume = volume;
-    audio.muted = isMuted;
+    audio.volume = initialVolume;
+    audio.muted = initialMuted;
     
     const handleLoadedMetadata = () => {
       console.log("Metadata loaded, duration:", audio.duration);
@@ -77,7 +81,6 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
       audio.pause();
       audioRef.current = null;
     };
-  // ตัด volume และ isMuted ออกจาก dependencies
   }, [audioUrl]);
 
   // แยก useEffect สำหรับการจัดการ volume และ muted
