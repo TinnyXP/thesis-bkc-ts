@@ -98,7 +98,7 @@ const FooterContent = () => {
                   width={0}
                   height={0}
                   src="/Bkj_logo.svg"
-                  className="w-[80px] h-[40px]"
+                  className="w-[95px] h-[40px]"
                   alt="Website Logo"
                 />
               </Link>
