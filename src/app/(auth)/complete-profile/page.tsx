@@ -142,8 +142,8 @@ export default function CompleteProfilePage() {
         <Image
           src="/Bkj_logo.svg"
           alt="Bangkrachoa Logo"
-          width={120}
-          height={60}
+          width={160}
+          height={90}
           className="mb-4"
         />
         <p className="text-xl font-bold">สร้างโปรไฟล์ของคุณ</p>

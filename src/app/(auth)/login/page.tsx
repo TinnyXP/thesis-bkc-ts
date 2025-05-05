@@ -330,8 +330,8 @@ export default function LoginPage() {
       <Image
         src="/Bkj_logo.svg"
         alt="Bangkrachoa Logo"
-        width={120}
-        height={60}
+        width={160}
+        height={90}
         className="mb-4"
       />
       <div className="flex w-full max-w-sm flex-col gap-3 rounded-large bg-content1 px-8 pb-6 pt-6 shadow-small">

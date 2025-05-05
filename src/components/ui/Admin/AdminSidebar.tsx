@@ -7,13 +7,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button, Tooltip, Divider } from "@heroui/react";
 import { signOut } from "next-auth/react";
-import { 
-  FaUserShield, 
-  FaClipboardList, 
-  FaComments, 
-  FaUsers, 
-  FaTachometerAlt, 
-  FaDoorOpen, 
+import {
+  FaUserShield,
+  FaClipboardList,
+  FaComments,
+  FaUsers,
+  FaTachometerAlt,
+  FaDoorOpen,
   FaBars,
   FaTimes,
   FaCog,
@@ -62,26 +62,26 @@ export default function AdminSidebar({ isSuperAdmin }: AdminSidebarProps) {
 
       {/* Sidebar - Desktop */}
       <div className="w-64 bg-white dark:bg-zinc-900 border-r border-default-200 dark:border-default-100/20 h-screen sticky top-0 hidden md:block">
-        <SidebarContent 
-          pathname={pathname} 
+        <SidebarContent
+          pathname={pathname}
           isSuperAdmin={isSuperAdmin}
           isMobile={false}
-          onItemClick={() => {}} 
+          onItemClick={() => { }}
         />
       </div>
 
       {/* Sidebar - Mobile */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={closeSidebar}>
-          <div 
+          <div
             className="w-64 bg-white dark:bg-zinc-900 h-screen overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <SidebarContent 
-              pathname={pathname} 
+            <SidebarContent
+              pathname={pathname}
               isSuperAdmin={isSuperAdmin}
               isMobile={true}
-              onItemClick={closeSidebar} 
+              onItemClick={closeSidebar}
             />
           </div>
         </div>
@@ -112,10 +112,10 @@ function SidebarContent({ pathname, isSuperAdmin, isMobile, onItemClick }: Sideb
         <Link href="/" onClick={onItemClick}>
           <Image
             src="/Bkj_logo.svg"
-            alt="บางกะเจ้า"
-            width={120}
-            height={60}
-            className="mx-auto"
+            alt="Bangkrachoa Logo"
+            width={150}
+            height={80}
+            className="mb-4"
           />
         </Link>
       </div>
@@ -223,7 +223,7 @@ function SidebarContent({ pathname, isSuperAdmin, isMobile, onItemClick }: Sideb
         </Button>
 
         <div className="text-center mt-4">
-          <Link 
+          <Link
             href="/"
             className="text-xs text-default-500 hover:text-primary-500"
             onClick={onItemClick}
@@ -256,8 +256,8 @@ function SidebarItem({ href, icon, label, isActive, isMobile, adminOnly, isSuper
         <div
           className={`
             flex items-center px-4 py-3 rounded-lg my-1 transition-colors
-            ${isActive 
-              ? "bg-primary-500 text-white" 
+            ${isActive
+              ? "bg-primary-500 text-white"
               : "text-default-600 hover:bg-default-100 dark:hover:bg-default-800"
             }
           `}
