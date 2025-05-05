@@ -6,7 +6,7 @@ import { FaPlay, FaPause, FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
 
 interface AudioPlayerProps {
   audioUrl: string;
-  title?: string; // ยังคงเก็บไว้ใน interface แต่เราจะไม่ใช้
+  title?: string;
 }
 
 export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
@@ -26,7 +26,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
     // Log เพื่อตรวจสอบ
     console.log("Loading audio:", audioUrl);
     
-    // ตั้งค่า volume
+    // ตั้งค่า volume เริ่มต้น
     audio.volume = volume;
     audio.muted = isMuted;
     
@@ -77,7 +77,16 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
       audio.pause();
       audioRef.current = null;
     };
-  }, [audioUrl, volume, isMuted]);
+  // ตัด volume และ isMuted ออกจาก dependencies
+  }, [audioUrl]);
+
+  // แยก useEffect สำหรับการจัดการ volume และ muted
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
 
   // ฟังก์ชันจัดการเวลาที่แสดง
   const formatTime = (seconds: number): string => {

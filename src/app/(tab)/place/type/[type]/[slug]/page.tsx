@@ -278,7 +278,7 @@ export default async function PlacePage({
               <article className="prose prose-2xl dark:prose-invert prose-zinc">
                 {place.description && (
                   <div className="bg-zinc-100 dark:bg-zinc-900 px-4 py-1 rounded-lg mb-6">
-                    <p className="text-lg italic text-zinc-900 dark:text-zinc-50">{place.description}</p>
+                    <p className="text-sm italic text-zinc-500 dark:text-zinc-400">{place.description}</p>
                   </div>
                 )}
 
