@@ -13,6 +13,7 @@ export default function TabLayout({
 }: {
   children: React.ReactNode;
 }) {
+  
   return (
     <div className="font-[family-name:var(--font-line-seed-sans)] min-h-screen flex flex-col bg-white dark:bg-black">
       {/* Navbar - แสดงเหมือนกันทุกหน้า */}

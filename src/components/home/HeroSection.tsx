@@ -19,7 +19,7 @@ export default function HeroSection() {
       {/* ภาพพื้นหลัง */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Image 
-          src="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/hero-bg-OvG0QPx1SQz0uMAhbRHIFH8E5tuUzB.jpeg" 
+          src="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/pathway-middle-green-leafed-trees-with-sun-shining-through-branches-dvwkHXLhMz1Dhs3WH6TxyiMEnaF2eE.jpg" 
           alt="บางกะเจ้า" 
           fill
           style={{ objectFit: 'cover' }}
