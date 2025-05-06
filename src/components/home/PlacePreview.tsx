@@ -25,7 +25,7 @@ export default function PlacePreview() {
         </motion.div>
         
         <div className="mb-12">
-          <PlaceCardList />
+          <PlaceCardList showSearchBar={false} />
         </div>
         
         <motion.div 

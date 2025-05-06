@@ -25,7 +25,7 @@ export default function BlogPreview() {
         </motion.div>
         
         <div className="mb-12">
-          <BlogCardList />
+          <BlogCardList showSearchBar={false} />
         </div>
         
         <motion.div 

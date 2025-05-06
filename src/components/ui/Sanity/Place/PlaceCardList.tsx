@@ -5,13 +5,14 @@ import React, { useState, useCallback } from "react";
 import { Loading, PlaceCard, SearchBar } from "@/components";
 import { usePlaces } from "@/hooks/usePlaces";
 import { Button } from "@heroui/react";
-import { Place } from "@/lib/sanity/schema"; // เพิ่มการ import ประเภทข้อมูล Place
+import { Place } from "@/lib/sanity/schema";
 
 interface PlaceCardListProps {
   type?: string;
+  showSearchBar?: boolean; // เพิ่ม prop ใหม่
 }
 
-export default function PlaceCardList({ type }: PlaceCardListProps) {
+export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardListProps) {
   const { places, isLoading, isError } = usePlaces(type);
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,26 +80,28 @@ export default function PlaceCardList({ type }: PlaceCardListProps) {
 
   return (
     <div>
-      <div className="mb-6">
-        <SearchBar 
-          onSearch={handleSearch}
-          contentType="place"
-        />
-        
-        {hasSearched && searchQuery && (
-          <div className="mt-3 mb-5 bg-zinc-100/70 dark:bg-zinc-800/70 px-4 py-2 rounded-lg flex justify-between items-center">
-            <div>
-              <span>ผลการค้นหา: </span>
-              <span className="font-bold">{filteredPlaces.length}</span> จาก <span className="font-bold">{places.length}</span> สถานที่
-              {searchQuery && <span> สำหรับ &quot;<span className="font-semibold text-primary-color">{searchQuery}</span>&quot;</span>}
+      {showSearchBar && ( // เพิ่มเงื่อนไขการแสดง SearchBar
+        <div className="mb-6">
+          <SearchBar 
+            onSearch={handleSearch}
+            contentType="place"
+          />
+          
+          {hasSearched && searchQuery && (
+            <div className="mt-3 mb-5 bg-zinc-100/70 dark:bg-zinc-800/70 px-4 py-2 rounded-lg flex justify-between items-center">
+              <div>
+                <span>ผลการค้นหา: </span>
+                <span className="font-bold">{filteredPlaces.length}</span> จาก <span className="font-bold">{places.length}</span> สถานที่
+                {searchQuery && <span> สำหรับ &quot;<span className="font-semibold text-primary-color">{searchQuery}</span>&quot;</span>}
+              </div>
+              
+              {filteredPlaces.length === 0 && (
+                <div className="text-zinc-500">ไม่พบผลลัพธ์</div>
+              )}
             </div>
-            
-            {filteredPlaces.length === 0 && (
-              <div className="text-zinc-500">ไม่พบผลลัพธ์</div>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* ถ้ายังไม่ได้ค้นหาหรือเคลียร์การค้นหาแล้ว ให้แสดงทั้งหมด */}
       {!hasSearched ? (
