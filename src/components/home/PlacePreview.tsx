@@ -2,9 +2,9 @@
 "use client";
 
 import React from "react";
-import { Button } from "@heroui/react";
+import { Button, Link } from "@heroui/react";
 import { motion } from "framer-motion";
-import Link from "next/link";
+
 import { PlaceCardList } from "@/components";
 
 export default function PlacePreview() {
