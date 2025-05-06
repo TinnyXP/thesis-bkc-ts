@@ -88,22 +88,12 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
           />
           
           {hasSearched && (
-            <div className="mt-3 mb-5 bg-zinc-100/70 dark:bg-zinc-800/70 px-4 py-2 rounded-lg flex justify-between items-center">
+            <div className="mt-3 mb-5 bg-transparent px-4 py-2 rounded-lg flex justify-between items-center">
               <div>
                 <span>ผลการค้นหา: </span>
                 <span className="font-bold">{filteredPosts.length}</span> จาก <span className="font-bold">{posts.length}</span> บทความ
                 {searchQuery && <span> สำหรับ &quot;<span className="font-semibold text-primary-color">{searchQuery}</span>&quot;</span>}
               </div>
-              
-              {searchQuery && (
-                <Button 
-                  variant="light" 
-                  size="sm" 
-                  onPress={handleClearSearch}
-                >
-                  ล้างการค้นหา
-                </Button>
-              )}
             </div>
           )}
         </div>
@@ -116,13 +106,10 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
         <BlogCard posts={filteredPosts} />
       ) : (
         <div className="text-center py-10">
-          <h2 className="text-2xl font-bold mb-4">ไม่พบบทความ</h2>
+          <h2 className="text-2xl font-bold mb-2">ไม่พบบทความ</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             ไม่พบบทความสำหรับคำค้นหา &quot;{searchQuery}&quot;
           </p>
-          <Button color="primary" onPress={handleClearSearch}>
-            แสดงบทความทั้งหมด
-          </Button>
         </div>
       )}
     </div>

@@ -89,22 +89,12 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
           />
           
           {hasSearched && (
-            <div className="mt-3 mb-5 bg-zinc-100/70 dark:bg-zinc-800/70 px-4 py-2 rounded-lg flex justify-between items-center">
+            <div className="mt-3 mb-5 bg-transparent px-4 py-2 rounded-lg flex justify-between items-center">
               <div>
                 <span>ผลการค้นหา: </span>
                 <span className="font-bold">{filteredPlaces.length}</span> จาก <span className="font-bold">{places.length}</span> สถานที่
                 {searchQuery && <span> สำหรับ &quot;<span className="font-semibold text-primary-color">{searchQuery}</span>&quot;</span>}
               </div>
-              
-              {searchQuery && (
-                <Button 
-                  variant="light" 
-                  size="sm" 
-                  onPress={handleClearSearch}
-                >
-                  ล้างการค้นหา
-                </Button>
-              )}
             </div>
           )}
         </div>
@@ -117,13 +107,10 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
         <PlaceCard places={filteredPlaces} />
       ) : (
         <div className="text-center py-10">
-          <h2 className="text-2xl font-bold mb-4">ไม่พบสถานที่ท่องเที่ยว</h2>
+          <h2 className="text-2xl font-bold mb-2">ไม่พบสถานที่ท่องเที่ยว</h2>
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             ไม่พบสถานที่ท่องเที่ยวสำหรับคำค้นหา &quot;{searchQuery}&quot;
           </p>
-          <Button color="primary" onPress={handleClearSearch}>
-            แสดงสถานที่ท่องเที่ยวทั้งหมด
-          </Button>
         </div>
       )}
     </div>
