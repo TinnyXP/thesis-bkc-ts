@@ -31,7 +31,7 @@ export default function PageHeader({
   title,
   subtitle,
   description,
-  imageSrc = "https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/hero-bg-OvG0QPx1SQz0uMAhbRHIFH8E5tuUzB.jpeg",
+  imageSrc = "https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/pathway-middle-green-leafed-trees-with-sun-shining-through-branches-hfT2uIv9B10jgjaeoUuuHJZwhd7Blf.jpg",
   imageAlt = "บางกะเจ้า",
   buttons,
   children

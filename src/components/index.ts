@@ -27,6 +27,7 @@ export { default as PlaceCardList } from './ui/Sanity/Place/PlaceCardList';
 export { default as PlaceTypeCardList } from './ui/Sanity/Place/PlaceTypeCardList';
 export { default as PlaceDistrictCardList } from './ui/Sanity/Place/PlaceDistrictCardList';
 export { default as OpenStreetMapView } from './ui/Sanity/Place/OpenStreetMapView';
+export { default as SearchBar } from './ui/Search/SearchBar';
 
 // Tourism Sanity Reviews Components
 export { default as ReviewSection } from './ui/Sanity/Reviews/ReviewSection';

@@ -81,7 +81,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
       audio.pause();
       audioRef.current = null;
     };
-  }, [audioUrl]);
+  }, [audioUrl, isLoaded, isMuted, volume]); // เพิ่ม isLoaded, isMuted, volume ในนี้
 
   // แยก useEffect สำหรับการจัดการ volume และ muted
   useEffect(() => {
