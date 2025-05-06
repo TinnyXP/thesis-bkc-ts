@@ -9,7 +9,7 @@ import { Place } from "@/lib/sanity/schema";
 
 interface PlaceCardListProps {
   type?: string;
-  showSearchBar?: boolean; // เพิ่ม prop ใหม่
+  showSearchBar?: boolean;
 }
 
 export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardListProps) {
@@ -20,15 +20,18 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
 
   // ฟังก์ชันค้นหา
   const handleSearch = useCallback((query: string) => {
+    // อัพเดท state searchQuery ทุกครั้งที่มีการค้นหา
     setSearchQuery(query);
-    setHasSearched(true);
     
     if (!query.trim()) {
-      // ล้างการค้นหา กลับไปแสดงทั้งหมด
+      // กรณีค่าว่าง: ล้างการค้นหา กลับไปแสดงทั้งหมด
       setFilteredPlaces([]);
       setHasSearched(false);
       return;
     }
+    
+    // กรณีมีคำค้นหา: ตั้งค่า hasSearched เป็น true เสมอเมื่อมีการเรียกฟังก์ชัน handleSearch
+    setHasSearched(true);
     
     // กรองสถานที่ตามชื่อหรือคำอธิบาย
     const lowerCaseQuery = query.toLowerCase();
@@ -37,18 +40,16 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
       (place.description && place.description.toLowerCase().includes(lowerCaseQuery))
     );
     
+    // อัพเดทผลลัพธ์การค้นหา
     setFilteredPlaces(filtered);
   }, [places]);
 
-  // ในกรณีที่โหลดข้อมูลใหม่ แต่ไม่ได้มีการค้นหา
-  React.useEffect(() => {
-    if (places && !hasSearched) {
-      setFilteredPlaces([]);
-    } else if (places && hasSearched && searchQuery) {
-      // อัปเดตผลการค้นหาหากมีข้อมูลใหม่
-      handleSearch(searchQuery);
-    }
-  }, [places, hasSearched, searchQuery, handleSearch]);
+  // ล้างการค้นหา
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setFilteredPlaces([]);
+    setHasSearched(false);
+  };
 
   if (isLoading) {
     return (
@@ -80,14 +81,14 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
 
   return (
     <div>
-      {showSearchBar && ( // เพิ่มเงื่อนไขการแสดง SearchBar
+      {showSearchBar && (
         <div className="mb-6">
           <SearchBar 
             onSearch={handleSearch}
             contentType="place"
           />
           
-          {hasSearched && searchQuery && (
+          {hasSearched && (
             <div className="mt-3 mb-5 bg-zinc-100/70 dark:bg-zinc-800/70 px-4 py-2 rounded-lg flex justify-between items-center">
               <div>
                 <span>ผลการค้นหา: </span>
@@ -95,8 +96,14 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
                 {searchQuery && <span> สำหรับ &quot;<span className="font-semibold text-primary-color">{searchQuery}</span>&quot;</span>}
               </div>
               
-              {filteredPlaces.length === 0 && (
-                <div className="text-zinc-500">ไม่พบผลลัพธ์</div>
+              {searchQuery && (
+                <Button 
+                  variant="light" 
+                  size="sm" 
+                  onPress={handleClearSearch}
+                >
+                  ล้างการค้นหา
+                </Button>
               )}
             </div>
           )}
@@ -114,7 +121,7 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             ไม่พบสถานที่ท่องเที่ยวสำหรับคำค้นหา &quot;{searchQuery}&quot;
           </p>
-          <Button color="primary" onPress={() => handleSearch("")}>
+          <Button color="primary" onPress={handleClearSearch}>
             แสดงสถานที่ท่องเที่ยวทั้งหมด
           </Button>
         </div>

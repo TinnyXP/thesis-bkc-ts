@@ -1,15 +1,14 @@
-// src/components/ui/Sanity/Blog/BlogCardList.tsx
 "use client";
 
 import React, { useState, useCallback } from "react";
 import { Loading, BlogCard, SearchBar } from "@/components";
 import { usePosts } from "@/hooks/usePosts";
 import { Button } from "@heroui/react";
-import { Post } from "@/lib/sanity";
+import { Post } from "@/lib/sanity/schema";
 
 interface BlogCardListProps {
   category?: string;
-  showSearchBar?: boolean; // เพิ่ม prop ใหม่
+  showSearchBar?: boolean;
 }
 
 export default function BlogCardList({ category, showSearchBar = true }: BlogCardListProps) {
@@ -20,15 +19,18 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
 
   // ฟังก์ชันค้นหา
   const handleSearch = useCallback((query: string) => {
+    // อัพเดท state searchQuery ทุกครั้งที่มีการค้นหา
     setSearchQuery(query);
-    setHasSearched(true);
     
     if (!query.trim()) {
-      // ล้างการค้นหา กลับไปแสดงทั้งหมด
+      // กรณีค่าว่าง: ล้างการค้นหา กลับไปแสดงทั้งหมด
       setFilteredPosts([]);
       setHasSearched(false);
       return;
     }
+    
+    // กรณีมีคำค้นหา: ตั้งค่า hasSearched เป็น true เสมอเมื่อมีการเรียกฟังก์ชัน handleSearch
+    setHasSearched(true);
     
     // กรองบทความตามชื่อหรือคำอธิบาย
     const lowerCaseQuery = query.toLowerCase();
@@ -37,18 +39,16 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
       (post.excerpt && post.excerpt.toLowerCase().includes(lowerCaseQuery))
     );
     
+    // อัพเดทผลลัพธ์การค้นหา
     setFilteredPosts(filtered);
   }, [posts]);
 
-  // ในกรณีที่โหลดข้อมูลใหม่ แต่ไม่ได้มีการค้นหา
-  React.useEffect(() => {
-    if (posts && !hasSearched) {
-      setFilteredPosts([]);
-    } else if (posts && hasSearched && searchQuery) {
-      // อัปเดตผลการค้นหาหากมีข้อมูลใหม่
-      handleSearch(searchQuery);
-    }
-  }, [posts, hasSearched, searchQuery, handleSearch]);
+  // ล้างการค้นหา
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setFilteredPosts([]);
+    setHasSearched(false);
+  };
 
   if (isLoading) {
     return (
@@ -80,14 +80,14 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
 
   return (
     <div>
-      {showSearchBar && ( // เพิ่มเงื่อนไขการแสดง SearchBar
+      {showSearchBar && (
         <div className="mb-6">
           <SearchBar 
             onSearch={handleSearch}
             contentType="blog"
           />
           
-          {hasSearched && searchQuery && (
+          {hasSearched && (
             <div className="mt-3 mb-5 bg-zinc-100/70 dark:bg-zinc-800/70 px-4 py-2 rounded-lg flex justify-between items-center">
               <div>
                 <span>ผลการค้นหา: </span>
@@ -95,8 +95,14 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
                 {searchQuery && <span> สำหรับ &quot;<span className="font-semibold text-primary-color">{searchQuery}</span>&quot;</span>}
               </div>
               
-              {filteredPosts.length === 0 && (
-                <div className="text-zinc-500">ไม่พบผลลัพธ์</div>
+              {searchQuery && (
+                <Button 
+                  variant="light" 
+                  size="sm" 
+                  onPress={handleClearSearch}
+                >
+                  ล้างการค้นหา
+                </Button>
               )}
             </div>
           )}
@@ -114,7 +120,7 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             ไม่พบบทความสำหรับคำค้นหา &quot;{searchQuery}&quot;
           </p>
-          <Button color="primary" onPress={() => handleSearch("")}>
+          <Button color="primary" onPress={handleClearSearch}>
             แสดงบทความทั้งหมด
           </Button>
         </div>

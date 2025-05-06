@@ -29,6 +29,7 @@ export default function SearchBar({
   // ค้นหาเมื่อกด Enter
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      // ส่งค่า searchTerm ไปค้นหาไม่ว่าจะมีค่าหรือไม่ก็ตาม
       onSearch(searchTerm);
     }
   };
@@ -36,12 +37,20 @@ export default function SearchBar({
   // ล้างการค้นหา
   const handleClear = () => {
     setSearchTerm("");
+    // เรียกฟังก์ชัน onSearch ด้วยค่าว่างเพื่อรีเซ็ตการค้นหา
     onSearch("");
   };
 
   // เมื่อกดปุ่มค้นหา
   const handleSearch = () => {
+    // ส่งค่า searchTerm ไปค้นหาไม่ว่าจะมีค่าหรือไม่ก็ตาม
     onSearch(searchTerm);
+  };
+
+  // เมื่อมีการเปลี่ยนแปลงค่า searchTerm
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // ไม่ต้องเรียก onSearch ทันทีเมื่อพิมพ์ เพราะอาจทำให้การค้นหาถี่เกินไป
   };
 
   if (!isMounted) {
@@ -58,14 +67,14 @@ export default function SearchBar({
           isClearable
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleChange}
           placeholder={searchPlaceholder}
           variant="flat"
           size="md"
           radius="full"
           onKeyPress={handleKeyPress}
           onClear={handleClear}
-          startContent={searchTerm && (<FaSearch className="text-default-400" />)}
+          startContent={<FaSearch className="text-default-400" />}
           classNames={{
             input: "text-md",
           }}
