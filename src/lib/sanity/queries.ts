@@ -8,7 +8,7 @@ import { Post, Category } from './schema';
  */
 export const POSTS_QUERY = `*[
   _type == "post" && defined(slug.current)
-] | order(publishedAt desc) {
+] | order(coalesce(updatedAt, publishedAt) desc) {
   _id,
   title,
   slug,
@@ -117,7 +117,7 @@ export async function getLatestPosts(limit?: number, options = defaultRevalidate
     
     const query = `*[
       _type == "post" && defined(slug.current)
-    ] | order(publishedAt desc)${limitClause} {
+    ] | order(coalesce(updatedAt, publishedAt) desc)${limitClause} {
       _id,
       title,
       slug,
