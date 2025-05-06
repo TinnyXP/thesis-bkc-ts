@@ -4,7 +4,6 @@
 import React, { useState, useCallback } from "react";
 import { Loading, PlaceCard, SearchBar } from "@/components";
 import { usePlaces } from "@/hooks/usePlaces";
-import { Button } from "@heroui/react";
 import { Place } from "@/lib/sanity/schema";
 
 interface PlaceCardListProps {
@@ -43,13 +42,6 @@ export default function PlaceCardList({ type, showSearchBar = true }: PlaceCardL
     // อัพเดทผลลัพธ์การค้นหา
     setFilteredPlaces(filtered);
   }, [places]);
-
-  // ล้างการค้นหา
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setFilteredPlaces([]);
-    setHasSearched(false);
-  };
 
   if (isLoading) {
     return (

@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from "react";
 import { Loading, BlogCard, SearchBar } from "@/components";
 import { usePosts } from "@/hooks/usePosts";
-import { Button } from "@heroui/react";
 import { Post } from "@/lib/sanity/schema";
 
 interface BlogCardListProps {
@@ -42,13 +41,6 @@ export default function BlogCardList({ category, showSearchBar = true }: BlogCar
     // อัพเดทผลลัพธ์การค้นหา
     setFilteredPosts(filtered);
   }, [posts]);
-
-  // ล้างการค้นหา
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setFilteredPosts([]);
-    setHasSearched(false);
-  };
 
   if (isLoading) {
     return (
