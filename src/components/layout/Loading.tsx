@@ -14,7 +14,7 @@ export default function Loading({
 }: LoadingProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center bg-background gap-4 ${fullScreen ? "fixed inset-0" : "h-full w-full min-h-[200px]"
+      className={`flex flex-col items-center justify-center bg-transparent gap-4 ${fullScreen ? "fixed inset-0" : "h-full w-full min-h-[200px]"
         }`}
     >
       <div className="flex flex-col items-center gap-4">

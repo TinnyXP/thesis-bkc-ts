@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardFooter, Chip, Image, Pagination } from "@heroui/react";
 import { Post, formatThaiDate } from "@/lib/sanity";
+import { FaCalendarAlt } from "react-icons/fa";
 
 interface PostCardProps {
   posts: Post[];
@@ -35,7 +36,7 @@ export default function PostCard({ posts, category }: PostCardProps) {
     // เรียกใช้งานครั้งแรกและเมื่อมีการ resize
     updateCardsPerPage();
     window.addEventListener("resize", updateCardsPerPage);
-    
+
     // Cleanup
     return () => window.removeEventListener("resize", updateCardsPerPage);
   }, []);
@@ -47,14 +48,27 @@ export default function PostCard({ posts, category }: PostCardProps) {
     setCurrentPosts(posts.slice(indexOfFirstPost, indexOfLastPost));
   }, [currentPage, cardsPerPage, posts]);
 
+  const formatDate = (post: Post): string => {
+    // ใช้ _updatedAt ถ้ามี หรือใช้ publishedAt
+    const dateString = post._updatedAt || post.publishedAt;
+    return dateString ? formatThaiDate(dateString) : "";
+  };
+
+  // แสดงข้อความว่าเป็นวันที่อัปเดตหรือเผยแพร่
+  const getDateLabel = (post: Post): string => {
+    return post._updatedAt && post._updatedAt !== post.publishedAt
+      ? 'อัปเดตล่าสุด: '
+      : 'เผยแพร่: ';
+  };
+
   // ถ้าไม่มีข้อมูลบทความ
   if (!posts.length) {
     return (
       <div className="text-center py-10">
         <h2 className="text-2xl font-bold mb-4">ไม่พบบทความ</h2>
         <p className="text-zinc-600 dark:text-zinc-400">
-          {category 
-            ? `ขออภัย ยังไม่มีบทความในหมวดหมู่ ${category}` 
+          {category
+            ? `ขออภัย ยังไม่มีบทความในหมวดหมู่ ${category}`
             : "ขออภัย ยังไม่มีบทความในขณะนี้"}
         </p>
       </div>
@@ -108,26 +122,25 @@ export default function PostCard({ posts, category }: PostCardProps) {
               <CardFooter className="flex justify-between items-center">
                 <div className="flex flex-col text-left">
                   <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold line-clamp-1">{post.title}</p>
-                  <div className="flex items-center gap-2">
-                    <small className="text-default-500">
-                      {formatThaiDate(post.publishedAt)}
-                    </small>
-                  </div>
+                  <small className="flex items-center gap-1 text-default-500">
+                    <FaCalendarAlt className="w-3 h-3" />
+                    <span>{getDateLabel(post)}{formatDate(post)}</span>
+                  </small>
                 </div>
               </CardFooter>
             </Card>
           );
         })}
       </div>
-      
+
       {totalPages > 1 && (
-        <Pagination 
-          variant="light" 
-          initialPage={1} 
-          total={totalPages} 
-          page={currentPage} 
-          onChange={setCurrentPage} 
-          classNames={{ item: "box-border" }} 
+        <Pagination
+          variant="light"
+          initialPage={1}
+          total={totalPages}
+          page={currentPage}
+          onChange={setCurrentPage}
+          classNames={{ item: "box-border" }}
         />
       )}
     </div>

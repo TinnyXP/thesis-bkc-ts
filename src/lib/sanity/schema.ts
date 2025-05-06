@@ -31,7 +31,7 @@ export interface Post {
   title: string;
   slug: { current: string };
   publishedAt: string;
-  updatedAt?: string; // ตรวจสอบว่ามีฟิลด์นี้
+  _updatedAt?: string; // เพิ่มฟิลด์นี้
   excerpt?: string;
   mainImage?: SanityImage;
   categories: Category[];
