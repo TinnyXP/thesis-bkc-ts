@@ -143,7 +143,8 @@ export interface Place {
   bestTimeToVisit?: string;
   tags?: string[];
   publishedAt?: string;
-  updatedAt?: string; // ตรวจสอบว่ามีฟิลด์นี้
+  updatedAt?: string; 
+  _updatedAt?: string; // เพิ่มฟิลด์นี้
   // เพิ่มฟิลด์สำหรับวิดีโอและไฟล์เสียง
   youtubeUrl?: string;
   audioFile?: {

@@ -8,12 +8,13 @@ import { Place, PlaceType, District } from './schema';
  */
 export const PLACES_QUERY = `*[
   _type == "place" && defined(slug.current)
-] | order(coalesce(updatedAt, publishedAt) desc) {
+] | order(coalesce(_updatedAt, publishedAt) desc) {
   _id,
   title,
   slug,
   description,
   publishedAt,
+  _updatedAt,
   "placeType": placeType->{
     title,
     slug,
@@ -183,12 +184,13 @@ export async function getLatestPlaces(limit?: number, options = defaultRevalidat
     
     const query = `*[
       _type == "place" && defined(slug.current)
-    ] | order(coalesce(updatedAt, publishedAt) desc)${limitClause} {
+    ] | order(coalesce(_updatedAt, publishedAt) desc)${limitClause} {
       _id,
       title,
       slug,
       description,
       publishedAt,
+      _updatedAt,
       "placeType": placeType->{
         title,
         slug,

@@ -38,17 +38,26 @@ export function usePlaces(placeType?: string) {
     url, 
     fetcher,
     {
-      refreshInterval: 60000, // รีเฟรชทุก 60 วินาที  
-      revalidateOnFocus: true, // รีเฟรชเมื่อกลับมาที่แท็บ
-      revalidateOnReconnect: true, // รีเฟรชเมื่อกลับมาออนไลน์
-      dedupingInterval: 5000 // ป้องกันการเรียก API ซ้ำในช่วง 5 วินาที
+      refreshInterval: 60000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000
     }
   );
 
+  // เรียงลำดับสถานที่ตามวันที่อัปเดตล่าสุด
+  const sortedPlaces: Place[] = data?.places
+    ? [...data.places].sort((a, b) => {
+        const dateA = new Date(a._updatedAt || a.publishedAt || '').getTime();
+        const dateB = new Date(b._updatedAt || b.publishedAt || '').getTime();
+        return dateB - dateA; // เรียงจากใหม่ไปเก่า
+      })
+    : [];
+
   return {
-    places: data?.places || [],
+    places: sortedPlaces,
     isLoading,
     isError: error,
-    mutate // ฟังก์ชันสำหรับรีเฟรชข้อมูลแบบทันที
+    mutate
   };
 }

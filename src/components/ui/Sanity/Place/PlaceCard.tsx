@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardBody, CardFooter, Chip, Image, Pagination } from "@heroui/react";
 import { Place } from '@/lib/sanity/schema';
-import { FaMapMarkerAlt, FaClipboardList } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 
@@ -52,10 +52,28 @@ export default function PlaceCard({ places }: PlaceCardProps) {
     setCurrentPlaces(places.slice(indexOfFirstPlace, indexOfLastPlace));
   }, [currentPage, cardsPerPage, places]);
 
+  // ฟังก์ชันสำหรับพิจารณาว่าควรแสดงข้อความ "ล่าสุด" หรือวันที่
+  const getDateLabel = (place: Place): string => {
+    const updatedDate = place._updatedAt || place.publishedAt;
+    if (!updatedDate) return "";
+    
+    const now = dayjs();
+    const date = dayjs(updatedDate);
+    const diffDays = now.diff(date, 'day');
+    
+    if (diffDays < 1) return "วันนี้ • ";
+    if (diffDays < 2) return "เมื่อวาน • ";
+    if (diffDays < 7) return "";
+    
+    return "";
+  };
+
   // ฟังก์ชันแปลงวันที่เป็นรูปแบบไทย
-  const formatThaiDate = (date: string | undefined): string => {
-    if (!date) return "";
-    return dayjs(date).format("D MMMM YYYY");
+  const formatDate = (place: Place): string => {
+    const dateString = place._updatedAt || place.publishedAt;
+    if (!dateString) return "";
+    
+    return dayjs(dateString).format("D MMMM YYYY");
   };
 
   // ถ้าไม่มีข้อมูลสถานที่
@@ -133,22 +151,20 @@ export default function PlaceCard({ places }: PlaceCardProps) {
               </CardBody>
               <CardFooter className="flex justify-between items-center">
                 <div className="flex flex-col text-left">
-                  <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold">{place.title}</p>
+                  <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold line-clamp-1">{place.title}</p>
 
                   {place.description && (
-                    <p className="text-xs text-default-500 mt-1 max-w-[320px] text-ellipsis line-clamp-1">
+                    <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-xs text-default-500 line-clamp-1">
                       {place.description}
                     </p>
                   )}
 
-                  {place.publishedAt && (
-                    <div className="flex items-center gap-1">
-                      <FaClipboardList size={12} />
-                      <span className="text-xs">
-                        {formatThaiDate(place.publishedAt)}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 mt-1 text-default-400">
+                    <FaCalendarAlt size={12} />
+                    <span className="text-xs">
+                      {getDateLabel(place)}{formatDate(place)}
+                    </span>
+                  </div>
                 </div>
               </CardFooter>
             </Card>
