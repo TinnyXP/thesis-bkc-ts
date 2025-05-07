@@ -21,7 +21,7 @@ const translations = {
   community : "ชุมชน",
   forum: "ฟอรัม",
   complaints: "ร้องเรียน",
-  static: "สถิติ",
+  static: "ข้อมูล",
 
   // Authentication
   login: "เข้าสู่ระบบ",

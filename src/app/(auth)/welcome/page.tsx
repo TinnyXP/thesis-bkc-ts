@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Button, Link } from "@heroui/react";
-import { Loading, NavBar } from "@/components";
+import { Footer, Loading, NavBar } from "@/components";
 import { FaUserCircle } from 'react-icons/fa';
 import { useSession } from "next-auth/react";
 import { redirect } from 'next/navigation';
@@ -124,6 +124,7 @@ export default function WelcomePage() {
           </Card>
         </div>
       </main>
+      <Footer/>
     </div>
   );
 }

@@ -70,7 +70,7 @@ export default function NavBar() {
     },
     // {
     //   label: t('static'),
-    //   href: "/static"
+    //   href: "/information"
     // },
   ], [t]); // ให้ dependency เป็น t เท่านั้น เพื่อให้สร้างใหม่เฉพาะเมื่อภาษาเปลี่ยน
 
