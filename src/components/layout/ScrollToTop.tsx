@@ -32,7 +32,7 @@ export default function ScrollToTop() {
       {backToTopButton && (
         <MotionButton
           key="backToTopButton"
-          className="fixed bottom-3.5 right-4 text-white z-[500] drop-shadow-md transition-all duration-300 ease-in-out hover:drop-shadow-lg"
+          className="fixed bottom-4 right-4 text-white z-[500] drop-shadow-md transition-all duration-300 ease-in-out hover:drop-shadow-lg"
           isIconOnly
           radius="full"
           size="md"

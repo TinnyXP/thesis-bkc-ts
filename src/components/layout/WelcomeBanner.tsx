@@ -1,9 +1,9 @@
-// src/components/layout/WelcomeBanner.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, Link } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { useSession } from "next-auth/react";
+import { IoClose } from "react-icons/io5";
 
 export default function WelcomeBanner() {
   const { data: session } = useSession();
@@ -19,69 +19,61 @@ export default function WelcomeBanner() {
   }
 
   return (
-    <div className="flex w-full items-center gap-x-3 border-b-1 border-divider bg-background/[0.15] px-6 py-2 backdrop-blur-xl sm:px-3.5 sm:before:flex-1">
-      <p className="text-small text-foreground">
-        <span className="font-semibold">สวัสดี, คุณ {session.user.name}!</span> ยินดีต้อนรับสู่บางกะเจ้า
-        <span className="text-xs text-default-500 ml-2">ID ของคุณ: {session.user.bkcId}</span>
-      </p>
-      <Button
-        as={Link}
-        className="group relative h-9 overflow-hidden bg-transparent text-small font-normal"
-        color="default"
-        endContent={
-          <svg
-            className="flex-none outline-none transition-transform group-data-[hover=true]:translate-x-0.5 [&>path]:stroke-[2]"
-            width="16" 
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              stroke="currentColor" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
-              d="M5 12h14m0 0l-7-7m7 7l-7 7"
-            />
-          </svg>
-        }
-        href="/history"
-        style={{
-          border: "solid 2px transparent",
-          backgroundImage: `linear-gradient(hsl(var(--heroui-background)), hsl(var(--heroui-background))), linear-gradient(to right, #10CE50, #06C755)`,
-          backgroundOrigin: "border-box",
-          backgroundClip: "padding-box, border-box",
-        }}
-        variant="bordered"
-      >
-        เข้าชม
-      </Button>
-      <div className="flex flex-1 justify-end">
-        <Button 
-          isIconOnly 
-          className="-m-1" 
-          size="sm" 
-          variant="light"
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 w-full px-2 pb-2 sm:flex sm:justify-center sm:px-4 lg:px-8 z-50">
+      <div className="pointer-events-auto flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-large sm:rounded-full border-1 border-divider bg-gradient-to-r from-white/80 via-primary-50/80 to-white/80 dark:from-zinc-900/80 dark:via-zinc-800/80 dark:to-zinc-900/80 px-3 py-3 shadow-lg backdrop-blur-xl w-full sm:max-w-lg">
+        <div className="flex flex-col items-center sm:ml-3 sm:items-start">
+          <div className="flex gap-2">
+            <p className="text-sm text-foreground font-semibold line-clamp-1">
+              สวัสดี, คุณ {session.user.name}!
+            </p>
+            <p className="text-sm text-foreground">
+              ยินดีต้อนรับสู่บางกะเจ้า
+            </p>
+          </div>
+          <p className="text-xs text-default-500 mt-1">
+            ID ของคุณ: {session.user.bkcId}
+          </p>
+        </div>
+
+        {/* ปุ่มปิดสำหรับมือถือ - แสดงเต็มแนว */}
+        <Button
+          className="group relative overflow-hidden bg-transparent text-small font-normal mt-2 block sm:hidden"
+          color="default"
+          aria-label="ปิด Banner"
           onPress={() => setIsVisible(false)}
+          style={{
+            border: "solid 2px transparent",
+            backgroundImage: `linear-gradient(hsl(var(--heroui-background)), hsl(var(--heroui-background))), linear-gradient(to right, #10CE50, #06C755)`,
+            backgroundOrigin: "border-box",
+            backgroundClip: "padding-box, border-box",
+          }}
+          variant="bordered"
+          size="sm"
         >
-          <span className="sr-only">ปิด Banner</span>
-          <svg 
-            className="text-default-500" 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              stroke="currentColor" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
-              d="M18 6L6 18M6 6l12 12"
-            />
-          </svg>
+          <div className="flex gap-1 items-center justify-center">
+            <IoClose size={20} />
+            <span>ปิดหน้าต่าง</span>
+          </div>
+        </Button>
+
+        {/* ปุ่มปิดสำหรับหน้าจอใหญ่ - แสดงเป็นสี่เหลี่ยมจัตุรัส */}
+        <Button
+          className="group relative overflow-hidden bg-transparent hidden sm:flex mt-0 h-10 w-10"
+          color="default"
+          aria-label="ปิด Banner"
+          onPress={() => setIsVisible(false)}
+          style={{
+            border: "solid 2px transparent",
+            backgroundImage: `linear-gradient(hsl(var(--heroui-background)), hsl(var(--heroui-background))), linear-gradient(to right, #10CE50, #06C755)`,
+            backgroundOrigin: "border-box",
+            backgroundClip: "padding-box, border-box",
+          }}
+          variant="bordered"
+          radius="full"
+          size="sm"
+          isIconOnly
+        >
+          <IoClose size={24} />
         </Button>
       </div>
     </div>
