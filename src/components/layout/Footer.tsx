@@ -8,6 +8,7 @@ import { Button } from "@heroui/react";
 
 import { FaFacebook, FaYoutube } from "react-icons/fa6";
 import { BsLine } from "react-icons/bs";
+import ViewCounter from "../ui/Analytics/ViewCounter";
 
 const footerNavigation = {
   services: [
@@ -62,6 +63,11 @@ export default function Footer() {
       <FooterContent />
       <div className="w-full flex justify-center items-center py-1.5 bg-black border-t-small border-default-200/70 rounded-t-2xl">
         <span className="text-xs font-medium flex leading-none text-zinc-200">&copy; 2024 Bangkrajao. สงวนลิขสิทธิ์ทั้งหมด</span>
+        <ViewCounter
+          pageType="homepage"
+          slug="home"
+          className="text-xs flex items-center gap-1"
+        />
       </div>
     </footer>
   )

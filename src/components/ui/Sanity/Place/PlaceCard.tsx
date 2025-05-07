@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardBody, CardFooter, Chip, Image, Pagination } from "@heroui/react";
 import { Place } from '@/lib/sanity/schema';
-import { FaMapMarkerAlt, FaCalendarAlt, FaAd } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 
@@ -161,19 +161,22 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                     </p>
                   )}
 
-                  <div className="flex items-center gap-1 mt-1 text-default-400">
-                    <FaCalendarAlt size={12} />
-                    <span className="text-xs">
-                      {getDateLabel(place)}{formatDate(place)}
-                    </span>
-                  </div>
+                  <div className="flex flex-row justify-between">
+                    <div className="flex items-center gap-1 mt-1 text-default-400">
+                      <FaCalendarAlt size={12} />
+                      <span className="text-xs">
+                        {getDateLabel(place)}{formatDate(place)}
+                      </span>
+                    </div>
 
-                  {/* เพิ่ม ViewCounter ที่นี่ */}
-                  <ViewCounter
-                    pageType="place"
-                    slug={place.slug.current}
-                    className="text-xs flex items-center gap-1"
-                  />
+                    {/* เพิ่ม ViewCounter ที่นี่ */}
+                    <ViewCounter
+                      pageType="place"
+                      slug={place.slug.current}
+                      className="text-xs flex items-center gap-1 text-default-400"
+                      iconClassName="text-default-400"
+                    />
+                  </div>
                 </div>
               </CardFooter>
             </Card>

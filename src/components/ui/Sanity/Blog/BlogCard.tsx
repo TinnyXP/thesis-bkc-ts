@@ -135,22 +135,25 @@ export default function BlogCard({ posts }: BlogCardProps) {
                 </div>
               </CardBody>
               <CardFooter className="flex justify-between items-start">
-                <div className="flex flex-col text-left">
-                  <p className="w-full max-w-[320px] overflow-hidden text-ellipsis text-sm uppercase font-bold line-clamp-1">{post.title}</p>
+                <div className="w-full max-w-[320px] flex flex-col text-left">
+                  <p className="overflow-hidden text-ellipsis text-sm uppercase font-bold line-clamp-1">{post.title}</p>
 
-                  <div className="flex items-center gap-1 mt-1 text-default-400">
-                    <FaCalendarAlt size={12} />
-                    <span className="text-xs">
-                      {getDateLabel(post)}{formatDate(post)}
-                    </span>
+                  <div className="flex flex-row justify-between">
+                    <div className="flex items-center gap-1 mt-1 text-default-400">
+                      <FaCalendarAlt size={12} />
+                      <span className="text-xs">
+                        {getDateLabel(post)}{formatDate(post)}
+                      </span>
+                    </div>
+
+                    {/* เพิ่ม ViewCounter ที่นี่ */}
+                    <ViewCounter
+                      pageType="blog"
+                      slug={post.slug.current}
+                      className="text-xs flex items-center gap-1 text-default-400"
+                      iconClassName="text-default-400"
+                    />
                   </div>
-                  
-                  {/* เพิ่ม ViewCounter ที่นี่ */}
-                  <ViewCounter
-                    pageType="blog"
-                    slug={post.slug.current}
-                    className="text-xs flex items-center gap-1"
-                  />
                 </div>
               </CardFooter>
             </Card>

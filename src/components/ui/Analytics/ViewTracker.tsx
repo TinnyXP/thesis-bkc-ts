@@ -15,8 +15,21 @@ export default function ViewTracker({ pageType, slug }: ViewTrackerProps) {
   useEffect(() => {
     const trackPageView = async () => {
       try {
+        // สร้าง key สำหรับเก็บใน localStorage
+        const today = new Date();
+        // ปรับเวลาเป็น UTC+7 (เวลาไทย)
+        today.setHours(today.getHours() + 7);
+        const dateString = today.toISOString().split('T')[0];
+        const trackingKey = `view_tracked_${pageType}_${slug}_${dateString}`;
+
+        // ตรวจสอบว่าได้ทำการติดตามแล้วหรือไม่ (ในระดับ client)
+        if (localStorage.getItem(trackingKey)) {
+          console.log(`[ViewTracker] Already tracked: ${pageType} - ${slug} on ${dateString}`);
+          return;
+        }
+
         // ส่งข้อมูลการเข้าชมไปยัง API
-        await fetch('/api/views/track', {
+        const response = await fetch('/api/views/track', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -26,6 +39,14 @@ export default function ViewTracker({ pageType, slug }: ViewTrackerProps) {
             slug: slug,
           }),
         });
+
+        const result = await response.json();
+        
+        // ถ้าสำเร็จ ให้บันทึกลง localStorage เพื่อป้องกันการติดตามซ้ำ
+        if (result.success) {
+          localStorage.setItem(trackingKey, 'true');
+          console.log(`[ViewTracker] Successfully tracked: ${pageType} - ${slug}`);
+        }
       } catch (error) {
         console.error("Error tracking page view:", error);
       }
@@ -34,10 +55,6 @@ export default function ViewTracker({ pageType, slug }: ViewTrackerProps) {
     // เรียกฟังก์ชันเมื่อคอมโพเนนต์ถูกโหลด
     trackPageView();
     
-    // ใช้สำหรับการทำงานใน development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[ViewTracker] Tracking page view: ${pageType} - ${slug}`);
-    }
   }, [pageType, slug, pathname]);
 
   // คอมโพเนนต์นี้ไม่แสดงผลใดๆ ในหน้าเว็บ

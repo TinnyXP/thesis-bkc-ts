@@ -20,8 +20,11 @@ export async function POST(request: NextRequest) {
     const forwarded = request.headers.get('x-forwarded-for');
     const ip = forwarded ? forwarded.split(/, /)[0] : request.headers.get('x-real-ip') || '0.0.0.0';
     
-    // สร้างวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0];
+    // สร้างวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD ตามเวลาไทย (UTC+7)
+    const now = new Date();
+    // ปรับเวลาเป็น UTC+7 (เวลาไทย)
+    now.setHours(now.getHours() + 7);
+    const today = now.toISOString().split('T')[0];
     
     await connectDB();
     
@@ -34,13 +37,14 @@ export async function POST(request: NextRequest) {
     });
     
     if (existingView) {
-      // ถ้ามีการเข้าชมแล้ว ให้อัพเดตจำนวนการเข้าชม
-      await PageView.findByIdAndUpdate(
-        existingView._id,
-        { $inc: { view_count: 1 } }
-      );
+      // ถ้ามีการเข้าชมแล้วในวันนี้ ไม่ต้องเพิ่มจำนวนการเข้าชม
+      // แค่ return success เฉยๆ
+      return NextResponse.json({
+        success: true,
+        message: "Already tracked today"
+      });
     } else {
-      // ถ้ายังไม่มีการเข้าชม ให้สร้างข้อมูลใหม่
+      // ถ้ายังไม่มีการเข้าชมในวันนี้ ให้สร้างข้อมูลใหม่ โดยกำหนด view_count เป็น 1 เท่านั้น
       await PageView.create({
         page_type,
         slug,

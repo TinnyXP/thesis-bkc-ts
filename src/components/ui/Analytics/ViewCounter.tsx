@@ -19,7 +19,7 @@ export default function ViewCounter({
   showIcon = true,
   className = "text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-1",
   textClassName = "",
-  iconClassName = "text-zinc-400"
+  iconClassName = "text-default-400" // เปลี่ยนเป็น text-default-400 แทน text-zinc-400
 }: ViewCounterProps) {
   const [viewCount, setViewCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
