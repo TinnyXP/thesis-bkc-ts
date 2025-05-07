@@ -5,7 +5,7 @@ import { ImageModal, SlugBreadcrumb, SlugShareButton, ReviewSection, YouTubeEmbe
 import { getPlaceBySlug } from "@/lib/sanity/placeQueries";
 import { urlFor } from "@/lib/sanity/image";
 import { createPlaceMetadata } from "@/lib/sanity/placeMetadata";
-import { Chip, Card, CardBody, Link } from "@heroui/react";
+import { Chip, Card, CardBody, Link, Button } from "@heroui/react";
 import { PortableText } from "next-sanity";
 import { Metadata } from "next";
 import { headers } from 'next/headers';
@@ -99,7 +99,7 @@ const portableTextComponents: Partial<PortableTextReactComponents> = {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline"
+          className="text-primary-color underline"
         >
           {children}
         </a>
@@ -131,9 +131,7 @@ const PlaceNotFound = () => (
         <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
           ขออภัย ไม่พบสถานที่ท่องเที่ยวที่คุณกำลังมองหา
         </p>
-        <Link href="/place" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-          กลับไปยังหน้ารวมสถานที่ท่องเที่ยว
-        </Link>
+        <Button as={Link} href="/place" color="primary" size="lg" className="font-bold" >กลับไปยังหน้ารวมสถานที่ท่องเที่ยว</Button>
       </div>
     </div>
   </div>

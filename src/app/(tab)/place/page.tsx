@@ -63,7 +63,7 @@ export default async function PlacePage() {
                 >
                   <CardBody className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-primary-color/10 dark:bg-primary-color/20 flex items-center justify-center flex-shrink-0">
                         {type.icon ? (
                           <span className="text-primary-color text-lg">{type.icon}</span>
                         ) : (
@@ -92,7 +92,7 @@ export default async function PlacePage() {
             <SectionHeading
               title="พื้นที่ในบางกะเจ้า"
               subtitle="ตำบล"
-              icon={<FaMap className="text-blue-600" />}
+              icon={<FaMap className="text-emerald-600" />}
               description="ค้นพบสถานที่ท่องเที่ยวในแต่ละตำบลของบางกะเจ้า"
             />
             
@@ -108,8 +108,8 @@ export default async function PlacePage() {
                 >
                   <CardBody className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                        <FaBuilding className="text-blue-600 text-lg" />
+                      <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                        <FaBuilding className="text-emerald-600 text-lg" />
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold">{district.title}</h3>

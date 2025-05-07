@@ -1,7 +1,7 @@
 import React from "react";
 import { CategoryCardList } from "@/components";
 import { getCategoryBySlug } from "@/lib/sanity";
-import { Link } from "@heroui/react";
+import { Button, Link } from "@heroui/react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
@@ -28,9 +28,7 @@ const CategoryNotFound = () => (
       <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
         ขออภัย ไม่พบหมวดหมู่ที่คุณกำลังมองหา
       </p>
-      <Link href="/blog" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-        กลับไปยังหน้าบทความ
-      </Link>
+      <Button as={Link} href="/blog" color="primary" size="lg" className="font-bold" >กลับไปยังหน้าบทความ</Button>
     </div>
   </div>
 );

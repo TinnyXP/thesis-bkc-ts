@@ -3,7 +3,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { CommentSection, ImageModal, SlugBreadcrumb, SlugShareButton, YouTubeEmbed, AudioPlayer } from "@/components";
 import { getPostBySlug, urlFor, formatThaiDate, createPostMetadata } from "@/lib/sanity";
-import { Image, Link } from "@heroui/react";
+import { Button, Image, Link } from "@heroui/react";
 import { PortableText } from "next-sanity";
 import { Metadata } from "next";
 import { headers } from 'next/headers';
@@ -106,7 +106,7 @@ const portableTextComponents: Partial<PortableTextReactComponents> = {
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline"
+          className="text-primary-color underline"
         >
           {children}
         </a>
@@ -137,9 +137,7 @@ const PostNotFound = () => (
       <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8">
         ขออภัย ไม่พบบทความที่คุณกำลังมองหา
       </p>
-      <Link href="/blog" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-        กลับไปยังหน้าบทความ
-      </Link>
+      <Button as={Link} href="/blog" color="primary" size="lg" className="font-bold" >กลับไปยังหน้าบทความ</Button>
     </div>
   </div>
 );

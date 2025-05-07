@@ -54,7 +54,7 @@ export default async function PlaceDistrictPage({
           <div className="mb-6">
             <Link 
               href="/place"
-              className="text-blue-600 hover:underline flex items-center gap-1 mb-4"
+              className="text-primary-color hover:underline flex items-center gap-1 mb-4"
             >
               &larr; กลับไปหน้ารวมสถานที่ท่องเที่ยว
             </Link>
