@@ -29,7 +29,7 @@ export default function CompleteProfilePage() {
     // ตรวจสอบว่าเป็นผู้ใช้ใหม่หรือไม่
     if (status === "authenticated") {
       if (!session.user.isNewUser) {
-        router.replace('/welcome');
+        router.replace('/');
       }
     } else if (status === "unauthenticated") {
       router.replace('/login');
@@ -110,7 +110,7 @@ export default function CompleteProfilePage() {
         // ให้ใช้ window.location.href เพื่อทำการ full page reload
         // เพื่อให้ได้ session ล่าสุดจากเซิร์ฟเวอร์
         setTimeout(() => {
-          router.replace('/welcome');
+          router.replace('/');
         }, 500);
       } else {
         setError(data.message || "ไม่สามารถสร้างโปรไฟล์ได้");

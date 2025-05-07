@@ -5,6 +5,7 @@ export { default as Loading } from './layout/Loading';
 export { default as PageHeader } from './layout/PageHeader';
 export { default as ScrollToTop } from './layout/ScrollToTop';
 export { default as ToggleTheme } from './layout/ToggleTheme';
+export { default as WelcomeBanner } from './layout/WelcomeBanner';
 export { default as SectionHeading } from './layout/SectionHeading';
 export { default as AccountStatusChecker } from './layout/AccountStatusChecker';
 

@@ -45,7 +45,7 @@ export default function LoginPage() {
         if (session.user.isNewUser) {
           router.replace('/complete-profile');
         } else {
-          router.replace('/welcome');
+          router.replace('/');
         }
       }
     };
@@ -86,7 +86,7 @@ export default function LoginPage() {
       if (session.user.isNewUser) {
         router.replace('/complete-profile');
       } else {
-        router.replace('/welcome');
+        router.replace('/');
       }
     }
   }, [session, router]);
@@ -123,7 +123,7 @@ export default function LoginPage() {
         if (session.user.isNewUser) {
           router.replace('/complete-profile');
         } else {
-          router.replace('/welcome');
+          router.replace('/');
         }
       }
     };
@@ -264,7 +264,7 @@ export default function LoginPage() {
         // เมื่อเข้าสู่ระบบสำเร็จ
         showToast("เข้าสู่ระบบสำเร็จ", "success");
         // หากเข้าสู่ระบบสำเร็จ ให้เปลี่ยนเส้นทางไปยังหน้า welcome
-        router.replace("/welcome");
+        router.replace("/");
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
@@ -276,7 +276,7 @@ export default function LoginPage() {
   };
 
   const handleLineLogin = () => {
-    signIn("line", { callbackUrl: "/welcome" });
+    signIn("line", { callbackUrl: "/" });
   };
 
   // ฟังก์ชันสำหรับการขอรหัส OTP ใหม่

@@ -1,7 +1,7 @@
 // src/app/page.tsx
 
 import { Metadata } from "next";
-import { AccordionMain, BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar, PlacePreview } from "@/components";
+import { AccordionMain, BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar, PlacePreview, WelcomeBanner } from "@/components";
 import { ViewTracker } from "@/components";
 
 // กำหนด Metadata สำหรับ SEO
@@ -44,6 +44,7 @@ export default function HomePage() {
       <ViewTracker pageType="homepage" slug="home" />
 
       <NavBar />
+      <WelcomeBanner /> {/* เพิ่ม WelcomeBanner ตรงนี้ */}
       
       <main>
         <HeroSection />

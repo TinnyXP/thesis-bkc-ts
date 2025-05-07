@@ -353,6 +353,8 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: "/login",
     error: "/error",
+    // เพิ่มเพื่อให้หลังจาก signIn สำเร็จให้ไปที่หน้าหลัก
+    newUser: "/" // ถ้ามี option นี้
   },
   debug: process.env.NODE_ENV === "development",
 };
