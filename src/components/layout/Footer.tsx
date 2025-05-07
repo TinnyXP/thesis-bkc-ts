@@ -15,7 +15,7 @@ export default function Footer() {
       <FooterBody />
       <div className="w-full flex justify-center items-center py-1.5 bg-black border-t-small border-default-200/70 rounded-t-2xl">
         <span className="text-xs font-medium flex leading-none text-zinc-200">
-          &copy; 2024 Bangkrajao. เพื่อการศึกษาเท่านั้น
+          &copy; 2024 Bangkachaokun. เพื่อการศึกษาเท่านั้น
         </span>
         {/* <span className="text-xs font-medium flex leading-none text-zinc-200">
           &copy; 2024 Bangkrajao. สงวนลิขสิทธิ์ทั้งหมด | เพื่อการศึกษาเท่านั้น
