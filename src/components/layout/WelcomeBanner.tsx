@@ -23,10 +23,10 @@ export default function WelcomeBanner() {
       <div className="pointer-events-auto flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-large sm:rounded-full border-1 border-divider bg-gradient-to-r from-white/80 via-primary-50/80 to-white/80 dark:from-zinc-950/90 dark:via-zinc-950/70 dark:to-zinc-950/90 px-3 py-3 shadow-lg backdrop-blur-xl w-full sm:max-w-lg">
         <div className="flex flex-col items-center sm:ml-3 sm:items-start">
           <div className="flex gap-2">
-            <p className="text-sm text-foreground font-semibold line-clamp-1">
+            <p className="text-md text-foreground font-semibold line-clamp-1">
               สวัสดี, คุณ {session.user.name}!
             </p>
-            <p className="text-sm text-foreground">
+            <p className="text-md text-foreground">
               ยินดีต้อนรับสู่บางกะเจ้า
             </p>
           </div>
@@ -58,7 +58,7 @@ export default function WelcomeBanner() {
 
         {/* ปุ่มปิดสำหรับหน้าจอใหญ่ - แสดงเป็นสี่เหลี่ยมจัตุรัส */}
         <Button
-          className="group relative overflow-hidden bg-transparent hidden sm:flex mt-0 h-10 w-10"
+          className="group relative overflow-hidden bg-transparent hidden sm:flex mt-0"
           color="default"
           aria-label="ปิด Banner"
           onPress={() => setIsVisible(false)}
@@ -70,7 +70,7 @@ export default function WelcomeBanner() {
           }}
           variant="bordered"
           radius="full"
-          size="sm"
+          size="md"
           isIconOnly
         >
           <IoClose size={24} />
