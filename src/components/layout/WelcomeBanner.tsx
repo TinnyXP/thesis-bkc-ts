@@ -20,7 +20,7 @@ export default function WelcomeBanner() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 w-full px-2 pb-2 sm:flex sm:justify-center sm:px-4 lg:px-8 z-50">
-      <div className="pointer-events-auto flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-large sm:rounded-full border-1 border-divider bg-gradient-to-r from-white/80 via-primary-50/80 to-white/80 dark:from-zinc-900/80 dark:via-zinc-800/80 dark:to-zinc-900/80 px-3 py-3 shadow-lg backdrop-blur-xl w-full sm:max-w-lg">
+      <div className="pointer-events-auto flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-large sm:rounded-full border-1 border-divider bg-gradient-to-r from-white/80 via-primary-50/80 to-white/80 dark:from-zinc-950/90 dark:via-zinc-950/70 dark:to-zinc-950/90 px-3 py-3 shadow-lg backdrop-blur-xl w-full sm:max-w-lg">
         <div className="flex flex-col items-center sm:ml-3 sm:items-start">
           <div className="flex gap-2">
             <p className="text-sm text-foreground font-semibold line-clamp-1">
