@@ -12,7 +12,6 @@
     "@heroui/react": "^2.7.5",
     "@portabletext/react": "^3.2.1",
     "@sanity/image-url": "^1.1.0",
-    "@types/react-speech-recognition": "^3.9.6",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.0",
     "dayjs": "^1.11.13",
@@ -29,7 +28,6 @@
     "react-dom": "^18",
     "react-i18next": "^15.4.1",
     "react-icons": "^5.5.0",
-    "react-speech-recognition": "^4.0.1",
     "swr": "^2.3.3"
   },
   "devDependencies": {
