@@ -2,8 +2,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Input, Button } from "@heroui/react";
-import { FaSearch } from "react-icons/fa";
+import { Input, Button, Tooltip } from "@heroui/react";
+import { FaSearch, FaMicrophone, FaStop } from "react-icons/fa";
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { AiFillAlipayCircle } from "react-icons/ai";
 
 interface SearchBarProps {
   placeholder?: string;
@@ -20,16 +22,45 @@ export default function SearchBar({
 }: SearchBarProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  
+  // สร้างฟังก์ชันที่จะเรียกเมื่อมีข้อความใหม่
+  const { transcript, listening, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition({
+    commands: [{
+      command: '*',
+      callback: (command) => {
+        setSearchTerm(command);
+      },
+      matchInterim: true
+    }]
+  });
 
   // Hydration fix
   useEffect(() => {
     setIsMounted(true);
   }, []);
+  
+  // อัพเดต searchTerm เมื่อ transcript เปลี่ยน
+  useEffect(() => {
+    if (transcript) {
+      setSearchTerm(transcript);
+    }
+  }, [transcript]);
+
+  const toggleListening = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      // เริ่มบันทึกเสียงด้วยภาษาไทย
+      SpeechRecognition.startListening({ 
+        continuous: true, 
+        language: 'th-TH' 
+      });
+    }
+  };
 
   // ค้นหาเมื่อกด Enter
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      // ส่งค่า searchTerm ไปค้นหาไม่ว่าจะมีค่าหรือไม่ก็ตาม
       onSearch(searchTerm);
     }
   };
@@ -37,20 +68,22 @@ export default function SearchBar({
   // ล้างการค้นหา
   const handleClear = () => {
     setSearchTerm("");
-    // เรียกฟังก์ชัน onSearch ด้วยค่าว่างเพื่อรีเซ็ตการค้นหา
+    resetTranscript();
     onSearch("");
+    // หยุดการบันทึกเสียงเมื่อล้างข้อความ
+    if (listening) {
+      SpeechRecognition.stopListening();
+    }
   };
 
   // เมื่อกดปุ่มค้นหา
   const handleSearch = () => {
-    // ส่งค่า searchTerm ไปค้นหาไม่ว่าจะมีค่าหรือไม่ก็ตาม
     onSearch(searchTerm);
   };
 
   // เมื่อมีการเปลี่ยนแปลงค่า searchTerm
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    // ไม่ต้องเรียก onSearch ทันทีเมื่อพิมพ์ เพราะอาจทำให้การค้นหาถี่เกินไป
   };
 
   if (!isMounted) {
@@ -61,7 +94,7 @@ export default function SearchBar({
     (contentType === 'blog' ? "ค้นหาบทความ..." : "ค้นหาสถานที่ท่องเที่ยว...");
 
   return (
-    <div className={`flex flex-col sm:flex-row gap-2 w-full ${className}`}>
+    <div className={`flex gap-2 w-full ${className}`}>
       <div className="relative flex-1">
         <Input
           isClearable
@@ -75,6 +108,13 @@ export default function SearchBar({
           onKeyPress={handleKeyPress}
           onClear={handleClear}
           startContent={<FaSearch className="text-default-400" />}
+          endContent={
+            listening && (
+              <div className="flex items-center">
+                <span className="animate-pulse text-primary-color mr-2 text-xs">กำลังฟัง...</span>
+              </div>
+            )
+          }
           classNames={{
             input: "text-md",
           }}
@@ -82,13 +122,27 @@ export default function SearchBar({
       </div>
 
       <div className="flex gap-2">
+        {browserSupportsSpeechRecognition && (
+          <Tooltip content={listening ? "หยุด" : "พูดเพื่อค้นหา"}>
+            <Button
+              isIconOnly
+              color={listening ? "danger" : "primary"}
+              variant={listening ? "solid" : "ghost"}
+              radius="full"
+              onPress={toggleListening}
+            >
+              {listening ? <FaStop size={16} /> : <FaMicrophone size={18} />}
+            </Button>
+          </Tooltip>
+        )}
+        
         <Button
           isIconOnly
           color="primary"
           radius="full"
           onPress={handleSearch}
         >
-          <FaSearch size={20} />
+          <FaSearch size={18} />
         </Button>
       </div>
     </div>

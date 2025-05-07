@@ -151,6 +151,7 @@ export default function BlogCard({ posts }: BlogCardProps) {
 
       {totalPages > 1 && (
         <Pagination
+          showControls
           variant="light"
           initialPage={1}
           total={totalPages}

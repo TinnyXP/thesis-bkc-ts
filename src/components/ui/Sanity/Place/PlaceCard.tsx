@@ -174,6 +174,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
 
       {totalPages > 1 && (
         <Pagination
+          showControls
           variant="light"
           initialPage={1}
           total={totalPages}
