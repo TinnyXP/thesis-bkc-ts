@@ -14,6 +14,7 @@ import { FaQuoteLeft, FaMapMarkerAlt, FaClock, FaPhone, FaGlobe, FaFacebook, FaL
 import Script from "next/script";
 import { IoMdContact } from "react-icons/io";
 
+import { ViewTracker, ViewCounter } from "@/components";
 
 // กำหนด metadata แบบ dynamic จากข้อมูลสถานที่ท่องเที่ยว
 export async function generateMetadata(
@@ -194,6 +195,8 @@ export default async function PlacePage({
 
     return (
       <div className="min-h-screen">
+        {/* เพิ่ม ViewTracker สำหรับติดตามการเข้าชม */}
+        <ViewTracker pageType="place" slug={params.slug} />
 
         {/* เพิ่ม JSON-LD schema สำหรับ SEO */}
         {placeMetadata?.jsonLd && (
@@ -258,6 +261,8 @@ export default async function PlacePage({
                     </span>
                   </p>
                 )}
+                {/* เพิ่ม ViewCounter ที่นี่ */}
+                <ViewCounter pageType="place" slug={params.slug} />
               </div>
             </div>
             {/* ปุ่มแชร์ */}

@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardBody, CardFooter, Chip, Image, Pagination } from "@heroui/react";
 import { Place } from '@/lib/sanity/schema';
-import { FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaCalendarAlt, FaAd } from "react-icons/fa";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
+
+import { ViewCounter } from "@/components";
 
 // ตั้งค่าภาษาไทยสำหรับ dayjs
 dayjs.locale("th");
@@ -56,15 +58,15 @@ export default function PlaceCard({ places }: PlaceCardProps) {
   const getDateLabel = (place: Place): string => {
     const updatedDate = place._updatedAt || place.publishedAt;
     if (!updatedDate) return "";
-    
+
     const now = dayjs();
     const date = dayjs(updatedDate);
     const diffDays = now.diff(date, 'day');
-    
+
     if (diffDays < 1) return "วันนี้ • ";
     if (diffDays < 2) return "เมื่อวาน • ";
     if (diffDays < 7) return "";
-    
+
     return "";
   };
 
@@ -72,7 +74,7 @@ export default function PlaceCard({ places }: PlaceCardProps) {
   const formatDate = (place: Place): string => {
     const dateString = place._updatedAt || place.publishedAt;
     if (!dateString) return "";
-    
+
     return dayjs(dateString).format("D MMMM YYYY");
   };
 
@@ -165,6 +167,13 @@ export default function PlaceCard({ places }: PlaceCardProps) {
                       {getDateLabel(place)}{formatDate(place)}
                     </span>
                   </div>
+
+                  {/* เพิ่ม ViewCounter ที่นี่ */}
+                  <ViewCounter
+                    pageType="place"
+                    slug={place.slug.current}
+                    className="text-xs flex items-center gap-1"
+                  />
                 </div>
               </CardFooter>
             </Card>

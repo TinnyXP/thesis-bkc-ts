@@ -11,6 +11,8 @@ import { PortableTextReactComponents } from "@portabletext/react";
 import { FaQuoteLeft } from "react-icons/fa6";
 import Script from "next/script";
 
+import { ViewTracker, ViewCounter } from "@/components";
+
 // กำหนด metadata แบบ dynamic จากข้อมูลบทความ
 export async function generateMetadata(
   { params }: { params: { category: string; slug: string } }
@@ -184,6 +186,9 @@ export default async function PostPage({
 
     return (
       <div>
+        {/* เพิ่ม ViewTracker สำหรับติดตามการเข้าชม */}
+        <ViewTracker pageType="blog" slug={params.slug} />
+
         {/* เพิ่ม JSON-LD schema สำหรับ SEO */}
         {postMetadata?.jsonLd && (
           <Script
@@ -229,6 +234,8 @@ export default async function PostPage({
                 <p className="text-base">
                   📅 เผยแพร่: {formatThaiDate(post.publishedAt)}
                 </p>
+                {/* เพิ่ม ViewCounter ที่นี่ */}
+                <ViewCounter pageType="blog" slug={params.slug} />
                 {post.author && (
                   <div className="flex items-center gap-2">
                     {post.author.image && (

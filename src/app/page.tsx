@@ -2,6 +2,7 @@
 
 import { Metadata } from "next";
 import { AccordionMain, BlogPreview, CTASection, FeatureSection, Footer, HeroSection, NavBar, PlacePreview } from "@/components";
+import { ViewTracker } from "@/components";
 
 // กำหนด Metadata สำหรับ SEO
 export const metadata: Metadata = {
@@ -39,6 +40,9 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="font-[family-name:var(--font-line-seed-sans)] min-h-screen bg-white dark:bg-black">
+      {/* เพิ่ม ViewTracker สำหรับหน้าหลัก */}
+      <ViewTracker pageType="homepage" slug="home" />
+
       <NavBar />
       
       <main>

@@ -60,3 +60,7 @@ export { default as CreateForumModal } from './ui/Community/CreateForumModal';
 export { default as CreateComplaintModal } from './ui/Community/CreateComplaintModal';
 export { default as ForumDetail } from './ui/Community/ForumDetail';
 export { default as ComplaintDetail } from './ui/Community/ComplaintDetail';
+
+// Analytics Components
+export { default as ViewTracker } from './ui/Analytics/ViewTracker';
+export { default as ViewCounter } from './ui/Analytics/ViewCounter';

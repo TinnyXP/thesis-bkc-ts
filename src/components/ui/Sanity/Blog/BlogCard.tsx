@@ -8,6 +8,8 @@ import { Post } from "@/lib/sanity/schema";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 
+import { ViewCounter } from "@/components";
+
 // ตั้งค่าภาษาไทยสำหรับ dayjs
 dayjs.locale("th");
 
@@ -58,15 +60,15 @@ export default function BlogCard({ posts }: BlogCardProps) {
   const getDateLabel = (post: Post): string => {
     const updatedDate = post._updatedAt || post.publishedAt;
     if (!updatedDate) return "";
-    
+
     const now = dayjs();
     const date = dayjs(updatedDate);
     const diffDays = now.diff(date, 'day');
-    
+
     if (diffDays < 1) return "วันนี้ • ";
     if (diffDays < 2) return "เมื่อวาน • ";
     if (diffDays < 7) return "";
-    
+
     return "";
   };
 
@@ -74,7 +76,7 @@ export default function BlogCard({ posts }: BlogCardProps) {
   const formatDate = (post: Post): string => {
     const dateString = post._updatedAt || post.publishedAt;
     if (!dateString) return "";
-    
+
     return dayjs(dateString).format("D MMMM YYYY");
   };
 
@@ -142,6 +144,13 @@ export default function BlogCard({ posts }: BlogCardProps) {
                       {getDateLabel(post)}{formatDate(post)}
                     </span>
                   </div>
+                  
+                  {/* เพิ่ม ViewCounter ที่นี่ */}
+                  <ViewCounter
+                    pageType="blog"
+                    slug={post.slug.current}
+                    className="text-xs flex items-center gap-1"
+                  />
                 </div>
               </CardFooter>
             </Card>
