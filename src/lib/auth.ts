@@ -82,80 +82,107 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-
-        // ใช้ type OTPUserCredentials แทน
+      
+        // ตรวจสอบความถูกต้องของข้อมูลที่ส่งมา
+        if (!credentials.email || !credentials.otp) {
+          console.log("Missing email or OTP in credentials");
+          return null;
+        }
+      
         const otpCredentials: OTPUserCredentials = {
           email: credentials.email,
           otp: credentials.otp
         };
-
+      
         const { email, otp } = otpCredentials;
+        
         try {
           await connectDB();
-
-          // ตรวจสอบ OTP
+      
+          // ตรวจสอบ OTP อย่างละเอียด
           const validOtp = await OTP.findOne({
             email,
             otp_code: otp,
             is_used: false,
             expires_at: { $gt: new Date() }
           });
-
+      
           if (!validOtp) {
-            console.log("Invalid OTP for email:", email);
+            console.log("Invalid OTP for email:", email, "- OTP not found or already used or expired");
             return null;
           }
-
-          // ทำเครื่องหมายว่า OTP ถูกใช้งานแล้ว
-          await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
-
+      
           // ค้นหาผู้ใช้
           const user = await UserModel.findOne({ email, provider: 'otp' });
-
-          // ใน authorize callback ของ OTP provider
-          if (!user) {
-            // สร้าง bkc_id ใหม่
-            const bkc_id = uuidv4();
-
-            // สร้างผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
-            const newUser = await UserModel.create({
-              email,
-              name: email.split('@')[0], // ใช้ส่วนแรกของอีเมลเป็นชื่อชั่วคราว
-              provider: 'otp',
-              bkc_id, // กำหนดค่า bkc_id ที่สร้างใหม่
-              profile_completed: false
-            });
-
-            // บันทึกประวัติการล็อกอิน
-            await saveLoginHistory(newUser._id.toString(), 'success');
-
-            return {
-              id: newUser._id.toString(),
-              email: newUser.email,
-              name: newUser.name,
-              image: null,
-              provider: 'otp',
-              bkc_id,  // ส่ง bkc_id กลับไป (required)
-              isNewUser: true
-            };
+          let userData;
+      
+          try {
+            // กำหนดค่า isNewUser และสร้างหรือดึงข้อมูลผู้ใช้
+            if (!user) {
+              // สร้าง bkc_id ใหม่
+              const bkc_id = uuidv4();
+      
+              // สร้างผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
+              const newUser = await UserModel.create({
+                email,
+                name: email.split('@')[0], // ใช้ส่วนแรกของอีเมลเป็นชื่อชั่วคราว
+                provider: 'otp',
+                bkc_id, // กำหนดค่า bkc_id ที่สร้างใหม่
+                profile_completed: false,
+                // ไม่ต้องระบุ line_id เพื่อให้เป็น undefined แทนที่จะเป็น null
+              });
+      
+              // บันทึกประวัติการล็อกอิน
+              await saveLoginHistory(newUser._id.toString(), 'success');
+      
+              userData = {
+                id: newUser._id.toString(),
+                email: newUser.email,
+                name: newUser.name,
+                image: null,
+                provider: 'otp',
+                bkc_id,
+                isNewUser: true
+              };
+            } else {
+              // ตรวจสอบสถานะการใช้งานของบัญชี
+              if (!user.is_active) {
+                console.log("Account is disabled:", email);
+                return null;
+              }
+      
+              // บันทึกประวัติการล็อกอิน
+              const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
+      
+              // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
+              try {
+                await sendLoginNotificationEmail(user.email, user.name, clientInfo);
+              } catch (emailError) {
+                console.error("Error sending login notification email:", emailError);
+              }
+      
+              userData = {
+                id: user._id.toString(),
+                name: user.name,
+                email: user.email,
+                image: user.profile_image,
+                provider: 'otp',
+                bkc_id: user.bkc_id,
+                isNewUser: false
+              };
+            }
+      
+            // ทำเครื่องหมายว่า OTP ถูกใช้งานแล้ว - หลังจากทำงานสำเร็จ
+            await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
+      
+            return userData;
+            
+          } catch (userProcessError) {
+            console.error("Error processing user data:", userProcessError);
+            return null;
           }
-
-          // บันทึกประวัติการล็อกอิน
-          const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
-
-          // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
-          sendLoginNotificationEmail(user.email, user.name, clientInfo);
-
-          return {
-            id: user._id.toString(),
-            name: user.name,
-            email: user.email,
-            image: user.profile_image,
-            provider: 'otp',
-            bkc_id: user.bkc_id  // ส่ง bkc_id กลับไป (required)
-          };
-        } catch (error) {
-          console.error("Error in OTP authorize:", error);
+        } catch (dbError) {
+          console.error("Database error in OTP authorize:", dbError);
           return null;
         }
       }
