@@ -15,7 +15,7 @@ const translations = {
   blog: "บล็อก",
 
   // Main menu items
-  history: "ประวัติความเป็นมา",
+  history: "ประวัติ",
   place: "สถานที่ท่องเที่ยว",
   news: "ข่าวสาร",
   community : "ชุมชน",

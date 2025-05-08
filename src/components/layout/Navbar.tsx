@@ -152,7 +152,7 @@ export default function NavBar() {
       </NavbarContent>
 
       {/* Right Content */}
-      <NavbarContent className="hidden md:flex gap-1.5" justify="end">
+      <NavbarContent className="hidden md:flex gap-2" justify="end">
         <NavbarItem>
           {session ? (
             <ProfileAvatar size="md" />
