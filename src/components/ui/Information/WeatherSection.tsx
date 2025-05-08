@@ -182,7 +182,7 @@ export default function WeatherSection() {
   return (
     <div className="py-8">
       <SectionHeading
-        title="สภาพอากาศปัจจุบันในบางกะเจ้า"
+        title="สภาพอากาศในบางกะเจ้า"
         description="ข้อมูลคุณภาพอากาศและสภาพอากาศแบบเรียลไทม์"
       />
 
