@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardBody, CardHeader } from "@heroui/react";
+import { Card, CardBody, CardHeader, Button } from "@heroui/react";
 import { BiWind } from "react-icons/bi";
 import { FaCloud, FaTemperatureHigh } from "react-icons/fa";
 import { BsDropletHalf } from "react-icons/bs";
@@ -65,48 +65,53 @@ export default function WeatherSection() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // เรียก API ข้อมูลคุณภาพอากาศและข้อมูลสภาพอากาศพร้อมกัน
-        const [airQualityResponse, weatherResponse] = await Promise.all([
-          fetch("/api/airquality"),
-          fetch("/api/weather-tmd")
-        ]);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // เรียก API ข้อมูลคุณภาพอากาศและข้อมูลสภาพอากาศพร้อมกัน
+      const [airQualityResponse, weatherResponse] = await Promise.all([
+        fetch("/api/airquality"),
+        fetch("/api/weather-tmd")
+      ]);
 
-        // ตรวจสอบการตอบสนองจาก API คุณภาพอากาศ
-        if (!airQualityResponse.ok) {
-          throw new Error("ไม่สามารถโหลดข้อมูลคุณภาพอากาศได้");
-        }
-
-        // ตรวจสอบการตอบสนองจาก API สภาพอากาศ TMD
-        if (!weatherResponse.ok) {
-          throw new Error("ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
-        }
-
-        // แปลงข้อมูลคุณภาพอากาศเป็น JSON
-        const airQualityData = await airQualityResponse.json();
-        
-        // แปลงข้อมูลสภาพอากาศเป็น JSON
-        const weatherData = await weatherResponse.json();
-
-        setAirQuality({
-          pm25: airQualityData.pm25,
-          updatedAt: airQualityData.updatedAt
-        });
-
-        setWeatherData(weatherData);
-
-      } catch (err) {
-        console.error("Error fetching weather data:", err);
-        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดข้อมูล");
-      } finally {
-        setLoading(false);
+      // ตรวจสอบการตอบสนองจาก API คุณภาพอากาศ
+      if (!airQualityResponse.ok) {
+        throw new Error("ไม่สามารถโหลดข้อมูลคุณภาพอากาศได้");
       }
-    };
 
+      // ตรวจสอบการตอบสนองจาก API สภาพอากาศ TMD
+      if (!weatherResponse.ok) {
+        throw new Error("ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
+      }
+
+      // แปลงข้อมูลคุณภาพอากาศเป็น JSON
+      const airQualityData = await airQualityResponse.json();
+      
+      // แปลงข้อมูลสภาพอากาศเป็น JSON
+      const weatherData = await weatherResponse.json();
+
+      if (!weatherData.success) {
+        throw new Error(weatherData.message || "ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
+      }
+
+      setAirQuality({
+        pm25: airQualityData.pm25,
+        updatedAt: airQualityData.updatedAt
+      });
+
+      setWeatherData(weatherData);
+
+    } catch (err) {
+      console.error("Error fetching weather data:", err);
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -206,7 +211,14 @@ export default function WeatherSection() {
               ) : error ? (
                 <div className="text-center text-danger h-48 flex flex-col items-center justify-center">
                   <p className="mb-2">{error}</p>
-                  <p className="text-sm">โปรดลองใหม่อีกครั้งในภายหลัง</p>
+                  <Button 
+                    color="primary" 
+                    variant="light" 
+                    onClick={fetchData}
+                    className="mt-3"
+                  >
+                    ลองใหม่อีกครั้ง
+                  </Button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
@@ -256,7 +268,14 @@ export default function WeatherSection() {
               ) : error ? (
                 <div className="text-center text-danger h-48 flex flex-col items-center justify-center">
                   <p className="mb-2">{error}</p>
-                  <p className="text-sm">โปรดลองใหม่อีกครั้งในภายหลัง</p>
+                  <Button 
+                    color="primary" 
+                    variant="light" 
+                    onClick={fetchData}
+                    className="mt-3"
+                  >
+                    ลองใหม่อีกครั้ง
+                  </Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

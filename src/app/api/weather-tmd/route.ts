@@ -67,18 +67,18 @@ async function fetchDailyForecast(): Promise<TMDResponse> {
 
   const url = `${baseUrl}?${params.toString()}`;
   
-  try {
-    const response = await fetch(url, { headers });
-    
-    if (!response.ok) {
-      throw new Error(`TMD API responded with status: ${response.status}`);
-    }
-    
-    return await response.json() as TMDResponse;
-  } catch (error) {
-    console.error("Error fetching daily forecast:", error);
-    throw error;
+  // ตรวจสอบว่ามี API token หรือไม่
+  if (!TMD_API_TOKEN) {
+    throw new Error("TMD_API_TOKEN is missing. Cannot fetch weather data without valid token.");
   }
+  
+  const response = await fetch(url, { headers });
+  
+  if (!response.ok) {
+    throw new Error(`TMD API responded with status: ${response.status}`);
+  }
+  
+  return await response.json() as TMDResponse;
 }
 
 // ฟังก์ชันสำหรับเรียกข้อมูลพยากรณ์อากาศรายชั่วโมง
@@ -98,18 +98,18 @@ async function fetchHourlyForecast(): Promise<TMDResponse> {
 
   const url = `${baseUrl}?${params.toString()}`;
   
-  try {
-    const response = await fetch(url, { headers });
-    
-    if (!response.ok) {
-      throw new Error(`TMD API responded with status: ${response.status}`);
-    }
-    
-    return await response.json() as TMDResponse;
-  } catch (error) {
-    console.error("Error fetching hourly forecast:", error);
-    throw error;
+  // ตรวจสอบว่ามี API token หรือไม่
+  if (!TMD_API_TOKEN) {
+    throw new Error("TMD_API_TOKEN is missing. Cannot fetch weather data without valid token.");
   }
+  
+  const response = await fetch(url, { headers });
+  
+  if (!response.ok) {
+    throw new Error(`TMD API responded with status: ${response.status}`);
+  }
+  
+  return await response.json() as TMDResponse;
 }
 
 // กำหนด interface สำหรับข้อมูลที่จะส่งกลับ
@@ -218,6 +218,7 @@ export async function GET(): Promise<Response> {
 
     return NextResponse.json(weatherData);
   } catch (error) {
+    // เมื่อมีข้อผิดพลาด จะส่งกลับข้อความแสดงความผิดพลาดโดยไม่มีการใช้ mock data
     console.error("Error fetching weather data:", error);
     return NextResponse.json({ 
       success: false, 
