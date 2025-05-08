@@ -13,7 +13,8 @@ import { SectionHeading } from "@/components";
 // กำหนด interface สำหรับข้อมูลสภาพอากาศจาก TMD API
 interface WeatherData {
   success: boolean;
-  currentTime: string;
+  requestTime: string;
+  forecastedAt: string;
   location: {
     province: string;
     amphoe: string;
@@ -65,55 +66,60 @@ export default function WeatherSection() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  // ทำให้ fetchData เป็น useCallback เพื่อป้องกันการสร้างฟังก์ชันใหม่ในทุก render
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // เรียก API ข้อมูลคุณภาพอากาศและข้อมูลสภาพอากาศพร้อมกัน
-      const [airQualityResponse, weatherResponse] = await Promise.all([
+      // เรียก API โดยใช้ Promise.allSettled ซึ่งจะไม่ fail แม้ว่า API ใดจะมีปัญหา
+      const [airQualityResult, weatherResult] = await Promise.allSettled([
         fetch("/api/airquality"),
         fetch("/api/weather-tmd")
       ]);
-
-      // ตรวจสอบการตอบสนองจาก API คุณภาพอากาศ
-      if (!airQualityResponse.ok) {
-        throw new Error("ไม่สามารถโหลดข้อมูลคุณภาพอากาศได้");
+      
+      // จัดการผลลัพธ์จาก API airquality
+      if (airQualityResult.status === 'fulfilled' && airQualityResult.value.ok) {
+        const airQualityData = await airQualityResult.value.json();
+        if (airQualityData.success) {
+          setAirQuality({
+            pm25: airQualityData.pm25,
+            updatedAt: airQualityData.updatedAt
+          });
+        }
+      } else {
+        console.warn("ไม่สามารถโหลดข้อมูลคุณภาพอากาศได้");
       }
-
-      // ตรวจสอบการตอบสนองจาก API สภาพอากาศ TMD
-      if (!weatherResponse.ok) {
+      
+      // จัดการผลลัพธ์จาก API weather-tmd
+      if (weatherResult.status === 'fulfilled' && weatherResult.value.ok) {
+        const weatherData = await weatherResult.value.json();
+        if (weatherData.success) {
+          setWeatherData(weatherData);
+        } else {
+          throw new Error(weatherData.message || "ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
+        }
+      } else {
         throw new Error("ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
       }
-
-      // แปลงข้อมูลคุณภาพอากาศเป็น JSON
-      const airQualityData = await airQualityResponse.json();
       
-      // แปลงข้อมูลสภาพอากาศเป็น JSON
-      const weatherData = await weatherResponse.json();
-
-      if (!weatherData.success) {
-        throw new Error(weatherData.message || "ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
+      // ตรวจสอบว่ามีข้อมูลอย่างน้อยหนึ่งอย่าง
+      if (!airQuality && !weatherData) {
+        throw new Error("ไม่สามารถโหลดข้อมูลได้");
       }
-
-      setAirQuality({
-        pm25: airQualityData.pm25,
-        updatedAt: airQualityData.updatedAt
-      });
-
-      setWeatherData(weatherData);
-
+      
     } catch (err) {
       console.error("Error fetching weather data:", err);
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดข้อมูล");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // เรียกใช้ fetchData เมื่อ component mount
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // คำนวณระดับคุณภาพอากาศและสีที่เกี่ยวข้อง
   const getAirQualityLevel = (pm25: number) => {
@@ -179,6 +185,27 @@ export default function WeatherSection() {
 
   const airQualityInfo = airQuality ? getAirQualityLevel(airQuality.pm25) : null;
 
+  // ฟังก์ชันสำหรับจัดรูปแบบวันที่
+  const formatDate = (dateString: string, showTime: boolean = false) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "ไม่มีข้อมูล";
+      
+      // ใช้ toLocaleString สำหรับแสดงวันที่และเวลาในรูปแบบไทย
+      return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        ...(showTime && {
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      });
+    } catch (e) {
+      return "ไม่มีข้อมูล";
+    }
+  };
+
   return (
     <div className="py-8">
       <SectionHeading
@@ -199,7 +226,9 @@ export default function WeatherSection() {
               <div className="flex flex-col">
                 <p className="text-md font-bold">คุณภาพอากาศ</p>
                 <p className="text-small text-default-500">
-                  {loading ? "กำลังโหลดข้อมูล..." : error ? "ไม่พบข้อมูล" : `อัปเดตล่าสุด: ${new Date(airQuality?.updatedAt || "").toLocaleString('th-TH')}`}
+                  {loading ? "กำลังโหลดข้อมูล..." : 
+                   !airQuality ? "ไม่พบข้อมูล" : 
+                   `ข้อมูล ณ วันที่: ${formatDate(airQuality.updatedAt, true)}`}
                 </p>
               </div>
             </CardHeader>
@@ -208,9 +237,9 @@ export default function WeatherSection() {
                 <div className="flex items-center justify-center h-48">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-color"></div>
                 </div>
-              ) : error ? (
-                <div className="text-center text-danger h-48 flex flex-col items-center justify-center">
-                  <p className="mb-2">{error}</p>
+              ) : !airQuality ? (
+                <div className="text-center text-default-500 h-48 flex flex-col items-center justify-center">
+                  <p className="mb-2">ไม่พบข้อมูลคุณภาพอากาศในขณะนี้</p>
                   <Button 
                     color="primary" 
                     variant="light" 
@@ -256,7 +285,9 @@ export default function WeatherSection() {
               <div className="flex flex-col">
                 <p className="text-md font-bold">ข้อมูลสภาพอากาศ</p>
                 <p className="text-small text-default-500">
-                  {loading ? "กำลังโหลดข้อมูล..." : error ? "ไม่พบข้อมูล" : `อัปเดตล่าสุด: ${new Date(weatherData?.currentTime || "").toLocaleString('th-TH')}`}
+                  {loading ? "กำลังโหลดข้อมูล..." : 
+                   !weatherData ? "ไม่พบข้อมูล" : 
+                   `ข้อมูลพยากรณ์ ณ วันที่: ${formatDate(weatherData.forecastedAt, true)}`}
                 </p>
               </div>
             </CardHeader>
@@ -265,9 +296,9 @@ export default function WeatherSection() {
                 <div className="flex items-center justify-center h-48">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-color"></div>
                 </div>
-              ) : error ? (
-                <div className="text-center text-danger h-48 flex flex-col items-center justify-center">
-                  <p className="mb-2">{error}</p>
+              ) : !weatherData ? (
+                <div className="text-center text-default-500 h-48 flex flex-col items-center justify-center">
+                  <p className="mb-2">ไม่พบข้อมูลสภาพอากาศในขณะนี้</p>
                   <Button 
                     color="primary" 
                     variant="light" 
@@ -284,9 +315,9 @@ export default function WeatherSection() {
                       <FaTemperatureHigh className="text-orange-500" />
                       <span className="font-semibold">อุณหภูมิ</span>
                     </div>
-                    <p className="text-2xl font-bold">{weatherData?.current?.temperature || "N/A"}°C</p>
+                    <p className="text-2xl font-bold">{weatherData.current?.temperature || "N/A"}°C</p>
                     <p className="text-sm text-default-500">
-                      รู้สึกเหมือน {Math.round((weatherData?.current?.temperature || 0) * 1.1)}°C
+                      รู้สึกเหมือน {Math.round((weatherData.current?.temperature || 0) * 1.1)}°C
                     </p>
                   </div>
 
@@ -295,11 +326,11 @@ export default function WeatherSection() {
                       <BsDropletHalf className="text-blue-500" />
                       <span className="font-semibold">ความชื้น</span>
                     </div>
-                    <p className="text-2xl font-bold">{weatherData?.current?.humidity || "N/A"}%</p>
+                    <p className="text-2xl font-bold">{weatherData.current?.humidity || "N/A"}%</p>
                     <p className="text-sm text-default-500">
-                      {weatherData?.current?.humidity && weatherData.current.humidity > 70 
+                      {weatherData.current?.humidity && weatherData.current.humidity > 70 
                         ? "ค่อนข้างสูง" 
-                        : weatherData?.current?.humidity && weatherData.current.humidity < 40 
+                        : weatherData.current?.humidity && weatherData.current.humidity < 40 
                         ? "ค่อนข้างต่ำ" 
                         : "ปานกลาง"}
                     </p>
@@ -310,25 +341,25 @@ export default function WeatherSection() {
                       <BiWind className="text-cyan-500" />
                       <span className="font-semibold">ความเร็วลม</span>
                     </div>
-                    <p className="text-2xl font-bold">{weatherData?.current?.windSpeed || "N/A"} km/h</p>
+                    <p className="text-2xl font-bold">{weatherData.current?.windSpeed || "N/A"} km/h</p>
                     <p className="text-sm text-default-500">
-                      ทิศ{getWindDirectionText(weatherData?.current?.windDirection)}
+                      ทิศ{getWindDirectionText(weatherData.current?.windDirection)}
                     </p>
                   </div>
 
                   <div className="p-4 bg-default-100 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="text-gray-500">
-                        {getWeatherIcon(weatherData?.current?.condition)}
+                        {getWeatherIcon(weatherData.current?.condition)}
                       </div>
                       <span className="font-semibold">สภาพอากาศ</span>
                     </div>
                     <p className="text-xl font-bold">
-                      {getWeatherConditionText(weatherData?.current?.condition)}
+                      {getWeatherConditionText(weatherData.current?.condition)}
                     </p>
                     <p className="text-sm text-default-500">
-                      สูงสุด {weatherData?.today?.maxTemperature || "N/A"}°C | 
-                      ต่ำสุด {weatherData?.today?.minTemperature || "N/A"}°C
+                      สูงสุด {weatherData.today?.maxTemperature || "N/A"}°C | 
+                      ต่ำสุด {weatherData.today?.minTemperature || "N/A"}°C
                     </p>
                   </div>
                 </div>
@@ -338,8 +369,8 @@ export default function WeatherSection() {
         </motion.div>
       </div>
 
-      {/* ส่วนของการพยากรณ์อากาศในอนาคต - สามารถเพิ่มเติมได้ */}
-      {!loading && !error && weatherData && (
+      {/* ส่วนแสดงพยากรณ์อากาศล่วงหน้า */}
+      {!loading && weatherData && weatherData.daily && weatherData.daily.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -350,7 +381,7 @@ export default function WeatherSection() {
             <CardHeader>
               <div className="flex gap-3">
                 <FaCloud className="text-primary-color text-2xl" />
-                <p className="text-md font-bold">พยากรณ์อากาศ 7 วัน</p>
+                <p className="text-md font-bold">พยากรณ์อากาศล่วงหน้า {weatherData.daily.length} วัน</p>
               </div>
             </CardHeader>
             <CardBody>
@@ -358,13 +389,13 @@ export default function WeatherSection() {
                 {weatherData.daily.map((day, index) => (
                   <div key={index} className="flex flex-col items-center p-3 rounded-lg bg-default-50">
                     <p className="text-sm font-medium">
-                      {new Date(day.date).toLocaleDateString('th-TH', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {formatDate(day.date)}
                     </p>
                     <div className="my-2">
                       {getWeatherIcon(day.condition)}
                     </div>
-                    <p className="text-sm font-bold">{day.maxTemperature}°C</p>
-                    <p className="text-xs text-default-500">{day.minTemperature}°C</p>
+                    <p className="text-sm font-bold">{day.maxTemperature || "N/A"}°C</p>
+                    <p className="text-xs text-default-500">{day.minTemperature || "N/A"}°C</p>
                     <p className="text-xs mt-1">{getWeatherConditionText(day.condition)}</p>
                   </div>
                 ))}

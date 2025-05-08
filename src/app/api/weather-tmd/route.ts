@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 // กำหนดเวลาในการ revalidate ข้อมูล
 export const revalidate = 1800; // รีเฟรชข้อมูลทุก 30 นาที
+export const dynamic = 'force-dynamic'; // บังคับให้เป็น dynamic route เพื่อไม่ให้ถูกเรียกตอน build
 
 // TMD API token (ควรเก็บใน .env)
 const TMD_API_TOKEN = process.env.TMD_API_TOKEN;
@@ -49,6 +50,7 @@ interface TMDResponse {
       [key: string]: string | number;
     };
     forecasts?: TMDForecast[];
+    issueDate?: string;
   }>;
   [key: string]: unknown;
 }
@@ -72,13 +74,29 @@ async function fetchDailyForecast(): Promise<TMDResponse> {
     throw new Error("TMD_API_TOKEN is missing. Cannot fetch weather data without valid token.");
   }
   
-  const response = await fetch(url, { headers });
-  
-  if (!response.ok) {
-    throw new Error(`TMD API responded with status: ${response.status}`);
+  try {
+    // กำหนด timeout ให้ fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 วินาที
+    
+    const response = await fetch(url, { 
+      headers,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`TMD API responded with status: ${response.status}`);
+    }
+    
+    return await response.json() as TMDResponse;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error("TMD API request timed out after 10 seconds");
+    }
+    throw error;
   }
-  
-  return await response.json() as TMDResponse;
 }
 
 // ฟังก์ชันสำหรับเรียกข้อมูลพยากรณ์อากาศรายชั่วโมง
@@ -103,19 +121,36 @@ async function fetchHourlyForecast(): Promise<TMDResponse> {
     throw new Error("TMD_API_TOKEN is missing. Cannot fetch weather data without valid token.");
   }
   
-  const response = await fetch(url, { headers });
-  
-  if (!response.ok) {
-    throw new Error(`TMD API responded with status: ${response.status}`);
+  try {
+    // กำหนด timeout ให้ fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 วินาที
+    
+    const response = await fetch(url, { 
+      headers,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`TMD API responded with status: ${response.status}`);
+    }
+    
+    return await response.json() as TMDResponse;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error("TMD API request timed out after 10 seconds");
+    }
+    throw error;
   }
-  
-  return await response.json() as TMDResponse;
 }
 
 // กำหนด interface สำหรับข้อมูลที่จะส่งกลับ
 interface WeatherDataResponse {
   success: boolean;
-  currentTime: string;
+  requestTime: string;
+  forecastedAt: string;
   location: {
     province: string;
     amphoe: string;
@@ -165,7 +200,8 @@ export async function GET(): Promise<Response> {
     ]);
 
     // วันที่และเวลาปัจจุบัน
-    const currentTime = new Date().toISOString();
+    const requestTime = new Date().toISOString();
+    const forecastedAt = dailyData.WeatherForecasts?.[0]?.issueDate || hourlyData.WeatherForecasts?.[0]?.issueDate || requestTime;
 
     // ข้อมูลพยากรณ์รายวัน
     const dailyForecasts = dailyData.WeatherForecasts?.[0]?.forecasts || [];
@@ -176,7 +212,8 @@ export async function GET(): Promise<Response> {
     // สร้างข้อมูลที่จะส่งกลับไป
     const weatherData: WeatherDataResponse = {
       success: true,
-      currentTime,
+      requestTime,
+      forecastedAt,
       location: {
         province: location.province,
         amphoe: location.amphoe,

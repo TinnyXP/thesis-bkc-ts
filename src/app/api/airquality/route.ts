@@ -1,7 +1,8 @@
-// src/app/api/weather/route.ts
+// src/app/api/airquality/route.ts
 import { NextResponse } from "next/server";
 
 export const revalidate = 30; // 30 seconds
+export const dynamic = 'force-dynamic'; // บังคับให้เป็น dynamic route เพื่อไม่ให้ถูกเรียกตอน build
 
 export async function GET() {
   try {
@@ -17,8 +18,22 @@ export async function GET() {
       }, { status: 500 });
     }
 
+    // กำหนด timeout ให้ fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 วินาที
+    
     const apiUrl = `http://api.waqi.info/feed/${STATION_ID}/?token=${API_TOKEN}`;
-    const response = await fetch(apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    
     const data = await response.json();
 
     if (!data.data) {
@@ -35,6 +50,15 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching air quality data:", error);
+    
+    // ตรวจสอบประเภทของข้อผิดพลาด
+    if (error instanceof Error && error.name === 'AbortError') {
+      return NextResponse.json({ 
+        success: false, 
+        message: "การเชื่อมต่อ API หมดเวลา กรุณาลองใหม่อีกครั้ง" 
+      }, { status: 504 });
+    }
+    
     return NextResponse.json({ 
       success: false, 
       message: "เกิดข้อผิดพลาดในการดึงข้อมูลสภาพอากาศ",
