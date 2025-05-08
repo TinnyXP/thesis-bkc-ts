@@ -5,7 +5,20 @@ export const revalidate = 30; // 30 seconds
 
 export async function GET() {
   try {
-    const response = await fetch("http://api.waqi.info/feed/A421915/?token=06605c96a372586b4da18f3e888e48e74ec192b1");
+    // ใช้ Environment Variables แทนการระบุค่าแบบ hardcode
+    const API_TOKEN = process.env.AIR_QUALITY_API_TOKEN;
+    const STATION_ID = process.env.AIR_QUALITY_STATION_ID || "A421915";
+    
+    if (!API_TOKEN) {
+      console.error("AIR_QUALITY_API_TOKEN is not defined in environment variables");
+      return NextResponse.json({ 
+        success: false, 
+        message: "ไม่สามารถเชื่อมต่อ API ได้ (ไม่พบ token)" 
+      }, { status: 500 });
+    }
+
+    const apiUrl = `http://api.waqi.info/feed/${STATION_ID}/?token=${API_TOKEN}`;
+    const response = await fetch(apiUrl);
     const data = await response.json();
 
     if (!data.data) {
