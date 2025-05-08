@@ -368,9 +368,9 @@ export default function CalendarSection() {
                                           )}
                                         </div>
                                         <h4 className="text-md font-semibold">{event.summary}</h4>
-                                        {event.description && (
+                                        {/* {event.description && (
                                           <p className="text-sm text-default-600 mt-1">{event.description}</p>
-                                        )}
+                                        )} */}
                                         {event.location && (
                                           <p className="text-xs text-default-500 mt-1">
                                             <strong>สถานที่:</strong> {event.location}
