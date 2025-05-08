@@ -5,8 +5,10 @@ import React from "react";
 import { Button, Link } from "@heroui/react";
 import { motion } from "framer-motion";
 import { BlogCardList } from "@/components";
+import { useTranslation } from "react-i18next";
 
 export default function BlogPreview() {
+const { t } = useTranslation();
   return (
     <section className="py-16 bg-zinc-50 dark:bg-zinc-950">
       <div className="container max-w-5xl mx-auto px-4 py-12 sm:px-6">
@@ -17,9 +19,9 @@ export default function BlogPreview() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">บทความล่าสุด</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('section4')}</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
-            ติดตามข่าวสาร บทความ และเรื่องราวน่าสนใจเกี่ยวกับบางกะเจ้า
+          {t('sec4Para')}
           </p>
         </motion.div>
         
@@ -41,7 +43,7 @@ export default function BlogPreview() {
             size="lg"
             className="font-semibold"
           >
-            ดูบทความทั้งหมด
+            {t('blogButton')}
           </Button>
         </motion.div>
       </div>

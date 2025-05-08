@@ -42,8 +42,8 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            บางกะเจ้า
-            <span className="block text-primary-color mt-2">ปอดสีเขียวแห่งกรุงเทพฯ</span>
+            {t('bigTittle1')}
+            <span className="block text-primary-color mt-2">{t('bigTittle2')}</span>
           </motion.h1>
           
           <motion.p 
@@ -52,7 +52,7 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            พื้นที่สีเขียวกลางเมืองที่อุดมสมบูรณ์ กับธรรมชาติและวิถีชีวิตชุมชนที่ท่านไม่ควรพลาด
+            {t('bigTittlePara')}
           </motion.p>
           
           <motion.div 
@@ -68,7 +68,7 @@ export default function HeroSection() {
               size="lg"
               className="font-semibold"
             >
-              ประวัติความเป็นมา
+              {t('history')}
             </Button>
             
             <Button
@@ -79,7 +79,7 @@ export default function HeroSection() {
               size="lg"
               className="bg-white/10 backdrop-blur-sm font-semibold border-white text-white"
             >
-              บทความน่าสนใจ
+              {t('bigTittleButton')}
             </Button>
           </motion.div>
         </motion.div>

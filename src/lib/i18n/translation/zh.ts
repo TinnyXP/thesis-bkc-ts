@@ -18,10 +18,40 @@ const translations = {
   history: "歷史",
   place: "旅遊景點",
   news: "資訊",
-  community : "ชุมชน",
+  community : "社群",
   forum: "ฟอรัม",
   complaints: "ร้องเรียน",
   static: "統計數據",
+
+  // Home 
+
+  // Section 1 
+  bigTittle1: "Bang Kachao",
+  bigTittle2: "曼谷的綠肺",
+  bigTittlePara: "市中心鬱鬱蔥蔥的綠地，擁有您不容錯過的自然和社區生活方式。",
+  bigTittleButton: "有趣的文章",
+
+  // Section 2 
+  section2: "探索 Bang Krachao",
+  sec2Para: "Bang Krachao 是曼谷附近最大的綠地。就像首都的肺部一樣，提供新鮮的空氣和美麗的自然風光。",
+  leaf: "曼谷的肺",
+  leafbox: "有助於淨化首都空氣的大型綠地，是各種動植物的保護區。",
+  map: "六個值得探索的地區",
+  mapbox: "Bang Krachao、Bang Nam Phueng、Bang Kobua、Bang Krasop、Songkhonong 和 Bang Yo 每個區域都有自己獨特的特色。",
+  time: "悠久的歷史",
+  timebox : "歷史悠久，土地肥沃。當地有代代相傳的文化。",
+  bike: "戶外活動",
+  bikebox: "適合騎自行車和享受大自然。參觀水上市場，並在大自然中進行其他活動",
+
+   // Section 3
+   section3: "有趣的旅遊景點",
+   sec3Para: "探索 Bang Kachao 有趣的旅遊景點。曼谷的綠肺",
+   placeButton: "查看所有景點",
+
+    // Blogs Preview
+  section4: "最新文章",
+  sec4Para: "關注有關 Bang Krachao 的新聞、文章和有趣的故事。",
+  blogButton: "看所有文章",
 
   // Authentication
   login: "登入",

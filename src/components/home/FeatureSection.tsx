@@ -5,6 +5,7 @@ import React from "react";
 import { Card, CardBody } from "@heroui/react";
 import { motion } from "framer-motion";
 import { FaLeaf, FaMapMarkedAlt, FaHistory, FaBiking } from "react-icons/fa";
+import { useTranslation } from 'react-i18next';
 // import { useTranslation } from "react-i18next";
 
 interface FeatureProps {
@@ -36,34 +37,36 @@ const Feature: React.FC<FeatureProps> = ({ icon, title, description, delay }) =>
 };
 
 export default function FeatureSection() {
+  const { t } = useTranslation();
   const features = [
     {
       icon: <FaLeaf />,
-      title: "ปอดของกรุงเทพฯ",
-      description: "พื้นที่สีเขียวขนาดใหญ่ที่ช่วยฟอกอากาศให้เมืองหลวง เป็นแหล่งอนุรักษ์พันธุ์พืชและสัตว์นานาชนิด",
+      title: t('leaf'),
+      description: t('leafbox'),
       delay: 0.1
     },
     {
       icon: <FaMapMarkedAlt />,
-      title: "6 ตำบลที่น่าค้นหา",
-      description: "บางกะเจ้า บางน้ำผึ้ง บางกอบัว บางกระสอบ ทรงคนอง และบางยอ แต่ละพื้นที่มีเอกลักษณ์เฉพาะตัว",
+      title: t('map'),
+      description: t('mapbox'),
       delay: 0.2
     },
     {
       icon: <FaHistory />,
-      title: "ประวัติศาสตร์อันยาวนาน",
-      description: "มีประวัติความเป็นมายาวนาน เป็นพื้นที่อันอุดมสมบูรณ์ มีวัฒนธรรมท้องถิ่นที่สืบทอดกันมาหลายชั่วอายุคน",
+      title: t('time'),
+      description: t('timebox'),
       delay: 0.3
     },
     {
       icon: <FaBiking />,
-      title: "กิจกรรมกลางแจ้ง",
-      description: "เหมาะสำหรับการปั่นจักรยานชมธรรมชาติ เยี่ยมชมตลาดน้ำ และทำกิจกรรมอื่นๆ ท่ามกลางธรรมชาติ",
+      title: t('bike'),
+      description: t('bikebox'),
       delay: 0.4
     },
   ];
 
   return (
+
     <section className="py-16 bg-white dark:bg-black">
       <div className="container mx-auto px-4 sm:px-6">
         <motion.div 
@@ -73,9 +76,9 @@ export default function FeatureSection() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">ค้นพบบางกะเจ้า</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('section2')}</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
-            บางกะเจ้าเป็นพื้นที่สีเขียวที่ใหญ่ที่สุดใกล้กรุงเทพมหานคร ดั่งปอดของเมืองหลวงที่มอบอากาศบริสุทธิ์และธรรมชาติอันงดงาม
+          {t('sec2Para')}
           </p>
         </motion.div>
         

@@ -18,10 +18,43 @@ const translations = {
   history: "History",
   place: "Places",
   news: "News",
-  community : "ชุมชน",
+  community : "Community",
   forum: "ฟอรัม",
   complaints: "ร้องเรียน",
   static: "Statistics",
+
+  // Home 
+
+  // section1 
+  bigTittle1: "Bang Kachao",
+  bigTittle2: "Green lungs of Bangkok",
+  bigTittlePara: "A green space in the city that is rich with nature and community lifestyle that you should not miss.",
+  bigTittleButton: "Interesting Articles",
+
+
+  // section2
+  section2: "Discover Bang Krachao",
+  sec2Para: "Bang Krachao is the largest green area near Bangkok. It is like the lungs of the capital, providing fresh air and beautiful nature.",
+  leaf: "Lungs of Bangkok",
+  leafbox: "A large green space that helps purify the air in the capital, it is a conservation area for a variety of plants and animals.",
+  map: "6 Sub-districts worth exploring",
+  mapbox: "Bang Krachao, Bang Nam Phueng, Bang Kobua, Bang Krasop, Songkhonong and Bang Yo, each area has its own unique identity.",
+  time: "Long history",
+  timebox : "It has a long history, is a rich area, and has local culture that has been passed down for generations.",
+  bike: "Outdoor activities",
+  bikebox: "Suitable for cycling to see nature, visiting the floating market and doing other activities amidst nature.",
+
+  // Places 
+  section3: "Interesting places",
+  sec3Para: "Discover interesting tourist attractions in Bang Kachao, the green lung of Bangkok.",
+  placeButton: "Browse more places",
+
+  // Blogs Preview
+  section4: "Latest Article",
+  sec4Para: "Follow news, articles and interesting stories about Bang Krachao.",
+  blogButton: "Browse all articles",
+
+
 
   // Authentication
   login: "Login",

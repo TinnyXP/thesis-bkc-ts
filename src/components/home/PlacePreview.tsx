@@ -6,8 +6,10 @@ import { Button, Link } from "@heroui/react";
 import { motion } from "framer-motion";
 
 import { PlaceCardList } from "@/components";
+import { useTranslation } from 'react-i18next';
 
 export default function PlacePreview() {
+  const { t } = useTranslation();
   return (
     <section className="py-16 bg-white dark:bg-black">
       <div className="container max-w-5xl mx-auto px-4 py-12 sm:px-6">
@@ -18,9 +20,9 @@ export default function PlacePreview() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">สถานที่ท่องเที่ยวน่าสนใจ</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('section3')}</h2>
           <p className="text-default-500 max-w-2xl mx-auto">
-            ค้นพบสถานที่ท่องเที่ยวที่น่าสนใจในบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ
+          {t('sec3Para')}
           </p>
         </motion.div>
         
@@ -42,7 +44,7 @@ export default function PlacePreview() {
             size="lg"
             className="font-semibold"
           >
-            ดูสถานที่ท่องเที่ยวทั้งหมด
+            {t('placeButton')}
           </Button>
         </motion.div>
       </div>
