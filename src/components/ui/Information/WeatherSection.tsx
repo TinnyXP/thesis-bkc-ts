@@ -64,13 +64,13 @@ export default function WeatherSection() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [airQuality, setAirQuality] = useState<AirQuality | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // เปลี่ยนชื่อจาก error เป็น errorMessage
 
   // ทำให้ fetchData เป็น useCallback เพื่อป้องกันการสร้างฟังก์ชันใหม่ในทุก render
   const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setErrorMessage(null);
       
       // เรียก API โดยใช้ Promise.allSettled ซึ่งจะไม่ fail แม้ว่า API ใดจะมีปัญหา
       const [airQualityResult, weatherResult] = await Promise.allSettled([
@@ -103,18 +103,13 @@ export default function WeatherSection() {
         throw new Error("ไม่สามารถโหลดข้อมูลสภาพอากาศได้");
       }
       
-      // ตรวจสอบว่ามีข้อมูลอย่างน้อยหนึ่งอย่าง
-      if (!airQuality && !weatherData) {
-        throw new Error("ไม่สามารถโหลดข้อมูลได้");
-      }
-      
     } catch (err) {
       console.error("Error fetching weather data:", err);
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+      setErrorMessage(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดข้อมูล");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // ไม่มี dependencies เพราะไม่ได้ใช้ state หรือ props ใดๆ ในฟังก์ชัน
 
   // เรียกใช้ fetchData เมื่อ component mount
   useEffect(() => {
@@ -191,7 +186,6 @@ export default function WeatherSection() {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "ไม่มีข้อมูล";
       
-      // ใช้ toLocaleString สำหรับแสดงวันที่และเวลาในรูปแบบไทย
       return date.toLocaleString('th-TH', {
         year: 'numeric',
         month: 'long',
@@ -201,7 +195,7 @@ export default function WeatherSection() {
           minute: '2-digit'
         })
       });
-    } catch (e) {
+    } catch {
       return "ไม่มีข้อมูล";
     }
   };
@@ -255,14 +249,14 @@ export default function WeatherSection() {
                     <div className="w-40 h-40 rounded-full flex items-center justify-center border-8 border-zinc-200 dark:border-zinc-800">
                       <div className={`w-32 h-32 rounded-full ${airQualityInfo?.color} flex items-center justify-center text-white`}>
                         <div className="text-center">
-                          <p className="text-6xl font-bold">{airQuality?.pm25}</p>
+                          <p className="text-6xl font-bold">{airQuality.pm25}</p>
                           <p className="text-sm">µg/m³</p>
                         </div>
                       </div>
                     </div>
                   </div>
                   <p className="text-2xl font-semibold mb-2">
-                    PM 2.5: <span className={airQualityInfo?.textColor}>{airQuality?.pm25} µg/m³</span>
+                    PM 2.5: <span className={airQualityInfo?.textColor}>{airQuality.pm25} µg/m³</span>
                   </p>
                   <p className="text-xl mb-4">
                     คุณภาพอากาศ: <span className={`font-bold ${airQualityInfo?.textColor}`}>{airQualityInfo?.level}</span>
@@ -299,6 +293,7 @@ export default function WeatherSection() {
               ) : !weatherData ? (
                 <div className="text-center text-default-500 h-48 flex flex-col items-center justify-center">
                   <p className="mb-2">ไม่พบข้อมูลสภาพอากาศในขณะนี้</p>
+                  {errorMessage && <p className="text-danger text-sm mb-3">{errorMessage}</p>}
                   <Button 
                     color="primary" 
                     variant="light" 
