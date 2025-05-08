@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaAngleDown } from "react-icons/fa";
 import {
   Card,
   CardBody,
@@ -13,10 +13,11 @@ import {
   SelectItem,
   Chip,
   Button,
-  Divider,
+  Accordion,
+  AccordionItem,
   type Selection
 } from "@heroui/react";
-import { Loading } from "@/components";
+import { Loading, SectionHeading } from "@/components";
 
 // ให้รองรับภาษาไทย
 dayjs.locale("th");
@@ -34,32 +35,42 @@ interface CalendarEvent {
     dateTime?: string;
     date?: string;
   };
+  location?: string;
+  eventType?: string;
+}
+
+interface MonthlyEvents {
+  [month: string]: {
+    [date: string]: CalendarEvent[];
+  };
 }
 
 export default function CalendarSection() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<number>(dayjs().month());
+  const [yearlyEvents, setYearlyEvents] = useState<MonthlyEvents>({});
   const [selectedYear, setSelectedYear] = useState<number>(dayjs().year());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate year range for dropdown
+  // สร้างตัวเลือกปี (ปีปัจจุบัน และ 2 ปีถัดไป)
   const currentYear = dayjs().year();
-  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+  const yearOptions = Array.from({ length: 3 }, (_, i) => currentYear + i);
 
-  // Fetch events function using useCallback
-  const fetchEvents = useCallback(async () => {
+  // ดึงข้อมูลทั้งปี
+  const fetchYearlyEvents = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const timeMin = dayjs(`${selectedYear}-${selectedMonth + 1}-01`)
-        .startOf("month")
-        .toISOString();
-
-      const timeMax = dayjs(`${selectedYear}-${selectedMonth + 1}-01`)
-        .endOf("month")
-        .toISOString();
+      // สร้างข้อมูลกิจกรรมเปล่าสำหรับทุกเดือน
+      const emptyMonthlyEvents: MonthlyEvents = {};
+      for (let month = 0; month < 12; month++) {
+        const monthKey = dayjs().year(selectedYear).month(month).format("YYYY-MM");
+        emptyMonthlyEvents[monthKey] = {};
+      }
+      
+      // ดึงข้อมูลทั้งปี
+      const timeMin = dayjs(`${selectedYear}-01-01`).startOf("year").toISOString();
+      const timeMax = dayjs(`${selectedYear}-12-31`).endOf("year").toISOString();
 
       const response = await fetch(`/api/calendar?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`);
 
@@ -68,48 +79,56 @@ export default function CalendarSection() {
       }
 
       const data = await response.json();
-      setEvents(data.events || []);
+      
+      // สร้างประเภทกิจกรรมตัวอย่าง
+      const eventsWithType = (data.events || []).map((event: CalendarEvent) => ({
+        ...event,
+        eventType: getRandomEventType()
+      }));
+      
+      // จัดกลุ่มกิจกรรมตามเดือนและวันที่
+      const monthlyEvents = groupEventsByMonthAndDate(eventsWithType);
+      
+      // รวมกับข้อมูลเปล่าที่สร้างไว้
+      setYearlyEvents({...emptyMonthlyEvents, ...monthlyEvents});
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการโหลดข้อมูล");
-      setEvents([]);
+      setYearlyEvents({});
     } finally {
       setIsLoading(false);
     }
-  }, [selectedMonth, selectedYear]);
+  }, [selectedYear]);
 
-  // Change month handler using useCallback
-  const handleMonthChange = useCallback((direction: "prev" | "next") => {
-    let newMonth = selectedMonth;
-    let newYear = selectedYear;
+  // สุ่มประเภทกิจกรรม (สำหรับตัวอย่างเท่านั้น)
+  const getRandomEventType = () => {
+    const types = ["วันหยุดราชการ", "วันหยุดธนาคาร", "กิจกรรมชุมชน", "เทศกาล"];
+    return types[Math.floor(Math.random() * types.length)];
+  };
 
-    if (direction === "prev") {
-      if (selectedMonth === 0) {
-        newMonth = 11;
-        newYear = selectedYear - 1;
-      } else {
-        newMonth = selectedMonth - 1;
+  // จัดกลุ่มกิจกรรมตามเดือนและวันที่
+  const groupEventsByMonthAndDate = (eventsList: CalendarEvent[]): MonthlyEvents => {
+    const result: MonthlyEvents = {};
+    
+    eventsList.forEach(event => {
+      const date = dayjs(event.start.dateTime || event.start.date);
+      const monthKey = date.format("YYYY-MM");
+      const dateKey = date.format("YYYY-MM-DD");
+      
+      if (!result[monthKey]) {
+        result[monthKey] = {};
       }
-    } else {
-      if (selectedMonth === 11) {
-        newMonth = 0;
-        newYear = selectedYear + 1;
-      } else {
-        newMonth = selectedMonth + 1;
+      
+      if (!result[monthKey][dateKey]) {
+        result[monthKey][dateKey] = [];
       }
-    }
+      
+      result[monthKey][dateKey].push(event);
+    });
+    
+    return result;
+  };
 
-    setSelectedMonth(newMonth);
-    setSelectedYear(newYear);
-  }, [selectedMonth, selectedYear]);
-
-  // เปลี่ยนฟังก์ชันการจัดการ Select ให้ใช้ useCallback
-  const handleMonthSelectionChange = useCallback((key: Selection) => {
-    const selectedKey = key as Set<string>;
-    if (selectedKey.size > 0) {
-      setSelectedMonth(Number(Array.from(selectedKey)[0]));
-    }
-  }, []);
-
+  // ดึงข้อมูลเมื่อเปลี่ยนปี
   const handleYearSelectionChange = useCallback((key: Selection) => {
     const selectedKey = key as Set<string>;
     if (selectedKey.size > 0) {
@@ -117,85 +136,90 @@ export default function CalendarSection() {
     }
   }, []);
 
-  // Run on component mount and when month/year changes
+  // รัน fetchYearlyEvents เมื่อเริ่มต้นหรือเมื่อปีเปลี่ยน
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    fetchYearlyEvents();
+  }, [fetchYearlyEvents]);
 
-  // Format time display
+  // จัดรูปแบบเวลา
   const formatTime = (dateTimeStr?: string): string => {
     if (!dateTimeStr) return "";
     return dayjs(dateTimeStr).format("HH:mm");
   };
 
+  // แปลงเลขเดือนเป็นชื่อเดือนภาษาไทย
+  const getThaiMonthName = (monthKey: string): string => {
+    const [year, month] = monthKey.split("-");
+    const date = dayjs(`${year}-${month}-01`);
+    return `${date.format("MMMM")} ${parseInt(year) + 543}`;
+  };
+
+  // สร้างชื่อวันและเดือนแบบไทย
+  const formatDateHeader = (dateStr: string): string => {
+    const date = dayjs(dateStr);
+    return `วัน${date.format("dddd")}ที่ ${date.format("D")}`;
+  };
+
+  // สร้างสีของ chip ตามประเภทกิจกรรม
+  const getEventTypeColor = (type?: string): "primary" | "success" | "warning" | "danger" => {
+    switch (type) {
+      case "วันหยุดราชการ": return "danger";
+      case "วันหยุดธนาคาร": return "primary";
+      case "กิจกรรมชุมชน": return "success";
+      case "เทศกาล": return "warning";
+      default: return "primary";
+    }
+  };
+
+  // ตรวจสอบว่าเดือนมีกิจกรรมหรือไม่
+  const hasEventsInMonth = (monthEvents: Record<string, CalendarEvent[]>): boolean => {
+    return Object.keys(monthEvents).length > 0;
+  };
+
   return (
     <div className="py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold">ปฏิทินกิจกรรม</h2>
-        <p className="text-default-500">กิจกรรมและเหตุการณ์ในบางกะเจ้า</p>
-      </div>
+      <SectionHeading
+        title="ปฏิทินวันหยุดและกิจกรรมบางกะเจ้า"
+        description="วันสำคัญ กิจกรรม และเทศกาลในพื้นที่บางกะเจ้า"
+        icon={<FaCalendarAlt className="text-primary-color" />}
+      />
 
-      {/* Month and Year Selector */}
+      {/* Year Selector */}
       <Card className="mb-6">
         <CardBody>
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <FaCalendarAlt className="text-primary text-lg" />
+              <FaCalendarAlt className="text-primary-color text-lg" />
               <h2 className="text-xl font-medium">
-                {dayjs().month(selectedMonth).format("MMMM")} {selectedYear}
+                ปฏิทินกิจกรรมประจำปี {selectedYear + 543}
               </h2>
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                isIconOnly
-                variant="light"
-                onClick={() => handleMonthChange("prev")}
-                aria-label="Previous month"
+              <Select
+                label="ปี"
+                selectedKeys={[selectedYear.toString()]}
+                className="w-40"
+                onSelectionChange={handleYearSelectionChange}
               >
-                <FaAngleLeft />
-              </Button>
-
-              <div className="flex gap-2">
-                <Select
-                  label="เดือน"
-                  selectedKeys={[selectedMonth.toString()]}
-                  className="w-40"
-                  onSelectionChange={handleMonthSelectionChange}
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <SelectItem key={i.toString()} textValue={dayjs().month(i).format("MMMM")}>
-                      {dayjs().month(i).format("MMMM")}
-                    </SelectItem>
-                  ))}
-                </Select>
-
-                <Select
-                  label="ปี"
-                  selectedKeys={[selectedYear.toString()]}
-                  className="w-32"
-                  onSelectionChange={handleYearSelectionChange}
-                >
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year.toString()} textValue={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
-
-              <Button
-                isIconOnly
-                variant="light"
-                onClick={() => handleMonthChange("next")}
-                aria-label="Next month"
-              >
-                <FaAngleRight />
-              </Button>
+                {yearOptions.map((year) => (
+                  <SelectItem key={year.toString()} textValue={(year + 543).toString()}>
+                    {year + 543}
+                  </SelectItem>
+                ))}
+              </Select>
             </div>
           </div>
         </CardBody>
       </Card>
+
+      {/* คำอธิบายสัญลักษณ์ */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Chip color="danger" variant="flat">วันหยุดราชการ</Chip>
+        <Chip color="primary" variant="flat">วันหยุดธนาคาร</Chip>
+        <Chip color="success" variant="flat">กิจกรรมชุมชน</Chip>
+        <Chip color="warning" variant="flat">เทศกาล</Chip>
+      </div>
 
       {/* Events List */}
       <AnimatePresence mode="wait">
@@ -222,12 +246,12 @@ export default function CalendarSection() {
               color="primary"
               variant="flat"
               className="mt-4"
-              onClick={fetchEvents}
+              onClick={fetchYearlyEvents}
             >
               ลองใหม่อีกครั้ง
             </Button>
           </motion.div>
-        ) : events.length === 0 ? (
+        ) : Object.keys(yearlyEvents).length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
@@ -236,8 +260,8 @@ export default function CalendarSection() {
             className="text-center my-16"
           >
             <FaCalendarAlt className="mx-auto text-4xl text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium text-gray-500">ไม่มีกิจกรรมในเดือนนี้</h3>
-            <p className="text-gray-400 mt-2">กรุณาเลือกเดือนอื่น หรือเพิ่มกิจกรรมใหม่</p>
+            <h3 className="text-xl font-medium text-gray-500">ไม่มีกิจกรรมในปีนี้</h3>
+            <p className="text-gray-400 mt-2">กรุณาเลือกปีอื่น หรือเพิ่มกิจกรรมใหม่</p>
           </motion.div>
         ) : (
           <motion.div
@@ -247,80 +271,127 @@ export default function CalendarSection() {
             exit={{ opacity: 0 }}
             className="space-y-4"
           >
-            {events.map((event, index) => {
-              const date = dayjs(event.start.dateTime || event.start.date);
-              const day = date.format("D");
-              const month = date.format("MMMM");
-              const dayOfWeek = date.format("dddd");
-              const hasTime = Boolean(event.start.dateTime);
-
-              return (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.01 }}
-                >
-                  <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <CardBody className="p-0">
-                      <div className="flex flex-col sm:flex-row">
-                        <div className="flex flex-col items-center justify-center bg-primary-100 p-4 sm:p-6 sm:w-32">
-                          <motion.span
-                            className="text-sm font-medium text-primary-600"
-                            whileHover={{ scale: 1.05 }}
-                          >
-                            {dayOfWeek}
-                          </motion.span>
-                          <motion.div
-                            className="text-4xl font-bold text-primary"
-                            whileHover={{ scale: 1.1 }}
-                          >
-                            {day}
-                          </motion.div>
-                          <span className="text-sm text-primary-600">{month}</span>
+            <Accordion
+              variant="bordered"
+              selectionMode="multiple" 
+              defaultExpandedKeys={[dayjs().format("YYYY-MM")]} // เปิดเดือนปัจจุบันเป็นค่าเริ่มต้น
+              className="px-0 border-none"
+              showDivider={false}
+              itemClasses={{
+                base: "py-0 w-full border border-default-200 rounded-lg mb-4 overflow-hidden",
+                title: "font-semibold text-xl",
+                trigger: "px-4 py-3 data-[hover=true]:bg-default-100 h-16 flex items-center",
+                indicator: "text-medium text-default-400",
+                content: "px-4 pt-0 pb-4"
+              }}
+            >
+              {Object.keys(yearlyEvents)
+                .sort()
+                .map((monthKey) => {
+                  const monthEvents = yearlyEvents[monthKey];
+                  const hasEvents = hasEventsInMonth(monthEvents);
+                  
+                  // แสดงเฉพาะเดือนที่มีกิจกรรม
+                  return (
+                    <AccordionItem
+                      key={monthKey}
+                      aria-label={getThaiMonthName(monthKey)}
+                      title={getThaiMonthName(monthKey)}
+                      indicator={<FaAngleDown />}
+                      classNames={{
+                        title: hasEvents ? "text-primary" : "text-default-500",
+                        trigger: hasEvents ? "bg-primary-50/50" : "bg-default-50",
+                      }}
+                      startContent={
+                        <div className={`${hasEvents ? "bg-primary-100 text-primary" : "bg-default-100 text-default-400"} w-12 h-12 rounded-full flex items-center justify-center mr-3 font-bold`}>
+                          {parseInt(monthKey.split("-")[1])}
                         </div>
-
-                        <div className="flex-1 p-4">
-                          <h3 className="text-xl font-semibold text-gray-800 mb-2">{event.summary}</h3>
-
-                          {event.description && (
-                            <p className="text-gray-600 text-sm mb-3">
-                              {event.description.length > 100
-                                ? `${event.description.substring(0, 100)}...`
-                                : event.description}
-                            </p>
+                      }
+                      subtitle={
+                        <div className="flex gap-1 flex-wrap">
+                          {hasEvents ? (
+                            <Chip size="sm" color="primary" variant="flat">
+                              มีกิจกรรม
+                            </Chip>
+                          ) : (
+                            <Chip size="sm" variant="flat">
+                              ไม่มีกิจกรรม
+                            </Chip>
                           )}
-
-                          {hasTime && (
-                            <div className="flex items-center mt-2">
-                              <FaClock className="text-gray-400 mr-2" size={14} />
-                              <span className="text-sm text-gray-500">
-                                {formatTime(event.start.dateTime)} - {formatTime(event.end?.dateTime)}
-                              </span>
-                            </div>
-                          )}
-
-                          <Divider className="my-3" />
-
-                          <div className="flex justify-between items-center">
-                            <Chip size="sm" color="primary" variant="flat">กิจกรรม</Chip>
-                            <Button
-                              size="sm"
-                              color="primary"
-                              variant="light"
-                              className="text-xs"
-                            >
-                              ดูรายละเอียด
-                            </Button>
-                          </div>
                         </div>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </motion.div>
-              );
-            })}
+                      }
+                    >
+                      {hasEvents ? (
+                        <div className="space-y-4">
+                          {Object.keys(monthEvents)
+                            .sort()
+                            .map((dateKey) => (
+                              <Card 
+                                key={dateKey}
+                                className="border-1 border-default-200"
+                              >
+                                <CardBody className="p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <div className="bg-primary-100 text-primary w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                                      {dayjs(dateKey).format("D")}
+                                    </div>
+                                    <h3 className="text-lg font-medium">{formatDateHeader(dateKey)}</h3>
+                                  </div>
+                                  
+                                  <div className="space-y-3 pl-12">
+                                    {monthEvents[dateKey].map((event, index) => (
+                                      <div 
+                                        key={`${dateKey}-${index}`}
+                                        className="border-l-4 pl-3 py-1"
+                                        style={{ 
+                                          borderColor: event.eventType === "วันหยุดราชการ" ? "var(--heroui-danger)" 
+                                            : event.eventType === "วันหยุดธนาคาร" ? "var(--heroui-primary)" 
+                                            : event.eventType === "กิจกรรมชุมชน" ? "var(--heroui-success)" 
+                                            : "var(--heroui-warning)" 
+                                        }}
+                                      >
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Chip 
+                                            size="sm" 
+                                            color={getEventTypeColor(event.eventType)} 
+                                            variant="flat"
+                                          >
+                                            {event.eventType}
+                                          </Chip>
+                                          {event.start.dateTime && (
+                                            <div className="flex items-center text-xs text-default-500">
+                                              <FaClock className="mr-1" size={10} />
+                                              <span>
+                                                {formatTime(event.start.dateTime)} - {formatTime(event.end?.dateTime)}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <h4 className="text-md font-semibold">{event.summary}</h4>
+                                        {event.description && (
+                                          <p className="text-sm text-default-600 mt-1">{event.description}</p>
+                                        )}
+                                        {event.location && (
+                                          <p className="text-xs text-default-500 mt-1">
+                                            <strong>สถานที่:</strong> {event.location}
+                                          </p>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CardBody>
+                              </Card>
+                            ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-default-500">
+                          <p>ไม่มีกิจกรรมในเดือนนี้</p>
+                        </div>
+                      )}
+                    </AccordionItem>
+                  );
+                })}
+            </Accordion>
           </motion.div>
         )}
       </AnimatePresence>
