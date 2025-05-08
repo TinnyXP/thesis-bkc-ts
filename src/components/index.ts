@@ -65,3 +65,7 @@ export { default as ComplaintDetail } from './ui/Community/ComplaintDetail';
 // Analytics Components
 export { default as ViewTracker } from './ui/Analytics/ViewTracker';
 export { default as ViewCounter } from './ui/Analytics/ViewCounter';
+
+// Analytics Components
+export { default as WeatherSection } from './ui/Information/WeatherSection';
+export { default as CalendarSection } from './ui/Information/CalendarSection';

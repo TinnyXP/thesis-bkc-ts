@@ -68,10 +68,10 @@ export default function NavBar() {
       label: t('community'),  // เปลี่ยนจาก forum และ complaints เป็น community
       href: "/community"
     },
-    // {
-    //   label: t('static'),
-    //   href: "/information"
-    // },
+    {
+      label: t('static'),
+      href: "/information"
+    },
   ], [t]); // ให้ dependency เป็น t เท่านั้น เพื่อให้สร้างใหม่เฉพาะเมื่อภาษาเปลี่ยน
 
   // เพิ่มข้อมูล schema.org สำหรับ navigation
@@ -152,7 +152,7 @@ export default function NavBar() {
       </NavbarContent>
 
       {/* Right Content */}
-      <NavbarContent className="hidden md:flex" justify="end">
+      <NavbarContent className="hidden md:flex gap-1.5" justify="end">
         <NavbarItem>
           {session ? (
             <ProfileAvatar size="md" />
