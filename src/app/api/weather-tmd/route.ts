@@ -1,8 +1,12 @@
 // src/app/api/weather-tmd/route.ts
 import { NextResponse } from "next/server";
 
-// กำหนดเวลาในการ revalidate ข้อมูล
-export const revalidate = 1800; // รีเฟรชข้อมูลทุก 30 นาที
+// สำคัญมาก: กำหนดให้ route นี้เป็น dynamic เท่านั้น ไม่ต้อง generate ตอน build
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
+// ลบหรือแก้ไข revalidate เป็น 0 เพื่อไม่ให้มีการ cache ตอน build
+export const revalidate = 0;
 
 // TMD API token (ควรเก็บใน .env)
 const TMD_API_TOKEN = process.env.TMD_API_TOKEN;
@@ -72,13 +76,27 @@ async function fetchDailyForecast(): Promise<TMDResponse> {
     throw new Error("TMD_API_TOKEN is missing. Cannot fetch weather data without valid token.");
   }
   
-  const response = await fetch(url, { headers });
+  // เพิ่ม timeout และ signal สำหรับการเชื่อมต่อ
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
   
-  if (!response.ok) {
-    throw new Error(`TMD API responded with status: ${response.status}`);
+  try {
+    const response = await fetch(url, { 
+      headers,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`TMD API responded with status: ${response.status}`);
+    }
+    
+    return await response.json() as TMDResponse;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-  
-  return await response.json() as TMDResponse;
 }
 
 // ฟังก์ชันสำหรับเรียกข้อมูลพยากรณ์อากาศรายชั่วโมง
@@ -103,13 +121,27 @@ async function fetchHourlyForecast(): Promise<TMDResponse> {
     throw new Error("TMD_API_TOKEN is missing. Cannot fetch weather data without valid token.");
   }
   
-  const response = await fetch(url, { headers });
+  // เพิ่ม timeout และ signal สำหรับการเชื่อมต่อ
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
   
-  if (!response.ok) {
-    throw new Error(`TMD API responded with status: ${response.status}`);
+  try {
+    const response = await fetch(url, { 
+      headers,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`TMD API responded with status: ${response.status}`);
+    }
+    
+    return await response.json() as TMDResponse;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-  
-  return await response.json() as TMDResponse;
 }
 
 // กำหนด interface สำหรับข้อมูลที่จะส่งกลับ
@@ -216,14 +248,25 @@ export async function GET(): Promise<Response> {
       }))
     };
 
-    return NextResponse.json(weatherData);
+    // เพิ่ม Cache-Control header
+    return new NextResponse(JSON.stringify(weatherData), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=300' // cache 10 นาที
+      }
+    });
   } catch (error) {
-    // เมื่อมีข้อผิดพลาด จะส่งกลับข้อความแสดงความผิดพลาดโดยไม่มีการใช้ mock data
+    // เมื่อมีข้อผิดพลาด จะส่งกลับข้อความแสดงความผิดพลาด
     console.error("Error fetching weather data:", error);
     return NextResponse.json({ 
       success: false, 
       message: "เกิดข้อผิดพลาดในการดึงข้อมูลสภาพอากาศ",
       error: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    }, { 
+      status: 500,
+      headers: {
+        'Cache-Control': 'no-store, must-revalidate'
+      }
+    });
   }
 }

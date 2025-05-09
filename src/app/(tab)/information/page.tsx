@@ -1,15 +1,17 @@
-// src/app/(tab)/information/page.tsx
 "use client";
 
-import React from "react";
-import { PageHeader, Loading, WeatherSection, CalendarSection } from "@/components";
+import React, { Suspense } from "react";
+import { PageHeader, Loading } from "@/components";
 import { Tabs, Tab } from "@heroui/react";
 import { FaCalendarAlt, FaCloud } from "react-icons/fa";
 
+// Import components lazily to avoid loading them during build time
+const WeatherSection = React.lazy(() => import('@/components/ui/Information/WeatherSection'));
+const CalendarSection = React.lazy(() => import('@/components/ui/Information/CalendarSection'));
+
 export default function InformationPage() {
   const [selectedKey, setSelectedKey] = React.useState<string>("weather");
-  const [isLoading] = React.useState<boolean>(false);
-
+  
   return (
     <>
       <PageHeader
@@ -19,12 +21,12 @@ export default function InformationPage() {
         buttons={{
           primary: {
             text: "ดูบทความล่าสุด",
-            href: "#latest-articles",
+            href: "/blog",
             icon: <FaCalendarAlt />
           },
           secondary: {
-            text: "ดูหมวดหมู่ทั้งหมด",
-            href: "#categories",
+            text: "ดูสถานที่ท่องเที่ยว",
+            href: "/place",
             icon: <FaCloud />
           }
         }}
@@ -54,13 +56,9 @@ export default function InformationPage() {
                 </div>
               }
             >
-              {isLoading ? (
-                <div className="flex justify-center py-12">
-                  <Loading />
-                </div>
-              ) : (
+              <Suspense fallback={<Loading message="กำลังโหลดข้อมูลสภาพอากาศ..." />}>
                 <WeatherSection />
-              )}
+              </Suspense>
             </Tab>
             <Tab
               key="calendar"
@@ -71,13 +69,9 @@ export default function InformationPage() {
                 </div>
               }
             >
-              {isLoading ? (
-                <div className="flex justify-center py-12">
-                  <Loading />
-                </div>
-              ) : (
+              <Suspense fallback={<Loading message="กำลังโหลดข้อมูลปฏิทิน..." />}>
                 <CalendarSection />
-              )}
+              </Suspense>
             </Tab>
           </Tabs>
         </div>

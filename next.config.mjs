@@ -1,3 +1,4 @@
+// next.config.mjs
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
@@ -11,6 +12,9 @@ const nextConfig = {
   },
   compress: true, // เปิดใช้งานการบีบอัดไฟล์
   poweredByHeader: false, // ปิด X-Powered-By header เพื่อความปลอดภัย
+  
+  // เพิ่มตัวเลือกสำหรับ build เพื่อป้องกันปัญหา timeout กับ API ภายนอก
+  output: 'standalone',
 };
 
 export default nextConfig;
