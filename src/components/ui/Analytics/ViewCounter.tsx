@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { FaEye } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 interface ViewCounterProps {
   pageType: 'homepage' | 'blog' | 'place';
@@ -23,7 +24,7 @@ export default function ViewCounter({
 }: ViewCounterProps) {
   const [viewCount, setViewCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
+  const { t } = useTranslation();
   useEffect(() => {
     const fetchViewCount = async () => {
       try {
@@ -63,7 +64,7 @@ export default function ViewCounter({
   return (
     <div className={className}>
       {showIcon && <FaEye className={iconClassName} />}
-      <span className={textClassName}>{formattedCount} ผู้เข้าชม</span>
+      <span className={textClassName}>{formattedCount} {t('footerView')}</span>
     </div>
   );
 }

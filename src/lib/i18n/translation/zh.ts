@@ -18,7 +18,7 @@ const translations = {
   history: "歷史",
   place: "旅遊景點",
   news: "資訊",
-  community : "社群",
+  community: "社群",
   forum: "ฟอรัม",
   complaints: "ร้องเรียน",
   static: "統計數據",
@@ -40,19 +40,40 @@ const translations = {
   map: "六個值得探索的地區",
   mapbox: "Bang Krachao、Bang Nam Phueng、Bang Kobua、Bang Krasop、Songkhonong 和 Bang Yo 每個區域都有自己獨特的特色。",
   time: "悠久的歷史",
-  timebox : "歷史悠久，土地肥沃。當地有代代相傳的文化。",
+  timebox: "歷史悠久，土地肥沃。當地有代代相傳的文化。",
   bike: "戶外活動",
   bikebox: "適合騎自行車和享受大自然。參觀水上市場，並在大自然中進行其他活動",
 
-   // Section 3
-   section3: "有趣的旅遊景點",
-   sec3Para: "探索 Bang Kachao 有趣的旅遊景點。曼谷的綠肺",
-   placeButton: "查看所有景點",
+  // Section 3
+  section3: "有趣的旅遊景點",
+  sec3Para: "探索 Bang Kachao 有趣的旅遊景點。曼谷的綠肺",
+  placeButton: "查看所有景點",
 
-    // Blogs Preview
+  // Blogs Preview
   section4: "最新文章",
   sec4Para: "關注有關 Bang Krachao 的新聞、文章和有趣的故事。",
   blogButton: "看所有文章",
+
+  //footer 
+  footerView: "访客",
+  footerSystem: "所有系统运行正常",
+  footerEnd: "仅供学习使用",
+
+  // CTA
+  ctaBig: "来体验邦卡拷的独特魅力",
+ctaPara: "距离曼谷不远的生态旅游胜地，只需穿越湄南河即可。感受当地社区生活，畅享自然中的趣味活动。",
+ctaButton: "旅游景点",
+
+// Question 
+questionBig: "常见问题",
+questionTitle1: "如果迷路了该怎么办？",
+questionTitle2: "可以删除代码吗？",
+questionTitle3: "想了解这个地区的背景信息怎么办？",
+questionAnswer1: "您可以立即联系工作人员。",
+questionAnswer2: "可以删除，请在个人资料的设置中操作。",
+questionAnswer3: "您可以点击查看历史背景页面了解详情。",
+
+
 
   // Authentication
   login: "登入",

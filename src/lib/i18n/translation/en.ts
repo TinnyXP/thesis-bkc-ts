@@ -55,6 +55,24 @@ const translations = {
   sec4Para: "Follow news, articles and interesting stories about Bang Krachao.",
   blogButton: "Browse all articles",
 
+  // footer
+  footerView: "Visitor",
+  footerSystem: "Operating normally",
+  footerEnd: "For educational purposes only",
+
+  //CTA
+  ctaBig: "Come and experience Bang Kachao",
+ctaPara: "An abundant eco-tourism destination near Bangkok, just across the Chao Phraya River. Discover local lifestyles and enjoy fun activities surrounded by nature.",
+ctaButton: "Places",
+
+// Question
+questionBig: "Frequently Asked Questions",
+questionTitle1: "What should I do if I get lost?",
+questionTitle2: "Can I delete the code?",
+questionTitle3: "Where can I learn about the area's background?",
+questionAnswer1: "You can try contacting the staff right away.",
+questionAnswer2: "You can delete it by going to Settings in your profile.",
+questionAnswer3: "You can read about it on the background/history page.",
 
 
   // Authentication

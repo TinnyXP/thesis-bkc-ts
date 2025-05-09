@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import ViewCounter from "../ui/Analytics/ViewCounter";
 
 export default function Footer() {
+  const { t } = useTranslation();
 
   return (
     <footer className="w-full flex flex-col items-center justify-center bg-white dark:bg-black">
@@ -15,7 +16,7 @@ export default function Footer() {
       <FooterBody />
       <div className="w-full flex justify-center items-center py-1.5 bg-black border-t-small border-default-200/70 rounded-t-2xl">
         <span className="text-xs font-medium flex leading-none text-zinc-200">
-          &copy; 2024 Bangkachaokun. เพื่อการศึกษาเท่านั้น
+          &copy; 2024 Bangkachaokun. {t('footerEnd')}
         </span>
         {/* <span className="text-xs font-medium flex leading-none text-zinc-200">
           &copy; 2024 Bangkrajao. สงวนลิขสิทธิ์ทั้งหมด | เพื่อการศึกษาเท่านั้น
@@ -102,7 +103,7 @@ const FooterBody = () => {
             dot: "relative before:content-[''] before:absolute before:-inset-[2px] before:rounded-full before:bg-success-500 before:animate-ping before:opacity-75"
           }}
         >
-          ระบบทั้งหมดทำงานปกติ
+          {t('footerSystem')}
         </Chip>
       </div>
     </div>

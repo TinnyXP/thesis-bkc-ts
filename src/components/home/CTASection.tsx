@@ -5,8 +5,10 @@ import React from "react";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export default function CTASection() {
+  const { t } = useTranslation();
   return (
     <section className="py-20 relative overflow-hidden">
       {/* ภาพพื้นหลัง */}
@@ -30,7 +32,7 @@ export default function CTASection() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            มาร่วมสัมผัสประสบการณ์ที่บางกะเจ้า
+            {t('ctaBig')}
           </motion.h2>
           
           <motion.p 
@@ -40,8 +42,7 @@ export default function CTASection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            แหล่งท่องเที่ยวเชิงนิเวศที่สมบูรณ์ใกล้กรุงเทพฯ เพียงข้ามฝั่งแม่น้ำเจ้าพระยา 
-            สัมผัสวิถีชีวิตชุมชน และกิจกรรมสนุกสนานท่ามกลางธรรมชาติ
+            {t('ctaPara')}
           </motion.p>
           
           <motion.div
@@ -56,7 +57,7 @@ export default function CTASection() {
               href="/place"
               className="font-semibold"
             >
-              สถานที่ท่องเที่ยว
+              {t('ctaButton')}
             </Button>
           </motion.div>
         </div>

@@ -1,31 +1,33 @@
 "use client"
 
-import { Accordion, AccordionItem, Link } from "@heroui/react";
+import { Accordion, AccordionItem, } from "@heroui/react";
 import { FaQuestionCircle } from "react-icons/fa";
 
 import React from 'react'
 import { FiChevronLeft } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 
 export default function AccordionMain() {
+  const {t} = useTranslation();
 
   const accordionContent = [
     {
       key: "faq1",
       ariaLabel: "Common Question 1",
-      title: "What is the purpose of this platform?",
-      content: "This platform is designed to help users manage and organize their projects efficiently, providing tools like file storage, collaboration, and analytics."
+      title: t('questionTitle1'),
+      content: t('questionAnswer1')
     },
     {
       key: "faq2",
       ariaLabel: "Common Question 2",
-      title: "How do I reset my password?",
-      content: "To reset your password, click on the 'Forgot Password' link on the login page, and follow the instructions sent to your registered email address."
+      title: t('questionTitle2'),
+      content: t('questionAnswer2')
     },
     {
       key: "faq3",
       ariaLabel: "Common Question 3",
-      title: "Can I share files with others?",
-      content: "Yes, you can share files by clicking the 'Share' button next to the file and entering the recipient's email address."
+      title: t('questionTitle3'),
+      content: t('questionAnswer3')
     }
   ];
 
@@ -37,15 +39,9 @@ export default function AccordionMain() {
         <div className="flex flex-wrap items-center justify-between px-2 mb-5">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <FaQuestionCircle size={35} className="text-primary-color" />
-            <p className="text-3xl md:text-4xl font-bold">คำถามที่พบบ่อย</p>
+            <p className="text-3xl md:text-4xl font-bold">{t('questionBig')}</p>
           </div>
-          <div className="text-md w-full md:w-auto text-left md:text-right">
-            <p className="text-default-500">ไม่พบคำตอบสำหรับคำถามของคุณ?</p>
-            <div className="flex justify-start md:justify-end items-center gap-2">
-              <p className="text-default-500">อย่าลังเลที่จะ</p>
-              <Link className="text-primary-color" underline="hover" href="#">ติดต่อเรา</Link>
-            </div>
-          </div>
+          
         </div>
         <Accordion
           dividerProps={{
