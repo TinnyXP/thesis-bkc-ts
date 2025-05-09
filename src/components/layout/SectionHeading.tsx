@@ -33,7 +33,7 @@ export default function SectionHeading({
         </p>
       )}
       
-      <h2 className={`text-2xl md:text-3xl font-bold mb-3 ${icon ? "flex items-center gap-2" : ""}`}>
+      <h2 className={`text-2xl md:text-3xl font-bold ${icon ? "flex items-center gap-2" : ""}`}>
         {icon}
         <span>{title}</span>
       </h2>

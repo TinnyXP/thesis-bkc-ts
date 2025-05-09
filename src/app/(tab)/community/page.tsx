@@ -29,7 +29,7 @@ import {
   FaSyncAlt
 } from "react-icons/fa";
 import Link from "next/link";
-import { Loading, PageHeader, CreateForumModal, CreateComplaintModal } from "@/components";
+import { Loading, PageHeader, CreateForumModal, CreateComplaintModal, SectionHeading } from "@/components";
 import { ForumPost, useForumPosts } from "@/hooks/useForumPosts";
 import { Complaint, useComplaints } from "@/hooks/useComplaints";
 import { showToast } from "@/lib/toast";
@@ -277,7 +277,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-black">
+    <div>
       <PageHeader
         title="ชุมชนบางกะเจ้า"
         subtitle="พูดคุยและแจ้งปัญหา"
@@ -285,11 +285,11 @@ export default function CommunityPage() {
         imageSrc="https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=2070"
         imageAlt="ชุมชนบางกะเจ้า"
       >
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-4">
           <Button
             color={activeTab === "forum" ? "primary" : "default"}
-            variant={activeTab === "forum" ? "solid" : "bordered"}
-            className="bg-white/10 backdrop-blur-sm font-semibold text-white"
+            variant={activeTab === "forum" ? "bordered" : "solid"}
+            className="bg-white/10 backdrop-blur-sm font-semibold text-white w-48 justify-center"
             startContent={<FaComments />}
             onPress={() => setActiveTab("forum")}
           >
@@ -297,8 +297,8 @@ export default function CommunityPage() {
           </Button>
           <Button
             color={activeTab === "complaints" ? "primary" : "default"}
-            variant={activeTab === "complaints" ? "solid" : "bordered"}
-            className="bg-white/10 backdrop-blur-sm font-semibold text-white"
+            variant={activeTab === "complaints" ? "bordered" : "solid"}
+            className="bg-white/10 backdrop-blur-sm font-semibold text-white w-48 justify-center"
             startContent={<FaClipboardList />}
             onPress={() => setActiveTab("complaints")}
           >
@@ -307,257 +307,268 @@ export default function CommunityPage() {
         </div>
       </PageHeader>
 
-      <main className="flex-1 container mx-auto max-w-6xl px-4 py-8">
-        <Tabs
-          aria-label="ประเภทเนื้อหา"
-          color="primary"
-          variant="underlined"
-          selectedKey={activeTab}
-          onSelectionChange={(key) => setActiveTab(key as string)}
-          classNames={{
-            tabList: "gap-6",
-            cursor: "bg-primary-color",
-            tab: "max-w-fit px-0 h-12",
-            tabContent: "group-data-[selected=true]:text-primary-color"
-          }}
-        >
-          {/* ส่วนแสดงกระทู้ */}
-          <Tab
-            key="forum"
-            title={
-              <div className="flex items-center gap-2">
-                <FaComments />
-                <span>กระทู้</span>
-              </div>
-            }
+      <main className="container max-w-5xl mx-auto px-4 py-12">
+        <div className="mt-4 mb-4">
+          <Tabs
+            aria-label="ประเภทเนื้อหา"
+            selectedKey={activeTab}
+            onSelectionChange={(key) => setActiveTab(key as string)}
+            color="primary"
+            variant="solid"
+            fullWidth
           >
-            <div className="flex flex-col gap-6 py-4">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                  <Select
-                    label="หมวดหมู่"
-                    placeholder="ทั้งหมด"
-                    selectedKeys={[forumCategory]}
-                    onChange={(e) => handleForumCategoryChange(e.target.value)}
-                    size="sm"
-                    className="w-full sm:w-48"
-                  >
-                    {forumCategories.map((category) => (
-                      <SelectItem key={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Input
-                    placeholder="ค้นหากระทู้..."
-                    value={forumSearchTerm}
-                    onValueChange={setForumSearchTerm}
-                    startContent={<FaSearch />}
-                    size="sm"
-                    className="w-full sm:w-60"
-                  />
+            {/* ส่วนแสดงกระทู้ */}
+            <Tab
+              key="forum"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaComments />
+                  <span>กระทู้</span>
                 </div>
+              }
+            >
+              <div className="flex flex-col gap-2 py-4">
 
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    color="default"
-                    onPress={handleRefreshForum}
-                    isLoading={isRefreshingForum}
-                    startContent={!isRefreshingForum && <FaSyncAlt />}
-                    className="flex-1 sm:flex-none"
-                  >
-                    {isRefreshingForum ? "กำลังโหลด..." : "รีเฟรช"}
-                  </Button>
+                <SectionHeading
+                  title="สภาพอากาศในบางกะเจ้า"
+                  description="ข้อมูลคุณภาพอากาศและสภาพอากาศแบบเรียลไทม์"
+                />
 
-                  <Button
-                    color="primary"
-                    startContent={<FaPlus />}
-                    className="flex-1 sm:flex-none"
-                    onPress={() => handleCreateButtonClick('forum')}
-                  >
-                    สร้างกระทู้ใหม่
-                  </Button>
-                </div>
-              </div>
-
-              <Card>
-                <CardBody className="p-0">
-                  {isLoadingForum ? (
-                    <div className="flex justify-center items-center py-20">
-                      <Spinner size="lg" color="primary" label="กำลังโหลดกระทู้..." />
-                    </div>
-                  ) : filteredPosts.length === 0 ? (
-                    <div className="text-center py-20">
-                      <FaComments size={40} className="mx-auto mb-4 text-default-400" />
-                      <p className="text-default-500">ไม่พบกระทู้ที่คุณค้นหา</p>
-                      {forumSearchTerm && (
-                        <Button
-                          color="primary"
-                          variant="flat"
-                          className="mt-4"
-                          onPress={() => setForumSearchTerm("")}
-                        >
-                          ล้างการค้นหา
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-default-200">
-                      {filteredPosts.map((post) => (
-                        <ForumPostItem
-                          key={post._id}
-                          post={post}
-                          getCategoryLabel={getForumCategoryLabel}
-                        />
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <Select
+                      label="หมวดหมู่"
+                      placeholder="ทั้งหมด"
+                      selectedKeys={[forumCategory]}
+                      onChange={(e) => handleForumCategoryChange(e.target.value)}
+                      size="sm"
+                      className="w-full sm:w-48"
+                    >
+                      {forumCategories.map((category) => (
+                        <SelectItem key={category.value}>
+                          {category.label}
+                        </SelectItem>
                       ))}
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
+                    </Select>
 
-              {/* Pagination สำหรับกระทู้ */}
-              {forumPagination && forumPagination.totalPages > 1 && (
-                <div className="flex justify-center mt-4">
-                  <Pagination
-                    total={forumPagination.totalPages}
-                    initialPage={forumPagination.currentPage}
-                    onChange={changeForumPage}
-                    showControls
-                    color="primary"
-                  />
+                    <Input
+                      placeholder="ค้นหากระทู้..."
+                      value={forumSearchTerm}
+                      onValueChange={setForumSearchTerm}
+                      startContent={<FaSearch className="text-zinc-500 dark:text-zinc-200" />}
+                      size="lg"
+                      radius="sm"
+                      className="w-full sm:w-60"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      color="default"
+                      onPress={handleRefreshForum}
+                      isLoading={isRefreshingForum}
+                      startContent={!isRefreshingForum && <FaSyncAlt />}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isRefreshingForum ? "กำลังโหลด..." : "รีเฟรช"}
+                    </Button>
+
+                    <Button
+                      color="primary"
+                      startContent={<FaPlus />}
+                      className="flex-1 sm:flex-none"
+                      onPress={() => handleCreateButtonClick('forum')}
+                    >
+                      สร้างกระทู้ใหม่
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </div>
-          </Tab>
 
-          {/* ส่วนแสดงเรื่องร้องเรียน */}
-          <Tab
-            key="complaints"
-            title={
-              <div className="flex items-center gap-2">
-                <FaClipboardList />
-                <span>เรื่องร้องเรียน</span>
+                <Card>
+                  <CardBody className="p-0">
+                    {isLoadingForum ? (
+                      <div className="flex justify-center items-center py-20">
+                        <Spinner size="lg" color="primary" label="กำลังโหลดกระทู้..." />
+                      </div>
+                    ) : filteredPosts.length === 0 ? (
+                      <div className="text-center py-20">
+                        <FaComments size={40} className="mx-auto mb-4 text-default-400" />
+                        <p className="text-default-500">ไม่พบกระทู้ที่คุณค้นหา</p>
+                        {forumSearchTerm && (
+                          <Button
+                            color="primary"
+                            variant="flat"
+                            className="mt-4"
+                            onPress={() => setForumSearchTerm("")}
+                          >
+                            ล้างการค้นหา
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-default-200">
+                        {filteredPosts.map((post) => (
+                          <ForumPostItem
+                            key={post._id}
+                            post={post}
+                            getCategoryLabel={getForumCategoryLabel}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </CardBody>
+                </Card>
+
+                {/* Pagination สำหรับกระทู้ */}
+                {forumPagination && forumPagination.totalPages > 1 && (
+                  <div className="flex justify-center mt-4">
+                    <Pagination
+                      total={forumPagination.totalPages}
+                      initialPage={forumPagination.currentPage}
+                      onChange={changeForumPage}
+                      showControls
+                      color="primary"
+                    />
+                  </div>
+                )}
               </div>
-            }
-          >
-            <div className="flex flex-col gap-6 py-4">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                  <Select
-                    label="หมวดหมู่"
-                    placeholder="ทั้งหมด"
-                    selectedKeys={[complaintCategory]}
-                    onChange={(e) => handleComplaintCategoryChange(e.target.value)}
-                    size="sm"
-                    className="w-full sm:w-40"
-                  >
-                    {complaintCategories.map((category) => (
-                      <SelectItem key={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
+            </Tab>
 
-                  <Select
-                    label="สถานะ"
-                    placeholder="ทั้งหมด"
-                    selectedKeys={[complaintStatus]}
-                    onChange={(e) => handleComplaintStatusChange(e.target.value)}
-                    size="sm"
-                    className="w-full sm:w-40"
-                  >
-                    {complaintStatuses.map((status) => (
-                      <SelectItem key={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Input
-                    placeholder="ค้นหาเรื่องร้องเรียน..."
-                    value={complaintSearchTerm}
-                    onValueChange={setComplaintSearchTerm}
-                    startContent={<FaSearch />}
-                    size="sm"
-                    className="w-full sm:w-60"
-                  />
+            {/* ส่วนแสดงเรื่องร้องเรียน */}
+            <Tab
+              key="complaints"
+              title={
+                <div className="flex items-center gap-2">
+                  <FaClipboardList />
+                  <span>เรื่องร้องเรียน</span>
                 </div>
+              }
+            >
+              <div className="flex flex-col gap-2 py-4">
 
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    color="default"
-                    onPress={handleRefreshComplaints}
-                    isLoading={isRefreshingComplaints}
-                    startContent={!isRefreshingComplaints && <FaSyncAlt />}
-                    className="flex-1 sm:flex-none"
-                  >
-                    {isRefreshingComplaints ? "กำลังโหลด..." : "รีเฟรช"}
-                  </Button>
+                <SectionHeading
+                  title="สภาพอากาศในบางกะเจ้า"
+                  description="ข้อมูลคุณภาพอากาศและสภาพอากาศแบบเรียลไทม์"
+                />
 
-                  <Button
-                    color="primary"
-                    startContent={<FaPlus />}
-                    className="flex-1 sm:flex-none"
-                    onPress={() => handleCreateButtonClick('complaint')}
-                  >
-                    สร้างเรื่องร้องเรียนใหม่
-                  </Button>
-                </div>
-              </div>
-
-              <Card>
-                <CardBody className="p-0">
-                  {isLoadingComplaints ? (
-                    <div className="flex justify-center items-center py-20">
-                      <Spinner size="lg" color="primary" label="กำลังโหลดเรื่องร้องเรียน..." />
-                    </div>
-                  ) : filteredComplaints.length === 0 ? (
-                    <div className="text-center py-20">
-                      <FaClipboardList size={40} className="mx-auto mb-4 text-default-400" />
-                      <p className="text-default-500">ไม่พบเรื่องร้องเรียนที่คุณค้นหา</p>
-                      {complaintSearchTerm && (
-                        <Button
-                          color="primary"
-                          variant="flat"
-                          className="mt-4"
-                          onPress={() => setComplaintSearchTerm("")}
-                        >
-                          ล้างการค้นหา
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-default-200">
-                      {filteredComplaints.map((complaint) => (
-                        <ComplaintItem
-                          key={complaint._id}
-                          complaint={complaint}
-                          getCategoryLabel={getComplaintCategoryLabel}
-                          getStatusText={getComplaintStatusText}
-                          getStatusColor={getComplaintStatusColor}
-                        />
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <Select
+                      label="หมวดหมู่"
+                      placeholder="ทั้งหมด"
+                      selectedKeys={[complaintCategory]}
+                      onChange={(e) => handleComplaintCategoryChange(e.target.value)}
+                      size="sm"
+                      className="w-full sm:w-40"
+                    >
+                      {complaintCategories.map((category) => (
+                        <SelectItem key={category.value}>
+                          {category.label}
+                        </SelectItem>
                       ))}
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
+                    </Select>
 
-              {/* Pagination สำหรับเรื่องร้องเรียน */}
-              {complaintPagination && complaintPagination.totalPages > 1 && (
-                <div className="flex justify-center mt-4">
-                  <Pagination
-                    total={complaintPagination.totalPages}
-                    initialPage={complaintPagination.currentPage}
-                    onChange={changeComplaintPage}
-                    showControls
-                    color="primary"
-                  />
+                    <Select
+                      label="สถานะ"
+                      placeholder="ทั้งหมด"
+                      selectedKeys={[complaintStatus]}
+                      onChange={(e) => handleComplaintStatusChange(e.target.value)}
+                      size="sm"
+                      className="w-full sm:w-40"
+                    >
+                      {complaintStatuses.map((status) => (
+                        <SelectItem key={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+
+                    <Input
+                      placeholder="ค้นหาเรื่องร้องเรียน..."
+                      value={complaintSearchTerm}
+                      onValueChange={setComplaintSearchTerm}
+                      startContent={<FaSearch className="text-zinc-500 dark:text-zinc-200" />}
+                      size="lg"
+                      radius="sm"
+                      className="w-full sm:w-60"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      color="default"
+                      onPress={handleRefreshComplaints}
+                      isLoading={isRefreshingComplaints}
+                      startContent={!isRefreshingComplaints && <FaSyncAlt />}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isRefreshingComplaints ? "กำลังโหลด..." : "รีเฟรช"}
+                    </Button>
+
+                    <Button
+                      color="primary"
+                      startContent={<FaPlus />}
+                      className="flex-1 sm:flex-none"
+                      onPress={() => handleCreateButtonClick('complaint')}
+                    >
+                      สร้างเรื่องร้องเรียนใหม่
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </div>
-          </Tab>
-        </Tabs>
+
+                <Card>
+                  <CardBody className="p-0">
+                    {isLoadingComplaints ? (
+                      <div className="flex justify-center items-center py-20">
+                        <Spinner size="lg" color="primary" label="กำลังโหลดเรื่องร้องเรียน..." />
+                      </div>
+                    ) : filteredComplaints.length === 0 ? (
+                      <div className="text-center py-20">
+                        <FaClipboardList size={40} className="mx-auto mb-4 text-default-400" />
+                        <p className="text-default-500">ไม่พบเรื่องร้องเรียนที่คุณค้นหา</p>
+                        {complaintSearchTerm && (
+                          <Button
+                            color="primary"
+                            variant="flat"
+                            className="mt-4"
+                            onPress={() => setComplaintSearchTerm("")}
+                          >
+                            ล้างการค้นหา
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-default-200">
+                        {filteredComplaints.map((complaint) => (
+                          <ComplaintItem
+                            key={complaint._id}
+                            complaint={complaint}
+                            getCategoryLabel={getComplaintCategoryLabel}
+                            getStatusText={getComplaintStatusText}
+                            getStatusColor={getComplaintStatusColor}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </CardBody>
+                </Card>
+
+                {/* Pagination สำหรับเรื่องร้องเรียน */}
+                {complaintPagination && complaintPagination.totalPages > 1 && (
+                  <div className="flex justify-center mt-4">
+                    <Pagination
+                      total={complaintPagination.totalPages}
+                      initialPage={complaintPagination.currentPage}
+                      onChange={changeComplaintPage}
+                      showControls
+                      color="primary"
+                    />
+                  </div>
+                )}
+              </div>
+            </Tab>
+          </Tabs>
+        </div>
       </main>
 
       {/* Modal สร้างกระทู้ */}

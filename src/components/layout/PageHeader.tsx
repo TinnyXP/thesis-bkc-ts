@@ -101,7 +101,6 @@ export default function PageHeader({
                   as="a"
                   href={buttons.primary.href}
                   color="primary"
-                  size="lg"
                   className="font-semibold"
                   startContent={buttons.primary.icon}
                 >
@@ -115,7 +114,6 @@ export default function PageHeader({
                   href={buttons.secondary.href}
                   color="default"
                   variant="bordered"
-                  size="lg"
                   className="bg-white/10 backdrop-blur-sm font-semibold border-white text-white"
                   startContent={buttons.secondary.icon}
                 >
