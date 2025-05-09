@@ -458,7 +458,7 @@ export default function CalendarSection() {
   };
 
   return (
-    <div className="py-6">
+    <div className="py-4">
       <SectionHeading
         title="ปฏิทินของพื้นที่บางกะเจ้า"
         description="วันสำคัญ กิจกรรม และเทศกาลในพื้นที่บางกะเจ้า"

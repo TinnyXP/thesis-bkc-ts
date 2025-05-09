@@ -19,11 +19,11 @@ export default function InformationPage() {
         subtitle="ข้อมูล"
         description="รวมข้อมูลที่น่าสนใจเกี่ยวกับบางกะเจ้า ปอดสีเขียวแห่งกรุงเทพฯ"
       >
-        <div className="flex flex-wrap justify-start w-full gap-4">
+        <div className="flex flex-wrap justify-start gap-3">
           <Button
             color={selectedKey === "weather" ? "primary" : "default"}
             variant={selectedKey === "weather" ? "bordered" : "solid"}
-            className="bg-white/10 backdrop-blur-sm font-semibold text-white w-48 justify-center"
+            className="bg-white/10 backdrop-blur-sm font-semibold text-white justify-center"
             startContent={<FaCloud />}
             onPress={() => setSelectedKey("weather")}
           >
@@ -32,7 +32,7 @@ export default function InformationPage() {
           <Button
             color={selectedKey === "calendar" ? "primary" : "default"}
             variant={selectedKey === "calendar" ? "bordered" : "solid"}
-            className="bg-white/10 backdrop-blur-sm font-semibold text-white w-48 justify-center"
+            className="bg-white/10 backdrop-blur-sm font-semibold text-white justify-center"
             startContent={<FaCalendarAlt />}
             onPress={() => setSelectedKey("calendar")}
           >

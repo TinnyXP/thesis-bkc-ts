@@ -60,7 +60,7 @@ export default function PageHeader({
         >
           {subtitle && (
             <motion.span
-              className="inline-block text-primary-color bg-zinc-800/20 border-2 border-zinc-600/50 backdrop-blur-sm px-2 pr-3 py-1 rounded-full text-sm md:text-base font-medium mb-4"
+              className="inline-block text-primary-color bg-zinc-800/20 border-2 border-zinc-600/20 backdrop-blur-sm px-2 pr-3 py-1 rounded-full text-sm md:text-base font-medium mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}

@@ -29,6 +29,7 @@ const translations = {
   bigTittle2: "ปอดสีเขียวแห่งกรุงเทพฯ",
   bigTittlePara: "พื้นที่สีเขียวกลางเมืองที่อุดมสมบูรณ์ กับธรรมชาติและวิถีชีวิตชุมชนที่ท่านไม่ควรพลาด",
   bigTittleButton: "บทความน่าสนใจ",
+  bigTittleButtonF: "ประวัติความเป็นมา",
 
   // Section 2 
   section2: "ค้นพบบางกะเจ้า",

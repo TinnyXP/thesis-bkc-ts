@@ -1,19 +1,24 @@
 // src/components/home/HeroSection.tsx
-
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import { FaHistory, FaNewspaper } from "react-icons/fa";
 
 export default function HeroSection() {
-  // เพิ่ม comment นี้เพื่อบอก ESLint ให้ข้าม warning
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { t } = useTranslation();
+  // เพิ่ม state สำหรับตรวจสอบการ mount component
+  const [isMounted, setIsMounted] = useState(false);
   
+  // useEffect เพื่อตั้งค่า isMounted เป็น true เมื่อ component ถูก mount บน client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <section className="relative min-h-[80vh] flex items-center overflow-hidden">
       {/* ภาพพื้นหลัง */}
@@ -42,8 +47,11 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            {t('bigTittle1')}
-            <span className="block text-primary-color mt-2">{t('bigTittle2')}</span>
+            {/* แก้ตรงนี้ ใช้ค่าเริ่มต้นเป็นภาษาไทยก่อนแล้วค่อยใช้ i18n เมื่อ component ถูก mount แล้ว */}
+            {isMounted ? t('bigTittle1') : "บางกะเจ้า"}
+            <span className="block text-primary-color mt-2">
+              {isMounted ? t('bigTittle2') : "ปอดสีเขียวแห่งกรุงเทพฯ"}
+            </span>
           </motion.h1>
           
           <motion.p 
@@ -52,7 +60,7 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            {t('bigTittlePara')}
+            {isMounted ? t('bigTittlePara') : "พื้นที่สีเขียวกลางเมืองที่อุดมสมบูรณ์ กับธรรมชาติและวิถีชีวิตชุมชนที่ท่านไม่ควรพลาด"}
           </motion.p>
           
           <motion.div 
@@ -65,10 +73,11 @@ export default function HeroSection() {
               as={Link}
               href="/history"
               color="primary"
-              size="lg"
+              variant="shadow"
               className="font-semibold"
+              startContent={<FaHistory />}
             >
-              {t('history')}
+              {isMounted ? t('bigTittleButtonF') : "ประวัติ"}
             </Button>
             
             <Button
@@ -76,10 +85,10 @@ export default function HeroSection() {
               href="/blog"
               color="default"
               variant="bordered"
-              size="lg"
-              className="bg-white/10 backdrop-blur-sm font-semibold border-white text-white"
+              className="bg-white/10 backdrop-blur-sm font-semibold border-zinc-500/50 text-white"
+              startContent={<FaNewspaper />}
             >
-              {t('bigTittleButton')}
+              {isMounted ? t('bigTittleButton') : "บทความน่าสนใจ"}
             </Button>
           </motion.div>
         </motion.div>

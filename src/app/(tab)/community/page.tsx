@@ -285,20 +285,20 @@ export default function CommunityPage() {
       // imageSrc="https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=2070"
       // imageAlt="ชุมชนบางกะเจ้า"
       >
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-start gap-3">
           <Button
             color={activeTab === "forum" ? "primary" : "default"}
             variant={activeTab === "forum" ? "bordered" : "solid"}
-            className="bg-white/10 backdrop-blur-sm font-semibold text-white w-48 justify-center"
+            className="bg-white/10 backdrop-blur-sm font-semibold text-white justify-center"
             startContent={<FaComments />}
             onPress={() => setActiveTab("forum")}
           >
-            กระทู้
+            กระทู้พูดคุย
           </Button>
           <Button
             color={activeTab === "complaints" ? "primary" : "default"}
             variant={activeTab === "complaints" ? "bordered" : "solid"}
-            className="bg-white/10 backdrop-blur-sm font-semibold text-white w-48 justify-center"
+            className="bg-white/10 backdrop-blur-sm font-semibold text-white justify-center"
             startContent={<FaClipboardList />}
             onPress={() => setActiveTab("complaints")}
           >
@@ -327,60 +327,62 @@ export default function CommunityPage() {
                 </div>
               }
             >
-              <div className="flex flex-col gap-2 py-4">
+              <div className="flex flex-col py-6">
 
                 <SectionHeading
                   title="กระทู้บางกะเจ้า"
                   description="พูดคุย แลกเปลี่ยนความคิดเห็นเกี่ยวกับบางกะเจ้า"
                 />
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                    <Select
-                      label="หมวดหมู่"
-                      placeholder="ทั้งหมด"
-                      selectedKeys={[forumCategory]}
-                      onChange={(e) => handleForumCategoryChange(e.target.value)}
-                      size="sm"
-                      className="w-full sm:w-48"
-                    >
-                      {forumCategories.map((category) => (
-                        <SelectItem key={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                <div className="mb-2">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                      <Select
+                        label="หมวดหมู่"
+                        placeholder="ทั้งหมด"
+                        selectedKeys={[forumCategory]}
+                        onChange={(e) => handleForumCategoryChange(e.target.value)}
+                        size="sm"
+                        className="w-full sm:w-48"
+                      >
+                        {forumCategories.map((category) => (
+                          <SelectItem key={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
 
-                    <Input
-                      placeholder="ค้นหากระทู้..."
-                      value={forumSearchTerm}
-                      onValueChange={setForumSearchTerm}
-                      startContent={<FaSearch className="text-zinc-500 dark:text-zinc-200" />}
-                      size="lg"
-                      radius="sm"
-                      className="w-full sm:w-60"
-                    />
-                  </div>
+                      <Input
+                        placeholder="ค้นหากระทู้..."
+                        value={forumSearchTerm}
+                        onValueChange={setForumSearchTerm}
+                        startContent={<FaSearch className="text-zinc-500 dark:text-zinc-200" />}
+                        size="lg"
+                        radius="sm"
+                        className="w-full sm:w-60"
+                      />
+                    </div>
 
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Button
-                      color="default"
-                      onPress={handleRefreshForum}
-                      isLoading={isRefreshingForum}
-                      startContent={!isRefreshingForum && <FaSyncAlt />}
-                      className="flex-1 sm:flex-none"
-                    >
-                      {isRefreshingForum ? "กำลังโหลด..." : "รีเฟรช"}
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button
+                        color="default"
+                        onPress={handleRefreshForum}
+                        isLoading={isRefreshingForum}
+                        startContent={!isRefreshingForum && <FaSyncAlt />}
+                        className="flex-1 sm:flex-none"
+                      >
+                        {isRefreshingForum ? "กำลังโหลด..." : "รีเฟรช"}
+                      </Button>
 
-                    <Button
-                      color="primary"
-                      startContent={<FaPlus />}
-                      className="flex-1 sm:flex-none"
-                      onPress={() => handleCreateButtonClick('forum')}
-                    >
-                      สร้างกระทู้ใหม่
-                    </Button>
+                      <Button
+                        color="primary"
+                        startContent={<FaPlus />}
+                        className="flex-1 sm:flex-none"
+                        onPress={() => handleCreateButtonClick('forum')}
+                      >
+                        สร้างกระทู้ใหม่
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -444,75 +446,77 @@ export default function CommunityPage() {
                 </div>
               }
             >
-              <div className="flex flex-col gap-2 py-6">
+              <div className="flex flex-col py-6">
 
                 <SectionHeading
                   title="ข้อเสนอแนะบางกะเจ้า"
-                  description="แสดงความคิดเห็นหรือเสนอแนวทางเพื่อพัฒนาบางกะเจ้าให้ดียิ่งขึ้น"
+                  description="เสนอแนวทางเพื่อพัฒนาบางกะเจ้าให้ดียิ่งขึ้น"
                 />
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                    <Select
-                      label="หมวดหมู่"
-                      placeholder="ทั้งหมด"
-                      selectedKeys={[complaintCategory]}
-                      onChange={(e) => handleComplaintCategoryChange(e.target.value)}
-                      size="sm"
-                      className="w-full sm:w-40"
-                    >
-                      {complaintCategories.map((category) => (
-                        <SelectItem key={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                <div className="mb-2">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                      <Select
+                        label="หมวดหมู่"
+                        placeholder="ทั้งหมด"
+                        selectedKeys={[complaintCategory]}
+                        onChange={(e) => handleComplaintCategoryChange(e.target.value)}
+                        size="sm"
+                        className="w-full sm:w-40"
+                      >
+                        {complaintCategories.map((category) => (
+                          <SelectItem key={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
 
-                    <Select
-                      label="สถานะ"
-                      placeholder="ทั้งหมด"
-                      selectedKeys={[complaintStatus]}
-                      onChange={(e) => handleComplaintStatusChange(e.target.value)}
-                      size="sm"
-                      className="w-full sm:w-40"
-                    >
-                      {complaintStatuses.map((status) => (
-                        <SelectItem key={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                      <Select
+                        label="สถานะ"
+                        placeholder="ทั้งหมด"
+                        selectedKeys={[complaintStatus]}
+                        onChange={(e) => handleComplaintStatusChange(e.target.value)}
+                        size="sm"
+                        className="w-full sm:w-40"
+                      >
+                        {complaintStatuses.map((status) => (
+                          <SelectItem key={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
 
-                    <Input
-                      placeholder="ค้นหาเรื่องร้องเรียน..."
-                      value={complaintSearchTerm}
-                      onValueChange={setComplaintSearchTerm}
-                      startContent={<FaSearch className="text-zinc-500 dark:text-zinc-200" />}
-                      size="lg"
-                      radius="sm"
-                      className="w-full sm:w-60"
-                    />
-                  </div>
+                      <Input
+                        placeholder="ค้นหาเรื่องร้องเรียน..."
+                        value={complaintSearchTerm}
+                        onValueChange={setComplaintSearchTerm}
+                        startContent={<FaSearch className="text-zinc-500 dark:text-zinc-200" />}
+                        size="lg"
+                        radius="sm"
+                        className="w-full sm:w-60"
+                      />
+                    </div>
 
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Button
-                      color="default"
-                      onPress={handleRefreshComplaints}
-                      isLoading={isRefreshingComplaints}
-                      startContent={!isRefreshingComplaints && <FaSyncAlt />}
-                      className="flex-1 sm:flex-none"
-                    >
-                      {isRefreshingComplaints ? "กำลังโหลด..." : "รีเฟรช"}
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button
+                        color="default"
+                        onPress={handleRefreshComplaints}
+                        isLoading={isRefreshingComplaints}
+                        startContent={!isRefreshingComplaints && <FaSyncAlt />}
+                        className="flex-1 sm:flex-none"
+                      >
+                        {isRefreshingComplaints ? "กำลังโหลด..." : "รีเฟรช"}
+                      </Button>
 
-                    <Button
-                      color="primary"
-                      startContent={<FaPlus />}
-                      className="flex-1 sm:flex-none"
-                      onPress={() => handleCreateButtonClick('complaint')}
-                    >
-                      สร้างเรื่องร้องเรียนใหม่
-                    </Button>
+                      <Button
+                        color="primary"
+                        startContent={<FaPlus />}
+                        className="flex-1 sm:flex-none"
+                        onPress={() => handleCreateButtonClick('complaint')}
+                      >
+                        สร้างเรื่องร้องเรียนใหม่
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

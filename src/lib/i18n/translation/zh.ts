@@ -30,6 +30,7 @@ const translations = {
   bigTittle2: "曼谷的綠肺",
   bigTittlePara: "市中心鬱鬱蔥蔥的綠地，擁有您不容錯過的自然和社區生活方式。",
   bigTittleButton: "有趣的文章",
+  bigTittleButtonF: "歷史",
 
   // Section 2 
   section2: "探索 Bang Krachao",

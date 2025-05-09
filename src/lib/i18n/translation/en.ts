@@ -30,6 +30,7 @@ const translations = {
   bigTittle2: "Green lungs of Bangkok",
   bigTittlePara: "A green space in the city that is rich with nature and community lifestyle that you should not miss.",
   bigTittleButton: "Interesting Articles",
+  bigTittleButtonF: "History",
 
 
   // section2
