@@ -180,7 +180,7 @@ export default function WeatherSection() {
   const airQualityInfo = airQuality ? getAirQualityLevel(airQuality.pm25) : null;
 
   return (
-    <div className="py-8">
+    <div className="py-6">
       <SectionHeading
         title="สภาพอากาศในบางกะเจ้า"
         description="ข้อมูลคุณภาพอากาศและสภาพอากาศแบบเรียลไทม์"

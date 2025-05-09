@@ -4,7 +4,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Button } from "@heroui/react";
+import { Button, Chip } from "@heroui/react";
 
 interface PageHeaderProps {
   title: string;
@@ -60,12 +60,22 @@ export default function PageHeader({
         >
           {subtitle && (
             <motion.span
-              className="inline-block text-primary-color bg-white/10 backdrop-blur-sm px-4 py-1 rounded-full text-sm md:text-base font-medium mb-3"
+              className="inline-block text-primary-color bg-zinc-800/20 border-2 border-zinc-600/50 backdrop-blur-sm px-2 pr-3 py-1 rounded-full text-sm md:text-base font-medium mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
             >
-              {subtitle}
+              <div>
+                <Chip
+                  className="border-none p-0 text-default-500"
+                  color="success"
+                  variant="dot"
+                  classNames={{
+                    dot: "relative before:content-[''] before:absolute before:-inset-[2px] before:rounded-full before:bg-success-500 before:animate-ping before:opacity-75"
+                  }}
+                ></Chip>
+                {subtitle}
+              </div>
             </motion.span>
           )}
 
@@ -102,6 +112,7 @@ export default function PageHeader({
                   href={buttons.primary.href}
                   color="primary"
                   className="font-semibold"
+                  variant="shadow"
                   startContent={buttons.primary.icon}
                 >
                   {buttons.primary.text}
@@ -114,7 +125,7 @@ export default function PageHeader({
                   href={buttons.secondary.href}
                   color="default"
                   variant="bordered"
-                  className="bg-white/10 backdrop-blur-sm font-semibold border-white text-white"
+                  className="bg-white/10 backdrop-blur-sm font-semibold border-zinc-500/50 text-white"
                   startContent={buttons.secondary.icon}
                 >
                   {buttons.secondary.text}

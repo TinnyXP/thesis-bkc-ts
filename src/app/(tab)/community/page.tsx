@@ -282,8 +282,8 @@ export default function CommunityPage() {
         title="ชุมชนบางกะเจ้า"
         subtitle="พูดคุยและแจ้งปัญหา"
         description="พื้นที่สำหรับพูดคุยแลกเปลี่ยน ถามคำถาม แบ่งปันประสบการณ์ และแจ้งปัญหาเกี่ยวกับบางกะเจ้า"
-        imageSrc="https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=2070"
-        imageAlt="ชุมชนบางกะเจ้า"
+      // imageSrc="https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=2070"
+      // imageAlt="ชุมชนบางกะเจ้า"
       >
         <div className="flex flex-wrap justify-center gap-4">
           <Button
@@ -330,8 +330,8 @@ export default function CommunityPage() {
               <div className="flex flex-col gap-2 py-4">
 
                 <SectionHeading
-                  title="สภาพอากาศในบางกะเจ้า"
-                  description="ข้อมูลคุณภาพอากาศและสภาพอากาศแบบเรียลไทม์"
+                  title="กระทู้บางกะเจ้า"
+                  description="พูดคุย แลกเปลี่ยนความคิดเห็นเกี่ยวกับบางกะเจ้า"
                 />
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -444,11 +444,11 @@ export default function CommunityPage() {
                 </div>
               }
             >
-              <div className="flex flex-col gap-2 py-4">
+              <div className="flex flex-col gap-2 py-6">
 
                 <SectionHeading
-                  title="สภาพอากาศในบางกะเจ้า"
-                  description="ข้อมูลคุณภาพอากาศและสภาพอากาศแบบเรียลไทม์"
+                  title="ข้อเสนอแนะบางกะเจ้า"
+                  description="แสดงความคิดเห็นหรือเสนอแนวทางเพื่อพัฒนาบางกะเจ้าให้ดียิ่งขึ้น"
                 />
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
