@@ -1,0 +1,657 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Switch,
+  Divider,
+  useDisclosure,
+  Tabs,
+  Tab,
+  Input,
+  Tooltip,
+} from "@heroui/react";
+import { FaBell, FaMoon, FaTrash, FaExclamationTriangle, FaUserEdit, FaCamera, FaCheck, FaTimes, FaSyncAlt } from "react-icons/fa";
+import { FiSettings, FiUser } from "react-icons/fi";
+import { useTheme } from "next-themes";
+import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
+import { FaUser } from "react-icons/fa6";
+import { LanguageSelectorTab } from "@/lib/i18n";
+import { showToast } from "@/lib/toast";
+
+// กำหนด interface สำหรับ userProfile
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  provider: string;
+  bkcId: string;
+  isActive: boolean;
+  profileCompleted: boolean;
+}
+
+// Export interface เพื่อให้คอมโพเนนต์อื่นสามารถเรียกใช้ได้
+export interface SettingsModalProps {
+  isOpen: boolean;
+  onOpenChange: () => void;
+  userProfile?: UserProfile | null;
+  refreshProfile?: () => Promise<void>;
+}
+
+export default function SettingsModal({
+  isOpen,
+  onOpenChange,
+  userProfile,
+  refreshProfile
+}: SettingsModalProps) {
+  const { data: session, update } = useSession();
+  const { theme, setTheme } = useTheme();
+  const [notifications, setNotifications] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(theme === "dark");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // สถานะสำหรับการแก้ไขโปรไฟล์
+  const [userName, setUserName] = useState(userProfile?.name || session?.user?.name || "");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removeProfileImage, setRemoveProfileImage] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [profileUpdateError, setProfileUpdateError] = useState("");
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
+
+  // สถานะสำหรับการรีเซ็ตโปรไฟล์ LINE
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
+
+  // ใช้ useDisclosure สำหรับการควบคุม modal ยืนยันการลบบัญชี
+  const {
+    isOpen: isDeleteConfirmOpen,
+    onOpen: onDeleteConfirmOpen,
+    onOpenChange: onDeleteConfirmChange,
+    onClose: onDeleteConfirmClose
+  } = useDisclosure();
+
+  // อัพเดต userName เมื่อ userProfile หรือ session เปลี่ยน
+  useEffect(() => {
+    if (userProfile?.name) {
+      setUserName(userProfile.name);
+    } else if (session?.user?.name) {
+      setUserName(session.user.name);
+    }
+
+    // รีเซ็ตสถานะการอัปเดตโปรไฟล์เมื่อ modal ถูกเปิด
+    if (isOpen) {
+      setProfileUpdateSuccess(false);
+      setProfileUpdateError("");
+      setProfileImage(null);
+      setPreviewUrl(null);
+      setRemoveProfileImage(false);
+      setResetSuccess(false);
+      setResetError("");
+    }
+  }, [userProfile, session, isOpen]);
+
+  // อัพเดต isDarkMode เมื่อ theme เปลี่ยน
+  useEffect(() => {
+    setIsDarkMode(theme === "dark");
+  }, [theme]);
+
+  // จัดการการเปลี่ยน theme
+  const handleDarkModeChange = (value: boolean) => {
+    setIsDarkMode(value);
+    setTheme(value ? "dark" : "light");
+    showToast(`เปลี่ยนโหมดเป็น${value ? "กลางคืน" : "กลางวัน"}เรียบร้อยแล้ว`, "info");
+  };
+
+  // จัดการการเลือกรูปโปรไฟล์
+  const handleImageClick = () => {
+    if (removeProfileImage) setRemoveProfileImage(false);
+    fileInputRef.current?.click();
+  };
+
+  // จัดการการเปลี่ยนรูปโปรไฟล์
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setProfileImage(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setRemoveProfileImage(false);
+    }
+  };
+
+  // ลบรูปโปรไฟล์
+  const handleRemoveImage = () => {
+    setRemoveProfileImage(true);
+    setProfileImage(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // อัปเดตโปรไฟล์
+  const handleUpdateProfile = async () => {
+    if (!userName.trim()) {
+      setProfileUpdateError("กรุณากรอกชื่อ");
+      showToast("กรุณากรอกชื่อ", "error");
+      return;
+    }
+
+    setIsUpdatingProfile(true);
+    setProfileUpdateError("");
+    setProfileUpdateSuccess(false);
+
+    try {
+      const formData = new FormData();
+      formData.append("name", userName);
+
+      if (profileImage) {
+        // ถ้ามีไฟล์รูปที่อัพโหลดใหม่
+        formData.append("profileImage", profileImage);
+      } else if (previewUrl && !removeProfileImage) {
+        // ถ้ามี previewUrl (รูปจาก LINE) และไม่ได้ตั้งค่าลบรูป
+        formData.append("imageUrl", previewUrl);
+      }
+
+      formData.append("removeProfileImage", removeProfileImage.toString());
+
+      const response = await fetch('/api/user/update-profile', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // อัพเดต session
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: data.user.name,
+            image: data.user.image
+          }
+        });
+
+        // รีเฟรชข้อมูลโปรไฟล์
+        if (refreshProfile) {
+          await refreshProfile(); // รอให้รีเฟรชเสร็จก่อน
+        }
+
+        // แสดงข้อความสำเร็จ
+        showToast("อัปเดตโปรไฟล์สำเร็จ", "success");
+        setProfileUpdateSuccess(true);
+
+        // รีเซ็ตสถานะ
+        setProfileImage(null);
+        setPreviewUrl(null);
+        setRemoveProfileImage(false);
+
+        // บังคับรีเฟรช global state สำหรับคอมเมนต์ด้วย (ใช้ Global Event)
+        // เพิ่ม custom event เพื่อแจ้งเตือนคอมโพเนนต์อื่นให้รีเฟรช
+        const profileUpdatedEvent = new CustomEvent('profile-updated', {
+          detail: {
+            name: data.user.name,
+            image: data.user.image,
+            bkcId: data.user.bkcId
+          }
+        });
+        window.dispatchEvent(profileUpdatedEvent);
+
+        // แสดงข้อความสำเร็จชั่วคราว
+        setTimeout(() => {
+          setProfileUpdateSuccess(false);
+        }, 3000);
+      } else {
+        setProfileUpdateError(data.message || "ไม่สามารถอัปเดตโปรไฟล์ได้");
+        showToast(data.message || "ไม่สามารถอัปเดตโปรไฟล์ได้", "error");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setProfileUpdateError("เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์");
+      showToast("เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์", "error");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  const handleFillLineData = async () => {
+    if (!session?.user?.bkcId) {
+      setResetError("ไม่พบข้อมูลผู้ใช้");
+      showToast("ไม่พบข้อมูลผู้ใช้", "error");
+      return;
+    }
+
+    setIsResetting(true);
+    setResetError("");
+    setResetSuccess(false);
+
+    try {
+      const response = await fetch('/api/user/get-line-default-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bkcId: userProfile?.bkcId || session?.user?.bkcId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.lineDefaultData) {
+        // อัพเดตชื่อ
+        setUserName(data.lineDefaultData.name);
+
+        // อัพเดตรูปภาพ - ใช้ URL โดยตรงจาก lineDefaultData
+        if (data.lineDefaultData.profile_image) {
+          // ตั้งค่า previewUrl เป็น URL รูปจาก LINE
+          setPreviewUrl(data.lineDefaultData.profile_image);
+          // รีเซ็ตไฟล์รูปที่อาจมีการอัพโหลดไว้ก่อนหน้า
+          setProfileImage(null);
+          // ยกเลิกการตั้งค่าลบรูป
+          setRemoveProfileImage(false);
+
+          console.log("Setting profile image from LINE:", data.lineDefaultData.profile_image);
+        }
+
+        setResetSuccess(true);
+        showToast("ดึงข้อมูลจาก LINE สำเร็จ กดอัปเดตเพื่อบันทึก", "success");
+
+        // แสดงข้อความสำเร็จชั่วคราว
+        setTimeout(() => {
+          setResetSuccess(false);
+        }, 3000);
+      } else {
+        setResetError(data.message || "ไม่สามารถดึงข้อมูลจาก LINE ได้");
+        showToast(data.message || "ไม่สามารถดึงข้อมูลจาก LINE ได้", "error");
+      }
+    } catch (error) {
+      console.error("Error getting LINE default data:", error);
+      setResetError("เกิดข้อผิดพลาดในการดึงข้อมูลจาก LINE");
+      showToast("เกิดข้อผิดพลาดในการดึงข้อมูลจาก LINE", "error");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // ฟังก์ชันลบบัญชีผู้ใช้
+  const handleDeleteAccount = async () => {
+    if (!session?.user?.bkcId) {
+      setDeleteError("ไม่พบข้อมูลผู้ใช้");
+      showToast("ไม่พบข้อมูลผู้ใช้", "error");
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      const response = await fetch('/api/user/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          confirmDelete: true,
+          bkcId: session.user.bkcId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast("ลบบัญชีเรียบร้อยแล้ว", "success");
+        // ปิด modal ยืนยัน
+        onDeleteConfirmClose();
+        // ปิด modal หลัก
+        onOpenChange();
+        // ล็อกเอาท์ผู้ใช้
+        await signOut({ callbackUrl: '/login?deleted=true' });
+      } else {
+        setDeleteError(data.message || "ไม่สามารถลบบัญชีได้");
+        showToast(data.message || "ไม่สามารถลบบัญชีได้", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      setDeleteError("เกิดข้อผิดพลาดในการลบบัญชี โปรดลองอีกครั้ง");
+      showToast("เกิดข้อผิดพลาดในการลบบัญชี โปรดลองอีกครั้ง", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md" backdrop='blur'
+        classNames={{
+          body: "py-2",
+          base: "font-[family-name:var(--font-line-seed-sans)]",
+          closeButton: "hover:bg-white/5 active:bg-white/10 right-4 top-3.5",
+        }}
+      >
+        <ModalContent>
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              การตั้งค่า
+            </ModalHeader>
+            <ModalBody>
+              <Tabs
+                aria-label="ตั้งค่า"
+                color="primary"
+                variant="underlined"
+                disableAnimation={false}
+                classNames={{
+                  base: "w-full",
+                  tabList: "w-full flex",
+                  tab: "flex-1 flex justify-center"
+                }}
+              >
+                {/* แท็บตั้งค่า */}
+                <Tab
+                  key="settings"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FiSettings />
+                      <span>ตั้งค่าบัญชี</span>
+                    </div>
+                  }
+                >
+                  <div className="flex flex-col gap-6 py-2">
+                    {/* แสดงข้อมูลการล็อกอิน */}
+                    <div className="flex flex-col items-center mb-3">
+                      <div className="bg-zinc-100 dark:bg-zinc-800 rounded-md p-2 text-xs text-center w-full">
+                        <p>เข้าสู่ระบบด้วย: <span className="font-bold">
+                          {(userProfile?.provider || session?.user?.provider) === 'line' ? 'LINE' : 'อีเมล'}
+                        </span></p>
+                        <p>{userProfile?.email || session?.user?.email}</p>
+                        <p className="text-xs text-zinc-500 mt-1">{userProfile?.bkcId || session?.user?.bkcId}</p>
+                      </div>
+                    </div>
+
+                    <LanguageSelectorTab placement="top" variant="bordered" fullWidth />
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <FaBell size={22} />
+                        <span>การแจ้งเตือน</span>
+                      </div>
+                      <Switch
+                        isSelected={notifications}
+                        onValueChange={setNotifications}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <FaMoon size={22} />
+                        <span>โหมดกลางคืน</span>
+                      </div>
+                      <Switch
+                        isSelected={isDarkMode}
+                        onValueChange={handleDarkModeChange}
+                      />
+                    </div>
+
+                    <Divider className="my-1" />
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <div>
+                        <Button
+                          color="danger"
+                          variant="shadow"
+                          startContent={<FaTrash />}
+                          className="w-full"
+                          onPress={onDeleteConfirmOpen}
+                        >
+                          ลบบัญชีผู้ใช้
+                        </Button>
+                      </div>
+
+                      <div className="text-center">
+                        <Divider className="my-1.5" />
+                        <p className="text-xs text-default-500">
+                          การลบบัญชีจะไม่สามารถกู้คืนได้ ข้อมูลทั้งหมดจะถูกลบออกจากระบบอย่างถาวร
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+                </Tab>
+                {/* แท็บโปรไฟล์ */}
+                <Tab
+                  key="edit-profile"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <FiUser />
+                      <span>แก้ไขโปรไฟล์</span>
+                    </div>
+                  }
+                >
+                  <div className="flex flex-col gap-6 py-2">
+                    {/* แสดงข้อความแจ้งเตือนความสำเร็จ/ล้มเหลว */}
+                    {profileUpdateSuccess && (
+                      <div className="bg-green-100 text-green-700 p-3 rounded-md flex items-center gap-2">
+                        <FaCheck size={16} />
+                        <span>อัปเดตโปรไฟล์สำเร็จ</span>
+                      </div>
+                    )}
+
+                    {profileUpdateError && (
+                      <div className="bg-red-100 text-red-700 p-3 rounded-md">
+                        {profileUpdateError}
+                      </div>
+                    )}
+
+                    {resetSuccess && (
+                      <div className="bg-blue-100 text-blue-700 p-3 rounded-md flex items-center gap-2">
+                        <FaCheck size={16} />
+                        <span>ดึงข้อมูลจาก LINE สำเร็จแล้ว</span>
+                      </div>
+                    )}
+
+                    {resetError && (
+                      <div className="bg-red-100 text-red-700 p-3 rounded-md">
+                        {resetError}
+                      </div>
+                    )}
+
+                    {/* รูปโปรไฟล์ */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="relative">
+                        <div
+                          className="relative w-40 h-40 rounded-full mb-2 cursor-pointer overflow-hidden bg-zinc-200/20 dark:bg-zinc-200/5 flex items-center justify-center border-2 border-solid border-default-300"
+                          onClick={handleImageClick}
+                        >
+                          {removeProfileImage ? (
+                            // แสดง AvatarIcon เมื่อตั้งค่าให้ลบรูปโปรไฟล์
+                            <FaUser size={60} className="text-zinc-400" />
+                          ) : previewUrl ? (
+                            // แสดงรูปพรีวิวกรณีมีการอัพโหลดรูปใหม่หรือใช้รูปจาก LINE
+                            <Image
+                              src={previewUrl}
+                              alt="Profile preview"
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          ) : userProfile?.image ? (
+                            // แสดงรูปโปรไฟล์ปัจจุบัน
+                            <Image
+                              src={userProfile.image}
+                              alt="รูปโปรไฟล์"
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          ) : (
+                            // แสดง AvatarIcon เมื่อไม่มีรูปโปรไฟล์
+                            <FaUser size={60} className="text-zinc-400" />
+                          )}
+                          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <FaCamera size={44} className="text-white" />
+                          </div>
+                        </div>
+
+                        {/* ปุ่มลบรูปโปรไฟล์ */}
+                        {(previewUrl || (!removeProfileImage && (userProfile?.image || session?.user?.image))) && (
+                          <Tooltip
+                            showArrow
+                            content="ลบรูปโปรไฟล์"
+                            placement="right"
+                            color="danger"
+                            delay={500}
+                            closeDelay={100}
+                          >
+                            <Button
+                              isIconOnly
+                              color="danger"
+                              size="md"
+                              variant="shadow"
+                              radius="full"
+                              className="absolute bottom-2 right-2"
+                              onPress={handleRemoveImage}
+                            >
+                              <FaTimes size={22} />
+                            </Button>
+                          </Tooltip>
+                        )}
+                      </div>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        คลิกที่รูปภาพเพื่ออัปโหลดรูปโปรไฟล์ใหม่
+                      </p>
+                    </div>
+
+                    {/* ชื่อผู้ใช้ */}
+                    <Input
+                      label="ชื่อที่แสดง"
+                      placeholder="กรอกชื่อที่ต้องการแสดง"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      variant="bordered"
+                      startContent={<FaUserEdit className="text-default-400" />}
+                      description="ชื่อนี้จะแสดงในโปรไฟล์และการโพสต์ของคุณ"
+                    />
+
+                    {/* ส่วนของปุ่มต่างๆ */}
+                    <div className="flex flex-col gap-2 w-full">
+                      {/* ปุ่มบันทึกการเปลี่ยนแปลงและปุ่ม Reset สำหรับผู้ใช้ LINE */}
+                      <div className="flex flex-row gap-2 w-full">
+                        <Button
+                          color="primary"
+                          onPress={handleUpdateProfile}
+                          isLoading={isUpdatingProfile}
+                          startContent={!isUpdatingProfile && <FaCheck size={16} />}
+                          className={(userProfile?.provider === 'line' || session?.user?.provider === 'line') ? "w-[90%]" : "w-full"}
+                        >
+                          {isUpdatingProfile ? "กำลังอัพเดต..." : "อัปเดตโปรไฟล์"}
+                        </Button>
+
+                        {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                          <Button
+                            variant="faded"
+                            onPress={handleFillLineData}
+                            isLoading={isResetting}
+                            isIconOnly
+                            className="w-[10%]"
+                          >
+                            <FaSyncAlt size={16} />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* ข้อความคำอธิบายสำหรับผู้ใช้ LINE */}
+                      {(userProfile?.provider === 'line' || session?.user?.provider === 'line') && (
+                        <div className="text-center">
+                          <Divider className="my-1.5" />
+                          <p className="text-xs text-default-500">
+                            คุณสามารถดึงข้อมูลจาก LINE มา และกดอัปเดตเพื่อบันทึก
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Tab>
+              </Tabs>
+            </ModalBody>
+          </>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal ยืนยันการลบบัญชี */}
+      <Modal
+        isOpen={isDeleteConfirmOpen}
+        onOpenChange={onDeleteConfirmChange}
+        backdrop="blur"
+        size="sm"
+        classNames={{
+          body: "py-2",
+          base: "font-[family-name:var(--font-line-seed-sans)]",
+          closeButton: "hover:bg-white/5 active:bg-white/10 right-4 top-3.5",
+        }}
+      >
+        <ModalContent>
+          {(onDeleteConfirmClose) => (
+            <>
+              <ModalHeader className="flex flex-col items-center text-danger">
+                <FaExclamationTriangle size={30} className="text-danger mb-2" />
+                ยืนยันการลบบัญชี
+              </ModalHeader>
+              <ModalBody>
+                <div className="text-center">
+                  <p className="mb-3">คุณกำลังจะลบบัญชีของคุณอย่างถาวร</p>
+                  <p className="font-bold mb-3">การกระทำนี้ไม่สามารถยกเลิกได้</p>
+                  <p className="text-sm text-default-500">ข้อมูลทั้งหมดของคุณจะถูกลบออกจากระบบ</p>
+
+                  {deleteError && (
+                    <div className="bg-red-100 text-danger p-2 rounded mt-3 text-sm">
+                      {deleteError}
+                    </div>
+                  )}
+                </div>
+              </ModalBody>
+              <ModalFooter className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  className="flex-1"
+                  variant="flat"
+                  onPress={onDeleteConfirmClose}
+                  autoFocus
+                >
+                  ยกเลิก
+                </Button>
+                <Button
+                  className="flex-1"
+                  color="danger"
+                  isLoading={isDeleting}
+                  onPress={handleDeleteAccount}
+                >
+                  ยืนยันการลบบัญชี
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}

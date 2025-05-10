@@ -1,0 +1,67 @@
+// src/components/home/CTASection.tsx
+"use client";
+
+import React from "react";
+import { Button } from "@heroui/react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { useTranslation } from "react-i18next";
+
+export default function CTASection() {
+  const { t } = useTranslation();
+  return (
+    <section className="py-20 relative overflow-hidden">
+      {/* ภาพพื้นหลัง */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <Image 
+          src="https://oyfe6pa52xt3zzj2.public.blob.vercel-storage.com/cta-bg-LP0CwgmwosqimskP5G8UVPhGPqeMUR.jpg" 
+          alt="บางกะเจ้า" 
+          fill
+          style={{ objectFit: 'cover' }}
+          quality={80}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/60" />
+      </div>
+      
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-3xl mx-auto text-center text-white">
+          <motion.h2 
+            className="text-3xl md:text-4xl font-bold mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            {t('ctaBig')}
+          </motion.h2>
+          
+          <motion.p 
+            className="text-lg mb-8 text-white/90"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            {t('ctaPara')}
+          </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+          >
+            <Button
+              color="primary"
+              size="lg"
+              href="/place"
+              className="font-semibold"
+            >
+              {t('ctaButton')}
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
