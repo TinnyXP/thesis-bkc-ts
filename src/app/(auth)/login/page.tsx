@@ -398,9 +398,9 @@ export default function LoginPage() {
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     รหัส OTP ถูกส่งไปยัง <span className="font-semibold">{email}</span>
                   </p>
-                  {!isOtpValid && (
+                  {/* {!isOtpValid && (
                     <p className="text-danger text-tiny mt-1">กรุณากรอกรหัส OTP ให้ถูกต้อง</p>
-                  )}
+                  )} */}
                   <InputOtp
                     length={6}
                     value={otp}
@@ -410,7 +410,7 @@ export default function LoginPage() {
                       setIsOtpValid(validateOtp(value) || value.length < 6);
                     }}
                     isInvalid={!isOtpValid}
-                    errorMessage={!isOtpValid ? "รหัส OTP ไม่ถูกต้อง" : undefined}
+                    // errorMessage={!isOtpValid ? "รหัส OTP ไม่ถูกต้อง" : undefined}
                     classNames={{
                       helperWrapper: "flex justify-center items-center",
                       errorMessage: !isOtpValid ? "text-danger text-tiny" : "hidden"

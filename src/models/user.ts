@@ -54,7 +54,7 @@ const userSchema = new Schema<UserDocument>(
     },
     line_id: {
       type: String,
-      default: null,
+      // default: null,
       // แก้ไขตรงนี้: ใช้ sparse index เพื่อให้สามารถมีหลายเรคอร์ดที่ line_id เป็น null ได้
       // sparse: true จะไม่รวมเอกสารที่ไม่มีฟิลด์หรือเป็น null ในการตรวจสอบ unique
       sparse: true,

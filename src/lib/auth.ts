@@ -82,23 +82,23 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials) return null;
-      
+
         // ตรวจสอบความถูกต้องของข้อมูลที่ส่งมา
         if (!credentials.email || !credentials.otp) {
           console.log("Missing email or OTP in credentials");
           return null;
         }
-      
+
         const otpCredentials: OTPUserCredentials = {
           email: credentials.email,
           otp: credentials.otp
         };
-      
+
         const { email, otp } = otpCredentials;
-        
+
         try {
           await connectDB();
-      
+
           // ตรวจสอบ OTP อย่างละเอียด
           const validOtp = await OTP.findOne({
             email,
@@ -106,22 +106,22 @@ export const authOptions: AuthOptions = {
             is_used: false,
             expires_at: { $gt: new Date() }
           });
-      
+
           if (!validOtp) {
             console.log("Invalid OTP for email:", email, "- OTP not found or already used or expired");
             return null;
           }
-      
+
           // ค้นหาผู้ใช้
           const user = await UserModel.findOne({ email, provider: 'otp' });
           let userData;
-      
+
           try {
             // กำหนดค่า isNewUser และสร้างหรือดึงข้อมูลผู้ใช้
             if (!user) {
               // สร้าง bkc_id ใหม่
               const bkc_id = uuidv4();
-      
+
               // สร้างผู้ใช้ใหม่ที่ยังไม่ได้กรอกข้อมูลโปรไฟล์
               const newUser = await UserModel.create({
                 email,
@@ -131,10 +131,10 @@ export const authOptions: AuthOptions = {
                 profile_completed: false,
                 // ไม่ต้องระบุ line_id เพื่อให้เป็น undefined แทนที่จะเป็น null
               });
-      
+
               // บันทึกประวัติการล็อกอิน
               await saveLoginHistory(newUser._id.toString(), 'success');
-      
+
               userData = {
                 id: newUser._id.toString(),
                 email: newUser.email,
@@ -150,17 +150,17 @@ export const authOptions: AuthOptions = {
                 console.log("Account is disabled:", email);
                 return null;
               }
-      
+
               // บันทึกประวัติการล็อกอิน
               const clientInfo = await saveLoginHistory(user._id.toString(), 'success');
-      
+
               // ส่งอีเมลแจ้งเตือนการเข้าสู่ระบบ
               try {
                 await sendLoginNotificationEmail(user.email, user.name, clientInfo);
               } catch (emailError) {
                 console.error("Error sending login notification email:", emailError);
               }
-      
+
               userData = {
                 id: user._id.toString(),
                 name: user.name,
@@ -171,12 +171,12 @@ export const authOptions: AuthOptions = {
                 isNewUser: false
               };
             }
-      
+
             // ทำเครื่องหมายว่า OTP ถูกใช้งานแล้ว - หลังจากทำงานสำเร็จ
             await OTP.findByIdAndUpdate(validOtp._id, { is_used: true });
-      
+
             return userData;
-            
+
           } catch (userProcessError) {
             console.error("Error processing user data:", userProcessError);
             return null;
