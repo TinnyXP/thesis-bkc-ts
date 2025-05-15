@@ -4,20 +4,23 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/user";
 import { withSuperAdminAuth } from "@/lib/middleware/adminMiddleware";
 
+// อีเมลที่จะตั้งเป็น Super Admin จาก environment variable
+const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || "thesis.bangkachao.64@gmail.com";
+
 // Admin เริ่มต้น (สำหรับรันตอนเริ่มต้นระบบเท่านั้น)
 export async function GET() {
   try {
     await connectDB();
     
-    // ตรวจสอบว่าอีเมล thesis.bangkachao.64@gmail.com มีอยู่ในระบบหรือไม่
-    const existingAdmin = await User.findOne({ email: "thesis.bangkachao.64@gmail.com" });
+    // ตรวจสอบว่าอีเมลจาก environment variable มีอยู่ในระบบหรือไม่
+    const existingAdmin = await User.findOne({ email: SUPER_ADMIN_EMAIL });
     
     if (existingAdmin) {
       // ถ้ามีอยู่แล้ว ให้ตรวจสอบว่าเป็น superadmin หรือไม่
       if (existingAdmin.role === 'superadmin') {
         return NextResponse.json({
           success: true,
-          message: "Super Admin ถูกตั้งค่าไว้แล้ว",
+          message: `Super Admin (${SUPER_ADMIN_EMAIL}) ถูกตั้งค่าไว้แล้ว`,
           admin: {
             id: existingAdmin._id.toString(),
             name: existingAdmin.name,
@@ -34,7 +37,7 @@ export async function GET() {
       
       return NextResponse.json({
         success: true,
-        message: "อัปเดตเป็น Super Admin เรียบร้อยแล้ว",
+        message: `อัปเดต ${SUPER_ADMIN_EMAIL} เป็น Super Admin เรียบร้อยแล้ว`,
         admin: {
           id: existingAdmin._id.toString(),
           name: existingAdmin.name,
@@ -47,7 +50,7 @@ export async function GET() {
     // ถ้ายังไม่มีในระบบ ให้ตอบกลับว่าต้องสมัครสมาชิกด้วยอีเมลนี้ก่อน
     return NextResponse.json({
       success: false,
-      message: "ไม่พบผู้ใช้ที่มีอีเมล thesis.bangkachao.64@gmail.com ในระบบ กรุณาสมัครสมาชิกก่อน"
+      message: `ไม่พบผู้ใช้ที่มีอีเมล ${SUPER_ADMIN_EMAIL} ในระบบ กรุณาสมัครสมาชิกก่อน`
     }, { status: 404 });
     
   } catch (error) {
